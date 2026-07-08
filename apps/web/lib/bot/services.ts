@@ -1,5 +1,5 @@
-import { prisma } from '@chat-ia/db';
-import type { Service } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
+import type { Service } from '@zappy/db';
 import { checkBookingRateLimit } from './rate-limit';
 
 // Brazilian phone with DDD: 10 digits (landline, e.g. 11 3456-7890) or 11

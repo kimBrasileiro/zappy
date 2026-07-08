@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { requireSuperAdmin } from '../../../lib/admin-auth';
 import { toggleUserActive } from './actions';
 

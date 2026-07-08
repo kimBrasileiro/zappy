@@ -12,7 +12,7 @@ export class AlertingStack extends cdk.Stack {
     // task for a later phase. CloudWatch Alarms added later (ECS CPU, ALB
     // 5xx, RDS connections) publish here immediately once wired.
     this.alertsTopic = new sns.Topic(this, 'AlertsTopic', {
-      displayName: 'Chat IA Alerts',
+      displayName: 'Zappy Alerts',
     });
 
     new cdk.CfnOutput(this, 'AlertsTopicArn', { value: this.alertsTopic.topicArn });

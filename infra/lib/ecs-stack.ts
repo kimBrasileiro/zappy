@@ -67,9 +67,9 @@ export class EcsStack extends cdk.Stack {
     });
     this.migrationTaskDefinition.addContainer('migrate', {
       image: ecs.ContainerImage.fromAsset(WEB_APP_DIR, { target: 'build' }),
-      command: ['pnpm', '--filter', '@chat-ia/db', 'db:migrate:prod'],
+      command: ['pnpm', '--filter', '@zappy/db', 'db:migrate:prod'],
       secrets: databaseUrlSecret,
-      logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'chat-ia-migrate' }),
+      logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'zappy-migrate' }),
     });
 
     new cdk.CfnOutput(this, 'MigrationTaskDefinitionArn', {

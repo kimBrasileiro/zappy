@@ -1,5 +1,5 @@
 {
-  "name": "@chat-ia/infra",
+  "name": "@zappy/infra",
   "private": true,
   "version": "0.1.0",
   "bin": {

@@ -1,4 +1,4 @@
-# @chat-ia/db
+# @zappy/db
 
 Prisma schema (multi-file, `prisma/schema/*.prisma`) + migrations for the multi-tenant support platform.
 

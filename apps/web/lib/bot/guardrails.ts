@@ -1,4 +1,4 @@
-import type { Company, Ticket } from '@chat-ia/db';
+import type { Company, Ticket } from '@zappy/db';
 
 export interface GuardrailResult {
   allowed: boolean;

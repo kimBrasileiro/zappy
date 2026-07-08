@@ -1,4 +1,4 @@
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 
 export default async function AdminCompaniesPage() {
   const companies = await prisma.company.findMany({

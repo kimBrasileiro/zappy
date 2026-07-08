@@ -1,4 +1,4 @@
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { streamGeminiCompletion, suggestQuickReplies } from '../ai/gemini';
 import type { ChatMessage, ToolCall } from '../ai/types';
 import { scrubForLog } from '../pii/scrubber';

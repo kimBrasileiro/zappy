@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 
 export interface ArticleFormState {

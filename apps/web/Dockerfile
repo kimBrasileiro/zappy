@@ -12,13 +12,13 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
 COPY . .
-RUN pnpm --filter @chat-ia/db db:generate
-RUN pnpm --filter @chat-ia/web build
+RUN pnpm --filter @zappy/db db:generate
+RUN pnpm --filter @zappy/web build
 
 # The "build" stage still has the full workspace + node_modules + prisma CLI,
 # so infra/lib/ecs-stack.ts builds this image with `--target build` for the
 # migration task definition and overrides its command to:
-#   ["pnpm", "--filter", "@chat-ia/db", "db:migrate:prod"]
+#   ["pnpm", "--filter", "@zappy/db", "db:migrate:prod"]
 # The pruned "runner" stage below is used for the web service only.
 
 FROM build AS runner

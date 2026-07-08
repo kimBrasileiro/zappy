@@ -26,7 +26,7 @@ export class NetworkStack extends cdk.Stack {
 
     this.albSecurityGroup = new ec2.SecurityGroup(this, 'AlbSecurityGroup', {
       vpc: this.vpc,
-      description: 'Chat IA ALB — public ingress',
+      description: 'Zappy ALB — public ingress',
       allowAllOutbound: true,
     });
     this.albSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'HTTPS from anywhere');
@@ -34,7 +34,7 @@ export class NetworkStack extends cdk.Stack {
 
     this.ecsSecurityGroup = new ec2.SecurityGroup(this, 'EcsSecurityGroup', {
       vpc: this.vpc,
-      description: 'Chat IA ECS tasks — ingress from ALB only',
+      description: 'Zappy ECS tasks — ingress from ALB only',
       allowAllOutbound: true,
     });
     this.ecsSecurityGroup.addIngressRule(
@@ -45,7 +45,7 @@ export class NetworkStack extends cdk.Stack {
 
     this.dbSecurityGroup = new ec2.SecurityGroup(this, 'DbSecurityGroup', {
       vpc: this.vpc,
-      description: 'Chat IA Aurora Postgres — ingress from ECS tasks only',
+      description: 'Zappy Aurora Postgres — ingress from ECS tasks only',
       allowAllOutbound: false,
     });
     this.dbSecurityGroup.addIngressRule(
@@ -56,7 +56,7 @@ export class NetworkStack extends cdk.Stack {
 
     this.redisSecurityGroup = new ec2.SecurityGroup(this, 'RedisSecurityGroup', {
       vpc: this.vpc,
-      description: 'Chat IA ElastiCache Redis — ingress from ECS tasks only',
+      description: 'Zappy ElastiCache Redis — ingress from ECS tasks only',
       allowAllOutbound: false,
     });
     this.redisSecurityGroup.addIngressRule(

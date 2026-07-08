@@ -1,5 +1,5 @@
 {
-  "name": "@chat-ia/web",
+  "name": "@zappy/web",
   "private": true,
   "version": "0.1.0",
   "scripts": {
@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@chat-ia/db": "workspace:*",
-    "@chat-ia/types": "workspace:*",
+    "@zappy/db": "workspace:*",
+    "@zappy/types": "workspace:*",
     "better-auth": "^1.6.23",
     "next": "^14.2.18",
     "openai": "^4.77.0",

@@ -16,7 +16,7 @@ export interface AppStacksProps {
 // than nesting them, so `cdk deploy <StackName>` can target one at a time
 // during iteration instead of always deploying the whole graph together.
 export function buildAppStacks({ app, envName, env }: AppStacksProps) {
-  const prefix = `ChatIa-${envName}`;
+  const prefix = `Zappy-${envName}`;
 
   const network = new NetworkStack(app, `${prefix}-Network`, { env });
 

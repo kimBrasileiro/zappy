@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { createService, deleteService, toggleServiceActive } from './actions';
 import { ServiceForm } from './service-form';

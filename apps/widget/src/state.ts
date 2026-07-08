@@ -1,7 +1,7 @@
-import type { MessageSenderType } from '@chat-ia/types';
+import type { MessageSenderType } from '@zappy/types';
 
 // Local shape only — reuses MessageDTO's sender/content vocabulary from
-// @chat-ia/types so swapping this for real ticket-backed messages later is a
+// @zappy/types so swapping this for real ticket-backed messages later is a
 // rename, not a redesign. No ticketId yet: no ticket exists until the real
 // backend creates one on first message.
 export interface WidgetMessage {
@@ -21,7 +21,7 @@ export interface WidgetState {
 }
 
 function storageKey(companyId: string): string {
-  return `chat-ia:${companyId}:conversation`;
+  return `zappy:${companyId}:conversation`;
 }
 
 function createFreshState(): WidgetState {

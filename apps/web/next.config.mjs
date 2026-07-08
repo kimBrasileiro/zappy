@@ -14,7 +14,7 @@ loadEnv({ path: path.resolve(__dirname, '../../.env.local') });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  transpilePackages: ['@chat-ia/db', '@chat-ia/types'],
+  transpilePackages: ['@zappy/db', '@zappy/types'],
 };
 
 export default nextConfig;

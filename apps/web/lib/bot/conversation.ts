@@ -1,4 +1,4 @@
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import type { ChatMessage } from '../ai/types';
 
 const HISTORY_LIMIT = 20;

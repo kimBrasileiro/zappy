@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { auth } from '../../lib/auth';
 import { generateUniqueSlug } from '../../lib/slug';
 

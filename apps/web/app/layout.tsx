@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: 'Chat IA',
+  title: 'Zappy',
   description: 'Multi-tenant AI customer support platform',
 };
 

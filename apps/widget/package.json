@@ -1,5 +1,5 @@
 {
-  "name": "@chat-ia/widget",
+  "name": "@zappy/widget",
   "private": true,
   "version": "0.1.0",
   "description": "Vanilla TS chat widget, bundled as a single <30KB gzipped script, Shadow DOM isolated.",
@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@chat-ia/types": "workspace:*"
+    "@zappy/types": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.3.5",

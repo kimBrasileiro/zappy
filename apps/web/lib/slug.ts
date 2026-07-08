@@ -1,4 +1,4 @@
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 
 const ACCENT_MARKS = /[̀-ͯ]/g;
 

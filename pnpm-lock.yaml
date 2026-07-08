@@ -35,10 +35,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@chat-ia/db':
+      '@zappy/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@chat-ia/types':
+      '@zappy/types':
         specifier: workspace:*
         version: link:../../packages/types
       better-auth:
@@ -81,7 +81,7 @@ importers:
 
   apps/widget:
     dependencies:
-      '@chat-ia/types':
+      '@zappy/types':
         specifier: workspace:*
         version: link:../../packages/types
     devDependencies:

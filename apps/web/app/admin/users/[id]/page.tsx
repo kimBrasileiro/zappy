@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { requireSuperAdmin } from '../../../../lib/admin-auth';
 import { updateUser } from '../actions';
 import { UserForm } from '../user-form';

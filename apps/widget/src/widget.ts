@@ -67,7 +67,7 @@ export class ChatWidget {
         <input class="input" type="text" placeholder="Digite sua mensagem..." aria-label="Mensagem" />
         <button class="send" aria-label="Enviar">${ICON_SEND}</button>
       </div>
-      <div class="footer">Powered by Chat IA</div>
+      <div class="footer">Powered by Zappy</div>
     `;
     this.panelEl = panel;
     this.messagesEl = panel.querySelector('.messages')!;

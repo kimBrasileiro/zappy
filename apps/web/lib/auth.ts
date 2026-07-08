@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',

@@ -1,4 +1,4 @@
-# Chat IA
+# Zappy
 
 Multi-tenant AI customer-support SaaS (website chat widget + WhatsApp Cloud API, shared backend/orchestrator).
 
@@ -18,7 +18,7 @@ pnpm install
 cp .env.example .env.local   # fill in DATABASE_URL at minimum
 
 # Local Postgres with pgvector, if you don't already have one:
-docker run -d --name chat-ia-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=chat_ia -p 5432:5432 pgvector/pgvector:pg16
+docker run -d --name zappy-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=zappy -p 5432:5432 pgvector/pgvector:pg16
 
 pnpm db:migrate     # applies all 9 migrations
 pnpm db:seed        # demo company + admin user

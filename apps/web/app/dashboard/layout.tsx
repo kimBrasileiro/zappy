@@ -10,7 +10,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <div className="dash-shell">
       <nav className="dash-nav">
-        <div className="dash-nav-brand">Chat IA</div>
+        <div className="dash-nav-brand">Zappy</div>
         <Link className="dash-nav-link" href="/dashboard/conversations">
           Conversas
         </Link>

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { updateFaq } from '../actions';
 import { FaqForm } from '../faq-form';

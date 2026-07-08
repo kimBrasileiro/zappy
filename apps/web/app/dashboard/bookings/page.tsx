@@ -1,4 +1,4 @@
-import { prisma } from '@chat-ia/db';
+import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { cancelBooking } from './actions';
 

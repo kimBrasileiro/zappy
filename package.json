@@ -1,5 +1,5 @@
 {
-  "name": "chat-ia",
+  "name": "zappy",
   "private": true,
   "packageManager": "pnpm@10.28.0",
   "engines": {
@@ -11,13 +11,13 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "db:generate": "pnpm --filter @chat-ia/db db:generate",
-    "db:migrate": "pnpm --filter @chat-ia/db db:migrate",
-    "db:migrate:prod": "pnpm --filter @chat-ia/db db:migrate:prod",
-    "db:migrate:status": "pnpm --filter @chat-ia/db db:migrate:status",
-    "db:migrate:rollback": "pnpm --filter @chat-ia/db db:migrate:rollback",
-    "db:migration:new": "pnpm --filter @chat-ia/db db:migration:new",
-    "db:seed": "pnpm --filter @chat-ia/db db:seed",
+    "db:generate": "pnpm --filter @zappy/db db:generate",
+    "db:migrate": "pnpm --filter @zappy/db db:migrate",
+    "db:migrate:prod": "pnpm --filter @zappy/db db:migrate:prod",
+    "db:migrate:status": "pnpm --filter @zappy/db db:migrate:status",
+    "db:migrate:rollback": "pnpm --filter @zappy/db db:migrate:rollback",
+    "db:migration:new": "pnpm --filter @zappy/db db:migration:new",
+    "db:seed": "pnpm --filter @zappy/db db:seed",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

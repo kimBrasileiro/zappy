@@ -31,7 +31,7 @@ export class DatabaseStack extends cdk.Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       securityGroups: [props.dbSecurityGroup],
       credentials: rds.Credentials.fromGeneratedSecret('app_user'),
-      defaultDatabaseName: 'chat_ia',
+      defaultDatabaseName: 'zappy',
       serverlessV2MinCapacity: 0.5,
       serverlessV2MaxCapacity: 4,
       writer: rds.ClusterInstance.serverlessV2('Writer'),
@@ -39,7 +39,7 @@ export class DatabaseStack extends cdk.Stack {
     });
 
     const redisSubnetGroup = new elasticache.CfnSubnetGroup(this, 'RedisSubnetGroup', {
-      description: 'Isolated subnets for Chat IA Redis (BullMQ, phase 2+)',
+      description: 'Isolated subnets for Zappy Redis (BullMQ, phase 2+)',
       subnetIds: props.vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_ISOLATED }).subnetIds,
     });
 

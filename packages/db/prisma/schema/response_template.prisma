@@ -1,0 +1,18 @@
+model ResponseTemplate {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  name      String
+  content   String
+  shortcut  String? // e.g. "/reembolso" expands to the template
+  category  String?
+  active    Boolean @default(true)
+  createdBy String? @map("created_by") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  company       Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdByUser User?   @relation("ResponseTemplateCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([companyId])
+  @@map("response_templates")
+}

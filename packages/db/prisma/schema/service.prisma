@@ -1,0 +1,31 @@
+model Service {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  name            String
+  description     String?
+  durationMinutes Int      @map("duration_minutes")
+  priceCents      Int      @map("price_cents")
+  // 'auto' — the bot confirms the booking directly with the customer.
+  // 'manual' — the bot tells the customer someone from the team will call to
+  // confirm; the slot is still reserved (locks availability the same way)
+  // but requires human follow-up, e.g. for services needing an assessment
+  // before confirming.
+  bookingMode     String   @default("auto") @map("booking_mode")
+  // Per-service business hours, same shape as Company.config.businessHours
+  // (Record<"sun"|"mon"|...,  [open, close] | null>). Null means "use the
+  // company's default hours" — most services don't need their own schedule,
+  // only ones with different hours than the rest of the business (e.g. a
+  // service only offered on weekday mornings).
+  businessHours   Json?    @map("business_hours")
+  active          Boolean  @default(true)
+  createdBy       String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdByUser User?     @relation("ServiceCreatedBy", fields: [createdBy], references: [id])
+  bookings      Booking[]
+
+  @@index([companyId])
+  @@map("services")
+}

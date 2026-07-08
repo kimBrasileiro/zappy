@@ -1,0 +1,40 @@
+// idx_tickets_assigned (partial, WHERE assigned_to IS NOT NULL) and
+// idx_tickets_sla (partial, WHERE status NOT IN ('resolved','closed')) are
+// NOT expressible via @@index in schema.prisma — Prisma has no partial index
+// syntax. Both are hand-written directly into
+// migrations/*_init_tickets/migration.sql.
+model Ticket {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId  String  @map("company_id") @db.Uuid
+  customerId String? @map("customer_id") @db.Uuid
+  assignedTo String? @map("assigned_to") @db.Uuid
+
+  channel  String // site_chat | whatsapp
+  status   String  @default("open") // open | bot_active | waiting_human | in_progress | resolved | closed
+  priority String  @default("normal") // low | normal | high | urgent
+  subject  String?
+  tags     String[] @default([])
+  metadata Json     @default("{}")
+
+  slaFirstResponseDue DateTime? @map("sla_first_response_due") @db.Timestamptz(6)
+  slaResolutionDue    DateTime? @map("sla_resolution_due") @db.Timestamptz(6)
+  firstResponseAt     DateTime? @map("first_response_at") @db.Timestamptz(6)
+  resolvedAt          DateTime? @map("resolved_at") @db.Timestamptz(6)
+  closedAt            DateTime? @map("closed_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  assignedToUser  User?     @relation("TicketAssignedTo", fields: [assignedTo], references: [id])
+  messages        Message[]
+  bookings        Booking[]
+
+  // Phase 2: crmDealId, csatScore, csatSubmittedAt, slaCategory attach here
+  // without a destructive migration.
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@map("tickets")
+}

@@ -1,0 +1,29 @@
+// companyId is nullable to allow the brief gap between a first-time Google
+// OAuth sign-in (Better Auth creates the User before we know the company)
+// and completing onboarding (apps/web/app/onboarding), which sets
+// companyId + role and never leaves it null again in practice.
+model User {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String?  @map("company_id") @db.Uuid
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  name          String
+  role          String   @default("agent") // admin | agent | viewer
+  avatarUrl     String?  @map("avatar_url") // Better Auth's "image" field, mapped via auth.ts fields config
+  status        String   @default("active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company            Company?           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assignedTickets    Ticket[]           @relation("TicketAssignedTo")
+  createdKbArticles  KbArticle[]        @relation("KbArticleCreatedBy")
+  createdTemplates   ResponseTemplate[] @relation("ResponseTemplateCreatedBy")
+  createdServices    Service[]          @relation("ServiceCreatedBy")
+  createdFaqs        Faq[]              @relation("FaqCreatedBy")
+  auditLogs          AuditLog[]
+  sessions           Session[]
+  accounts           Account[]
+
+  @@index([companyId])
+  @@map("users")
+}

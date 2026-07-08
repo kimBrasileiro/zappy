@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build outputs
+.next/
+dist/
+build/
+*.tsbuildinfo
+
+# turbo
+.turbo/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# prisma
+packages/db/generated/
+
+# widget build artifact mirrored into the Next.js public dir for local preview
+apps/web/public/widget.js
+
+# cdk
+infra/cdk.out/
+infra/.cdk.staging/
+infra/cdk.context.json
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# os / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json

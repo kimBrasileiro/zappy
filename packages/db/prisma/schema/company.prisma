@@ -1,0 +1,29 @@
+// created_at/updated_at columns are DEFAULT now() without a NOT NULL
+// constraint (matches the raw SQL in migration 001) — modeled here as
+// required DateTime fields since Prisma always supplies the default on
+// insert; the DB permits NULL only if a caller writes it via raw SQL.
+model Company {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String
+  slug                   String   @unique
+  plan                   String   @default("starter")
+  status                 String   @default("active")
+  config                 Json     @default("{}")
+  slaConfig              Json     @default("{}") @map("sla_config")
+  whatsappPhoneId        String?  @map("whatsapp_phone_id")
+  whatsappTokenEncrypted String?  @map("whatsapp_token_encrypted")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  users              User[]
+  customers          Customer[]
+  kbArticles         KbArticle[]
+  tickets            Ticket[]
+  responseTemplates  ResponseTemplate[]
+  auditLogs          AuditLog[]
+  services           Service[]
+  bookings           Booking[]
+  faqs               Faq[]
+
+  @@map("companies")
+}

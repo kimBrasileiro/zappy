@@ -1,0 +1,24 @@
+model Customer {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String    @map("company_id") @db.Uuid
+  name          String?
+  email         String?
+  phone         String? // WhatsApp identifier
+  externalId    String?   @map("external_id") // id in the client's own system (CRM, etc.)
+  metadata      Json      @default("{}")
+  gdprDeletedAt DateTime? @map("gdpr_deleted_at") @db.Timestamptz(6) // LGPD/GDPR anonymization marker
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tickets  Ticket[]
+  bookings Booking[]
+
+  // Phase 2: crmContactId (HubSpot/Salesforce/Pipedrive OAuth2 sync) attaches
+  // here without a destructive migration.
+
+  @@unique([companyId, phone])
+  @@unique([companyId, email])
+  @@index([companyId])
+  @@index([companyId, phone])
+  @@map("customers")
+}

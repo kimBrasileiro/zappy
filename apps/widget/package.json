@@ -1,0 +1,18 @@
+{
+  "name": "@chat-ia/widget",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Vanilla TS chat widget, bundled as a single <30KB gzipped script, Shadow DOM isolated.",
+  "scripts": {
+    "build": "tsup && node scripts/copy-to-web.js",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chat-ia/types": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}

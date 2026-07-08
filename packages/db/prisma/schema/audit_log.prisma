@@ -1,0 +1,19 @@
+model AuditLog {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String? @map("company_id") @db.Uuid
+  userId       String? @map("user_id") @db.Uuid
+  action       String // ticket.assign | ticket.close | kb.create | etc.
+  resourceType String? @map("resource_type")
+  resourceId   String? @map("resource_id") @db.Uuid
+  before       Json?
+  after        Json?
+  ip           String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  company Company? @relation(fields: [companyId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
+
+  @@index([companyId, createdAt(sort: Desc)])
+  @@map("audit_log")
+}

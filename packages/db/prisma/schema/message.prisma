@@ -1,0 +1,22 @@
+model Message {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticketId   String  @map("ticket_id") @db.Uuid
+  companyId  String  @map("company_id") @db.Uuid // denormalized for RLS, no FK by design (matches spec)
+  senderType String  @map("sender_type") // customer | bot | agent | system
+  senderId   String? @map("sender_id") @db.Uuid // user id if agent, null if bot/customer
+  content    String
+  contentType String @default("text") @map("content_type") // text | image | file | template
+  metadata   Json    @default("{}") // tool_calls, provider used, tokens, cost
+  isInternal Boolean @default(false) @map("is_internal") // internal note, agents only
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  // Phase 2: sentimentScore, sentimentLabel attach here without a
+  // destructive migration.
+
+  @@index([ticketId])
+  @@index([companyId])
+  @@map("messages")
+}

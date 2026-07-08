@@ -1,0 +1,33 @@
+// idx_bookings_no_double_book (partial, UNIQUE (service_id, scheduled_at)
+// WHERE status = 'confirmed') is hand-written directly into
+// migrations/*_init_services_bookings/migration.sql — Prisma has no partial
+// unique index syntax. It's a defense-in-depth backstop against the
+// application-level availability check racing itself, not the primary
+// mechanism (that's the re-check inside create_booking).
+model Booking {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  serviceId       String   @map("service_id") @db.Uuid
+  customerId      String?  @map("customer_id") @db.Uuid
+  ticketId        String?  @map("ticket_id") @db.Uuid
+
+  scheduledAt     DateTime @map("scheduled_at") @db.Timestamptz(6)
+  // Snapshotted from the Service at booking time — later price/duration
+  // changes on the service must not rewrite booking history.
+  durationMinutes Int      @map("duration_minutes")
+  priceCents      Int      @map("price_cents")
+  status          String   @default("confirmed") // confirmed | cancelled | completed
+  notes           String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  service  Service   @relation(fields: [serviceId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+  ticket   Ticket?   @relation(fields: [ticketId], references: [id])
+
+  @@index([companyId])
+  @@index([serviceId, scheduledAt])
+  @@map("bookings")
+}

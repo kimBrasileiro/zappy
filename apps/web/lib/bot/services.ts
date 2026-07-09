@@ -261,20 +261,32 @@ export async function createBooking(
     };
   }
 
-  // Best-effort — persists the name/phone onto the customer record so the
-  // dashboard shows a real name instead of "Anônimo" and future tickets from
-  // this same person can reuse it. Never blocks the booking itself: two
-  // different conversations claiming the same phone number would hit the
-  // customers table's (company_id, phone) unique constraint, which is a
-  // data-quality edge case, not a reason to fail the actual reservation.
+  // Persists the name/phone onto the customer record so the dashboard shows
+  // a real name instead of "Anônimo" and future tickets from this same
+  // person can reuse it. A different conversation/session claiming the same
+  // phone number hits the customers table's (company_id, phone) unique
+  // constraint — in that case the pre-existing row IS this customer's real
+  // identity, so the booking is re-pointed to it instead of staying linked
+  // to a blank duplicate.
+  let effectiveCustomerId = customerId;
   if (customerId) {
     try {
       await prisma.customer.update({
         where: { id: customerId },
         data: { name: customerName, phone: normalizedPhone },
       });
-    } catch {
-      // phone already claimed by a different customer row — ignore.
+    } catch (err) {
+      // instanceof Prisma.PrismaClientKnownRequestError is unreliable here:
+      // Next.js transpiles @zappy/db separately from how the Prisma engine's
+      // own runtime resolves @prisma/client, so the thrown error and the
+      // imported class can end up as different module instances. Checking
+      // the error code directly sidesteps that entirely.
+      if ((err as { code?: string }).code === 'P2002') {
+        const existing = await prisma.customer.findFirst({ where: { companyId, phone: normalizedPhone } });
+        if (existing) effectiveCustomerId = existing.id;
+      } else {
+        throw err;
+      }
     }
   }
 
@@ -283,7 +295,7 @@ export async function createBooking(
       data: {
         companyId,
         serviceId: service.id,
-        customerId,
+        customerId: effectiveCustomerId,
         ticketId,
         scheduledAt,
         durationMinutes: service.durationMinutes,

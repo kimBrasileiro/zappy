@@ -11,6 +11,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     <div className="dash-shell">
       <nav className="dash-nav">
         <div className="dash-nav-brand">Zappy</div>
+        <Link className="dash-nav-link" href="/dashboard/inbox">
+          Inbox
+        </Link>
         <Link className="dash-nav-link" href="/dashboard/conversations">
           Conversas
         </Link>

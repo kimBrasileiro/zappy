@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { ReplyForm } from './reply-form';
+import { resolveTicket } from './actions';
 
 const SENDER_LABEL: Record<string, string> = {
   customer: 'Cliente',
@@ -34,8 +35,15 @@ export default async function TicketDetailPage({ params }: { params: { ticketId:
       <h1 className="dash-h1">
         {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? 'Anônimo'}
       </h1>
-      <p className="dash-subtitle">
+      <p className="dash-subtitle" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {ticket.channel} · <span className={`dash-badge dash-badge-${ticket.status}`}>{ticket.status}</span>
+        {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
+          <form action={resolveTicket.bind(null, ticket.id)}>
+            <button type="submit" className="dash-btn">
+              Marcar como resolvida
+            </button>
+          </form>
+        )}
       </p>
 
       <div className="dash-thread">

@@ -9,6 +9,7 @@ import {
   checkMaliciousContent,
   checkTicketContext,
   detectHallucination,
+  isHumanHandling,
   resolveLanguage,
 } from './guardrails';
 import { appendMessage, findOrCreateCustomer, findOrCreateOpenTicket, loadHistory } from './conversation';
@@ -76,6 +77,14 @@ export async function* orchestrate(
   const history = await loadHistory(ticket.id);
   await appendMessage(ticket.id, company.id, 'customer', input.message);
 
+  // G11 — a human is already handling this ticket (escalated or an agent
+  // already replied): the message above is saved for the Inbox thread, but
+  // the bot stays silent so it never talks over the human.
+  if (isHumanHandling(ticket)) {
+    yield '';
+    return { quickReplies: [] };
+  }
+
   const language = resolveLanguage(company);
   const config = company.config as { botName?: string } | null;
   const botName = config?.botName ?? 'Assistente';
@@ -89,8 +98,8 @@ export async function* orchestrate(
     `Você é ${botName}, o assistente de suporte da empresa ${company.name}.`,
     `Responda sempre em ${language}, de forma clara, direta e simpática.`,
     `Hoje é ${todayWeekday}, ${todayIso} (formato YYYY-MM-DD).`,
-    'Se não souber a resposta com certeza, diga que vai encaminhar para um atendente humano — nunca invente informações.',
-    'Você tem acesso a tools para listar serviços, checar disponibilidade, criar agendamentos e listar perguntas frequentes (FAQ).',
+    'Se o cliente pedir explicitamente para falar com um atendente, uma pessoa real ou suporte humano, OU se você não souber responder com certeza mesmo depois de checar list_faqs/list_services, chame a tool escalate_human IMEDIATAMENTE — nunca apenas diga que vai encaminhar sem ter chamado a tool, e nunca invente informações.',
+    'Você tem acesso a tools para listar serviços, checar disponibilidade, criar agendamentos, listar perguntas frequentes (FAQ) e encaminhar para um atendente humano.',
     'REGRA DE PRIORIDADE PARA FAQ x SERVIÇOS: se a pergunta do cliente for sobre quais serviços existem, preços, duração, disponibilidade de horários, OU sobre como agendar / marcar um horário (de qualquer forma, mesmo genérica como "como agendar?" ou "como funciona o agendamento?"), chame list_services (e check_availability se já tiver um serviço e data) IMEDIATAMENTE — NUNCA chame list_faqs nesse caso, mesmo que a pergunta pareça uma "dúvida geral". Só depois de excluir esses casos é que list_faqs entra em jogo.',
     'Para qualquer OUTRA pergunta geral sobre a empresa que não seja sobre o catálogo de serviços ou sobre agendar (ex: horário de funcionamento, formas de pagamento, endereço, políticas), ou quando o cliente disser que tem dúvidas de forma genérica / pedir para ver o FAQ, chame list_faqs IMEDIATAMENTE para conferir se já existe uma resposta cadastrada — nunca responda esse tipo de pergunta de memória sem checar list_faqs primeiro. Nunca invente perguntas ou respostas que não estejam na lista retornada. Se a lista vier vazia, diga que ainda não há FAQ cadastrado e ofereça encaminhar para um atendente.',
     'Se o cliente pediu pra ver as dúvidas de forma genérica (sem uma pergunta específica em mente), responda de forma breve tipo "Aqui estão algumas perguntas frequentes, clique em uma pra ver a resposta:" SEM listar as perguntas e respostas no texto — elas já aparecem automaticamente como botões pro cliente clicar, um por pergunta.',
@@ -201,6 +210,7 @@ export async function* orchestrate(
   }
 
   if (!full.trim()) {
+    console.log(`[chat] empty final answer after tools=[${toolNamesUsed.join(', ')}]`);
     full = FALLBACK_MESSAGE;
     yield full;
   }

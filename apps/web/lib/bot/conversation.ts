@@ -35,6 +35,16 @@ export async function findOrCreateOpenTicket(companyId: string, customerId: stri
   });
 }
 
+// Called by the escalate_human tool when the customer asks for a real
+// person. waiting_human (rather than in_progress) distinguishes "the bot
+// handed this off" from "an agent already replied" for the Inbox view.
+export async function escalateToHuman(ticketId: string) {
+  await prisma.ticket.update({
+    where: { id: ticketId },
+    data: { status: 'waiting_human' },
+  });
+}
+
 export async function loadHistory(ticketId: string): Promise<ChatMessage[]> {
   const messages = await prisma.message.findMany({
     where: { ticketId, isInternal: false },

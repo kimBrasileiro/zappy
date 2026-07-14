@@ -173,6 +173,20 @@ export function buildStyles(primaryColor: string): string {
       color: #fff;
       border-bottom-right-radius: 4px;
     }
+    .bubble.agent {
+      align-self: flex-start;
+      background: var(--bot-bubble-bg);
+      color: var(--fg);
+      border-bottom-left-radius: 4px;
+      border-left: 3px solid var(--primary);
+    }
+    .msg-sender {
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      opacity: 0.85;
+    }
 
     .typing {
       align-self: flex-start;

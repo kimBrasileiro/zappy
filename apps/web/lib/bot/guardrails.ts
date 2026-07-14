@@ -81,3 +81,13 @@ export function resolveLanguage(company: Pick<Company, 'config'>): string {
   const config = company.config as { language?: string } | null;
   return config?.language ?? 'pt-BR';
 }
+
+// G11 — once a human is handling the ticket (escalate_human moved it to
+// waiting_human, or a dashboard agent reply moved it to in_progress), the bot
+// goes silent: the customer's message is still recorded so the lojista sees
+// it in the Inbox thread, but no LLM call happens, so the bot and the human
+// never answer over each other. Bot access resumes only if the ticket is
+// resolved/closed and a new one is opened.
+export function isHumanHandling(ticket: Pick<Ticket, 'status'>): boolean {
+  return ticket.status === 'waiting_human' || ticket.status === 'in_progress';
+}

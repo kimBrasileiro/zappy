@@ -37,3 +37,19 @@ export async function sendAgentReply(
   revalidatePath(`/dashboard/conversations/${ticketId}`);
   return {};
 }
+
+export async function resolveTicket(ticketId: string): Promise<void> {
+  const { companyId } = await requireSession();
+
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  if (!ticket || ticket.companyId !== companyId) return;
+
+  await prisma.ticket.update({
+    where: { id: ticketId },
+    data: { status: 'resolved', resolvedAt: new Date() },
+  });
+
+  revalidatePath(`/dashboard/conversations/${ticketId}`);
+  revalidatePath('/dashboard/inbox');
+  revalidatePath('/dashboard/conversations');
+}

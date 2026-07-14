@@ -72,3 +72,28 @@ export async function streamBotReply(
 
   return { fullText: full, options };
 }
+
+export interface PolledAgentMessage {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+// GET rather than the SSE endpoint above — this is a plain poll, not a
+// streamed reply, so a simple JSON response is enough.
+export async function pollAgentMessages(
+  apiUrl: string,
+  companyId: string,
+  conversationId: string,
+  after: string | null,
+): Promise<PolledAgentMessage[]> {
+  const params = new URLSearchParams({ companyId, conversationId });
+  if (after) params.set('after', after);
+  const url = `${apiUrl.replace(/\/chat\/?$/, '/chat/poll')}?${params.toString()}`;
+
+  const response = await fetch(url);
+  if (!response.ok) return [];
+
+  const data = (await response.json()) as { messages?: PolledAgentMessage[] };
+  return data.messages ?? [];
+}

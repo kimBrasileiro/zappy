@@ -17,6 +17,11 @@ model Service {
   // only ones with different hours than the rest of the business (e.g. a
   // service only offered on weekday mornings).
   businessHours   Json?    @map("business_hours")
+  // When true, the service is bookable any day of the week at any time —
+  // businessHours (own or the company's) is ignored entirely by
+  // checkAvailability. Mutually exclusive with businessHours in the
+  // dashboard form; the flag wins if both are somehow set.
+  is24h           Boolean  @default(false) @map("is_24h")
   active          Boolean  @default(true)
   createdBy       String?  @map("created_by") @db.Uuid
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

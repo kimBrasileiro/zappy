@@ -177,3 +177,21 @@
   margin-bottom: 4px;
   text-transform: uppercase;
 }
+
+.dash-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+.dash-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: dash-spin 0.7s linear infinite;
+}
+@keyframes dash-spin {
+  to { transform: rotate(360deg); }
+}

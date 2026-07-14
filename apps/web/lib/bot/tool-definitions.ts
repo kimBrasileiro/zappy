@@ -1,6 +1,7 @@
 import type { ToolCall, ToolDefinition } from '../ai/types';
 import { checkAvailability, createBooking, listServices } from './services';
 import { listFaqs } from './faqs';
+import { escalateToHuman } from './conversation';
 
 export const BUSINESS_TOOLS: ToolDefinition[] = [
   {
@@ -51,6 +52,12 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
       required: ['serviceName', 'scheduledAt', 'customerName', 'customerPhone'],
     },
   },
+  {
+    name: 'escalate_human',
+    description:
+      'Encaminha a conversa para um atendente humano. Chame IMEDIATAMENTE quando o cliente pedir explicitamente para falar com um atendente, uma pessoa real, ou suporte humano, ou quando você não souber resolver algo com certeza mesmo depois de checar list_faqs/list_services. Depois de chamar, diga ao cliente que um atendente vai responder em breve — o bot para de responder nessa conversa até um humano assumir ou resolver.',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
 ];
 
 export interface ToolExecutionContext {
@@ -90,6 +97,9 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
           customerPhone: String(args.customerPhone ?? ''),
         }),
       );
+    case 'escalate_human':
+      await escalateToHuman(ctx.ticketId);
+      return JSON.stringify({ success: true });
     default:
       return JSON.stringify({ error: 'unknown_tool' });
   }

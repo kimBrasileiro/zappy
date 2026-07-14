@@ -1,7 +1,17 @@
 import { buildStyles } from './styles';
-import { appendMessage, loadState, resetState, saveState, type WidgetMessage, type WidgetState } from './state';
+import {
+  appendAgentMessage,
+  appendMessage,
+  loadState,
+  resetState,
+  saveState,
+  type WidgetMessage,
+  type WidgetState,
+} from './state';
 import { QUICK_REPLIES } from './quick-replies';
-import { streamBotReply } from './api';
+import { pollAgentMessages, streamBotReply } from './api';
+
+const POLL_INTERVAL_MS = 5000;
 
 export interface WidgetConfig {
   companyId: string;
@@ -24,6 +34,8 @@ export class ChatWidget {
   private shadow: ShadowRoot;
   private isOpen = false;
   private isBotTyping = false;
+  private pollTimer: number | null = null;
+  private isPolling = false;
 
   private panelEl!: HTMLDivElement;
   private fabEl!: HTMLButtonElement;
@@ -42,6 +54,9 @@ export class ChatWidget {
 
     this.buildDom();
     this.renderMessages();
+    // A ticket only exists once the customer has sent at least one message —
+    // no point polling for a conversation that doesn't have one yet.
+    if (this.state.hasSentFirstMessage) this.startPolling();
   }
 
   private buildDom(): void {
@@ -109,9 +124,49 @@ export class ChatWidget {
     this.hideTyping();
     this.isBotTyping = false;
     this.sendBtnEl.disabled = false;
+    this.stopPolling();
     this.state = resetState(this.config.companyId);
     this.renderMessages();
     this.inputEl.focus();
+  }
+
+  private startPolling(): void {
+    if (this.pollTimer !== null) return;
+    this.pollTimer = window.setInterval(() => this.pollOnce(), POLL_INTERVAL_MS);
+  }
+
+  private stopPolling(): void {
+    if (this.pollTimer === null) return;
+    window.clearInterval(this.pollTimer);
+    this.pollTimer = null;
+  }
+
+  // Picks up agent replies sent from the dashboard — the only kind of
+  // message that doesn't arrive through the customer's own request/response
+  // cycle (see handleSend). Runs regardless of open/closed panel state so
+  // the reply is already there next time the customer opens the widget.
+  private async pollOnce(): Promise<void> {
+    if (this.isPolling) return;
+    this.isPolling = true;
+    const conversationIdAtPoll = this.state.conversationId;
+    try {
+      const messages = await pollAgentMessages(
+        this.config.apiUrl,
+        this.config.companyId,
+        conversationIdAtPoll,
+        this.state.lastAgentMessageAt,
+      );
+      if (this.state.conversationId !== conversationIdAtPoll || messages.length === 0) return;
+      for (const m of messages) {
+        appendAgentMessage(this.state, m.id, m.content, m.createdAt);
+      }
+      this.renderMessages();
+      saveState(this.config.companyId, this.state);
+    } catch {
+      // Network hiccup — the next tick retries with the same cursor.
+    } finally {
+      this.isPolling = false;
+    }
   }
 
   private renderMessages(): void {
@@ -162,6 +217,7 @@ export class ChatWidget {
     appendMessage(this.state, 'customer', text);
     this.renderMessages();
     saveState(this.config.companyId, this.state);
+    this.startPolling(); // no-op if already running — a ticket exists from here on
 
     this.isBotTyping = true;
     this.sendBtnEl.disabled = true;
@@ -201,9 +257,14 @@ export class ChatWidget {
     if (this.state.conversationId !== conversationIdAtSend) return;
 
     this.hideTyping();
-    appendMessage(this.state, 'bot', full, options);
-    this.renderMessages();
-    saveState(this.config.companyId, this.state);
+    // Empty means the backend went quiet on purpose (ticket handed off to a
+    // human — see orchestrator.ts's G11) rather than a real empty reply;
+    // nothing to show, so no bubble.
+    if (full) {
+      appendMessage(this.state, 'bot', full, options);
+      this.renderMessages();
+      saveState(this.config.companyId, this.state);
+    }
 
     this.isBotTyping = false;
     this.sendBtnEl.disabled = false;
@@ -211,7 +272,8 @@ export class ChatWidget {
 }
 
 function bubbleHtml(message: WidgetMessage, isLast: boolean): string {
-  const bubble = `<div class="bubble ${message.senderType}">${escapeHtml(message.content)}</div>`;
+  const label = message.senderType === 'agent' ? '<div class="msg-sender">Atendente</div>' : '';
+  const bubble = `${label}<div class="bubble ${message.senderType}">${escapeHtml(message.content)}</div>`;
   if (isLast && message.senderType === 'bot' && message.options?.length) {
     const chips = message.options.map((o) => `<button class="chip">${escapeHtml(o)}</button>`).join('');
     return `${bubble}<div class="msg-options">${chips}</div>`;

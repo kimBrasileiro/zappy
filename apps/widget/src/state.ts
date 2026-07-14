@@ -6,7 +6,7 @@ import type { MessageSenderType } from '@zappy/types';
 // backend creates one on first message.
 export interface WidgetMessage {
   id: string;
-  senderType: Extract<MessageSenderType, 'customer' | 'bot'>;
+  senderType: Extract<MessageSenderType, 'customer' | 'bot' | 'agent'>;
   content: string;
   createdAt: number;
   // AI-suggested quick-reply buttons for this turn (bot messages only).
@@ -18,6 +18,10 @@ export interface WidgetState {
   conversationId: string;
   messages: WidgetMessage[];
   hasSentFirstMessage: boolean;
+  // Cursor (server createdAt, ISO) for /api/chat/poll — null means "fetch
+  // from the start of this conversation". Only advances for 'agent'
+  // messages; bot replies never come through the poller (see api.ts).
+  lastAgentMessageAt: string | null;
 }
 
 function storageKey(companyId: string): string {
@@ -29,6 +33,7 @@ function createFreshState(): WidgetState {
     conversationId: crypto.randomUUID(),
     messages: [],
     hasSentFirstMessage: false,
+    lastAgentMessageAt: null,
   };
 }
 
@@ -80,4 +85,15 @@ export function appendMessage(
     state.hasSentFirstMessage = true;
   }
   return message;
+}
+
+// Distinct from appendMessage: uses the server's own message id (rather than
+// a fresh client-generated one) so a message the poll cursor re-fetches at
+// the edge of its window — createdAt round-trips through JSON at
+// millisecond precision, while Postgres keeps microseconds, so an exact-hit
+// cursor can match again — is deduped here instead of showing twice.
+export function appendAgentMessage(state: WidgetState, id: string, content: string, createdAt: string): void {
+  state.lastAgentMessageAt = createdAt;
+  if (state.messages.some((m) => m.id === id)) return;
+  state.messages.push({ id, senderType: 'agent', content, createdAt: Date.now() });
 }

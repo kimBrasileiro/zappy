@@ -7,6 +7,19 @@ import { auth } from './auth';
 // to this one email as requested; isolated here so it's easy to find/change.
 const SUPER_ADMIN_EMAIL = 'kim@wisell.ai';
 
+// Deliberately a plain string match against the hardcoded constant above —
+// never derived from a DB role/flag. A company-impersonation capability
+// (see auth-server.ts, dashboard/impersonate-actions.ts) must not become
+// grantable to anyone by tampering with a database row.
+export function isSuperAdminEmail(email: string | null | undefined): boolean {
+  return email === SUPER_ADMIN_EMAIL;
+}
+
+// Cookie holding the company id a super admin is currently impersonating in
+// /dashboard. HttpOnly — only ever read/written server-side (auth-server.ts,
+// impersonate-actions.ts), never by client JS.
+export const IMPERSONATE_COOKIE = 'zappy_impersonate_company';
+
 export interface RequireSuperAdminResult {
   userId: string;
   email: string;
@@ -23,7 +36,7 @@ export async function requireSuperAdmin(): Promise<RequireSuperAdminResult> {
   if (user.status !== 'active') {
     redirect('/login');
   }
-  if (user.email !== SUPER_ADMIN_EMAIL) {
+  if (!isSuperAdminEmail(user.email)) {
     redirect('/dashboard');
   }
 

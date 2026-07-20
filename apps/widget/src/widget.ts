@@ -18,6 +18,13 @@ export interface WidgetConfig {
   apiUrl: string;
   primaryColor: string;
   botName: string;
+  // E.164, e.g. "+5511999999999" — the platform's shared WhatsApp number.
+  // Omitted entirely (no data-whatsapp attribute) hides the button.
+  whatsappNumber?: string;
+  // Overrides the generic default (see quick-replies.ts) — e.g. the Zappy
+  // institutional site itself uses sales-flavored chips instead of the
+  // generic "agendar um horário" ones meant for a service business.
+  quickReplies?: string[];
 }
 
 const FALLBACK_REPLY =
@@ -27,6 +34,7 @@ const ICON_CHAT = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org
 const ICON_CLOSE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICON_RESTART = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICON_SEND = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12l16-7-6 16-2.5-6.5L4 12z" fill="currentColor"/></svg>`;
+const ICON_WHATSAPP = `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 0 0-8.66 15L2 22l5.14-1.31A10 10 0 1 0 12 2zm0 18.2a8.16 8.16 0 0 1-4.17-1.14l-.3-.18-3.05.78.82-2.97-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81s-.4-.12-.56.12-.63.81-.78.97-.28.19-.53.06a6.7 6.7 0 0 1-1.97-1.22 7.4 7.4 0 0 1-1.36-1.7c-.14-.25 0-.38.11-.5s.25-.29.37-.44a1.6 1.6 0 0 0 .25-.41.46.46 0 0 0 0-.44c-.06-.12-.56-1.35-.77-1.85s-.4-.42-.56-.43h-.48a.9.9 0 0 0-.66.31 2.76 2.76 0 0 0-.86 2.05 4.78 4.78 0 0 0 1 2.54 10.9 10.9 0 0 0 4.19 3.7c.58.25 1.04.4 1.4.51a3.37 3.37 0 0 0 1.54.1 2.52 2.52 0 0 0 1.65-1.16 2 2 0 0 0 .14-1.16c-.06-.1-.22-.16-.47-.28z"/></svg>`;
 
 export class ChatWidget {
   private config: WidgetConfig;
@@ -73,6 +81,7 @@ export class ChatWidget {
       <div class="header">
         <div class="avatar">${this.config.botName.charAt(0).toUpperCase()}</div>
         <div class="name">${escapeHtml(this.config.botName)}</div>
+        ${this.config.whatsappNumber ? `<button class="whatsapp" aria-label="Continuar no WhatsApp" title="Continuar no WhatsApp">${ICON_WHATSAPP}</button>` : ''}
         <button class="restart" aria-label="Reiniciar conversa" title="Reiniciar conversa">${ICON_RESTART}</button>
         <button class="close" aria-label="Fechar chat">${ICON_CLOSE}</button>
       </div>
@@ -99,6 +108,7 @@ export class ChatWidget {
 
     panel.querySelector('.close')!.addEventListener('click', () => this.toggle());
     panel.querySelector('.restart')!.addEventListener('click', () => this.resetConversation());
+    panel.querySelector('.whatsapp')?.addEventListener('click', () => this.openWhatsApp());
     this.sendBtnEl.addEventListener('click', () => this.handleSend());
     this.inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.handleSend();
@@ -128,6 +138,19 @@ export class ChatWidget {
     this.state = resetState(this.config.companyId);
     this.renderMessages();
     this.inputEl.focus();
+  }
+
+  // Opens a fresh WhatsApp conversation with the platform's shared number,
+  // pre-filled with the "Z:<slug>" prefix the webhook uses to route the
+  // message to this company (see lib/bot/conversation.ts#resolveWhatsAppRoute
+  // on the backend). This starts a NEW thread on WhatsApp — it does not, and
+  // cannot, carry over this conversation's message history, since WhatsApp
+  // only lets you pre-fill text the customer would type themselves.
+  private openWhatsApp(): void {
+    if (!this.config.whatsappNumber) return;
+    const digits = this.config.whatsappNumber.replace(/\D/g, '');
+    const text = `Z:${this.config.companyId} Olá, vim do chat do site`;
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 
   private startPolling(): void {
@@ -186,12 +209,13 @@ export class ChatWidget {
       });
     }
 
+    const quickReplies = this.config.quickReplies ?? QUICK_REPLIES;
     this.quickRepliesEl.style.display = this.state.hasSentFirstMessage ? 'none' : 'flex';
     this.quickRepliesEl.innerHTML = this.state.hasSentFirstMessage
       ? ''
-      : QUICK_REPLIES.map((q) => `<button class="chip">${escapeHtml(q)}</button>`).join('');
+      : quickReplies.map((q) => `<button class="chip">${escapeHtml(q)}</button>`).join('');
     this.quickRepliesEl.querySelectorAll('.chip').forEach((chip, i) => {
-      chip.addEventListener('click', () => this.handleSend(QUICK_REPLIES[i]));
+      chip.addEventListener('click', () => this.handleSend(quickReplies[i]));
     });
   }
 

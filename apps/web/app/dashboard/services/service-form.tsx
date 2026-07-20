@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import type { ServiceFormState } from './actions';
 
@@ -39,10 +40,12 @@ export function ServiceForm({
     priceCents: number;
     bookingMode: string;
     businessHours: BusinessHours | null;
+    is24h: boolean;
   };
   submitLabel: string;
 }) {
   const [state, formAction] = useFormState(action, initialState);
+  const [is24h, setIs24h] = useState(defaultValues?.is24h ?? false);
 
   const durationIsHours = !!defaultValues && defaultValues.durationMinutes % 60 === 0 && defaultValues.durationMinutes >= 60;
   const durationValue = defaultValues
@@ -94,12 +97,27 @@ export function ServiceForm({
 
       <div className="dash-form-row">
         <label>
-          <input type="checkbox" name="useCustomHours" defaultChecked={hasCustomHours} style={{ marginRight: 6 }} />
-          Este serviço tem horário de funcionamento próprio (diferente do padrão da empresa)
+          <input
+            type="checkbox"
+            name="is24h"
+            checked={is24h}
+            onChange={(e) => setIs24h(e.target.checked)}
+            style={{ marginRight: 6 }}
+          />
+          Disponível 24h — qualquer dia da semana, a qualquer horário
         </label>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+      {!is24h && (
+        <div className="dash-form-row">
+          <label>
+            <input type="checkbox" name="useCustomHours" defaultChecked={hasCustomHours} style={{ marginRight: 6 }} />
+            Este serviço tem horário de funcionamento próprio (diferente do padrão da empresa)
+          </label>
+        </div>
+      )}
+
+      <div style={{ display: is24h ? 'none' : 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
         {DAYS.map(({ key, label }) => {
           const dayHours = defaultValues?.businessHours?.[key];
           return (

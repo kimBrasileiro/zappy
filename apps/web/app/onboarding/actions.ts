@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@zappy/db';
 import { auth } from '../../lib/auth';
 import { generateUniqueSlug } from '../../lib/slug';
+import { createDefaultFaqs } from '../../lib/default-faqs';
 
 export interface OnboardingState {
   error?: string;
@@ -31,6 +32,8 @@ export async function completeOnboarding(
     where: { id: session.user.id },
     data: { companyId: company.id, role: 'admin' },
   });
+
+  await createDefaultFaqs(company.id);
 
   redirect('/dashboard');
 }

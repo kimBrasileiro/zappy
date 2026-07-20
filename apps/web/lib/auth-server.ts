@@ -1,11 +1,21 @@
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { prisma } from '@zappy/db';
 import { auth } from './auth';
+import { IMPERSONATE_COOKIE, isSuperAdminEmail } from './admin-auth';
 
 export interface RequireSessionResult {
   userId: string;
   companyId: string;
   role: string;
+  // True only for the hardcoded super-admin email (see admin-auth.ts) —
+  // gates the company switcher in dashboard/layout.tsx and the impersonate
+  // server actions. isSuperAdmin never changes companyId by itself; that
+  // only happens below, via the IMPERSONATE_COOKIE.
+  isSuperAdmin: boolean;
+  // The signed-in user's own company — same as companyId unless a super
+  // admin is currently impersonating a different one.
+  actualCompanyId: string;
 }
 
 // Every dashboard Server Component/Server Action calls this first — no
@@ -35,5 +45,19 @@ export async function requireSession(): Promise<RequireSessionResult> {
     redirect('/onboarding');
   }
 
-  return { userId: user.id, companyId: user.companyId, role: user.role };
+  const isSuperAdmin = isSuperAdminEmail(user.email);
+  let companyId = user.companyId;
+
+  if (isSuperAdmin) {
+    const impersonating = (await cookies()).get(IMPERSONATE_COOKIE)?.value;
+    if (impersonating) {
+      // A stale/tampered cookie value (deleted company, bad id) silently
+      // falls back to the real company rather than ever handing back a
+      // companyId that doesn't resolve to anything.
+      const exists = await prisma.company.findUnique({ where: { id: impersonating }, select: { id: true } });
+      if (exists) companyId = impersonating;
+    }
+  }
+
+  return { userId: user.id, companyId, role: user.role, isSuperAdmin, actualCompanyId: user.companyId };
 }

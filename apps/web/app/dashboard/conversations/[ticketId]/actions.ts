@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../../lib/auth-server';
+import { sendWhatsAppMessage } from '../../../../lib/whatsapp/client';
 
 export interface ReplyState {
   error?: string;
@@ -29,6 +30,14 @@ export async function sendAgentReply(
   await prisma.message.create({
     data: { ticketId, companyId, senderType: 'agent', senderId: userId, content, contentType: 'text' },
   });
+
+  // WhatsApp tickets have no client polling the DB for new messages like the
+  // widget does — without an explicit send here, an agent's reply from the
+  // Inbox would just sit in Postgres and never reach the customer.
+  if (ticket.channel === 'whatsapp' && ticket.customerId) {
+    const route = await prisma.whatsAppRoute.findFirst({ where: { customerId: ticket.customerId } });
+    if (route) await sendWhatsAppMessage(route.waPhoneNumber, content);
+  }
 
   if (ticket.status === 'bot_active' || ticket.status === 'waiting_human') {
     await prisma.ticket.update({ where: { id: ticketId }, data: { status: 'in_progress' } });

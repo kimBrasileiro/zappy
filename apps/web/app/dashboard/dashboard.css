@@ -6,33 +6,61 @@
 }
 
 .dash-nav {
-  width: 220px;
+  width: 224px;
   flex-shrink: 0;
   background: #111827;
   color: #e5e7eb;
   padding: 20px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .dash-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
+  letter-spacing: -0.01em;
   color: #fff;
-  padding: 0 8px 16px;
+  padding: 0 8px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
+}
+
+.dash-nav-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dash-nav-logo svg {
+  width: 15px;
+  height: 15px;
 }
 
 .dash-nav-link {
-  color: #cbd5e1;
+  color: #9ca3af;
   text-decoration: none;
   padding: 9px 10px;
   border-radius: 8px;
   font-size: 13.5px;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 .dash-nav-link:hover {
   background: #1f2937;
   color: #fff;
+}
+.dash-nav-link.active {
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
 }
 
 .dash-nav-spacer {
@@ -194,4 +222,68 @@
 }
 @keyframes dash-spin {
   to { transform: rotate(360deg); }
+}
+
+.dash-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #888;
+  margin: 28px 0 10px;
+}
+.dash-section-title:first-of-type {
+  margin-top: 0;
+}
+
+.dash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.dash-stat-tile {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-left: 3px solid #2563eb;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+.dash-stat-tile-link {
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+.dash-stat-tile-link:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+.dash-stat-amber {
+  border-left-color: #d97706;
+}
+.dash-stat-green {
+  border-left-color: #16a34a;
+}
+
+.dash-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.dash-stat-label {
+  font-size: 12.5px;
+  color: #666;
+}
+
+.dash-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.dash-refresh-spin {
+  animation: dash-spin 0.6s linear;
 }

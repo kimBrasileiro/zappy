@@ -3,6 +3,7 @@ import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { createArticle, deleteArticle, toggleArticleActive } from './actions';
 import { ArticleForm } from './article-form';
+import { RefreshButton } from '../refresh-button';
 
 export default async function KnowledgeBasePage() {
   const { companyId } = await requireSession();
@@ -14,11 +15,16 @@ export default async function KnowledgeBasePage() {
 
   return (
     <>
-      <h1 className="dash-h1">Base de Conhecimento</h1>
-      <p className="dash-subtitle">
-        Artigos usados pelo bot para responder perguntas frequentes. A geração de embeddings pra
-        busca semântica entra numa fase seguinte (precisa de uma chave OpenAI/Voyage).
-      </p>
+      <div className="dash-toolbar">
+        <div>
+          <h1 className="dash-h1">Base de Conhecimento</h1>
+          <p className="dash-subtitle" style={{ marginBottom: 0 }}>
+            Artigos usados pelo bot para responder perguntas frequentes. A geração de embeddings pra
+            busca semântica entra numa fase seguinte (precisa de uma chave OpenAI/Voyage).
+          </p>
+        </div>
+        <RefreshButton />
+      </div>
 
       <div className="dash-card">
         <ArticleForm action={createArticle} submitLabel="Criar artigo" />

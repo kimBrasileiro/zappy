@@ -3,6 +3,7 @@ import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { createFaq, deleteFaq, toggleFaqActive } from './actions';
 import { FaqForm } from './faq-form';
+import { RefreshButton } from '../refresh-button';
 
 export default async function FaqPage() {
   const { companyId } = await requireSession();
@@ -14,10 +15,15 @@ export default async function FaqPage() {
 
   return (
     <>
-      <h1 className="dash-h1">FAQ</h1>
-      <p className="dash-subtitle">
-        Perguntas frequentes que o bot lista pro cliente quando ele diz que tem dúvidas.
-      </p>
+      <div className="dash-toolbar">
+        <div>
+          <h1 className="dash-h1">FAQ</h1>
+          <p className="dash-subtitle" style={{ marginBottom: 0 }}>
+            Perguntas frequentes que o bot lista pro cliente quando ele diz que tem dúvidas.
+          </p>
+        </div>
+        <RefreshButton />
+      </div>
 
       <div className="dash-card">
         <FaqForm action={createFaq} submitLabel="Criar FAQ" />

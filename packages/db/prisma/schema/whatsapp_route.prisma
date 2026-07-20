@@ -1,0 +1,16 @@
+// Maps a raw WhatsApp phone number to the company/customer it currently
+// belongs to. Needed because the whole platform shares ONE WhatsApp Business
+// number (see lib/bot/conversation.ts#resolveWhatsAppRoute) — Customer.phone
+// alone isn't enough to route an inbound message, since it's only unique
+// *within* a company, not globally across the shared number.
+model WhatsAppRoute {
+  waPhoneNumber String   @id @map("wa_phone_number") // E.164, e.g. "+5511999999999"
+  companyId     String   @map("company_id") @db.Uuid
+  customerId    String   @map("customer_id") @db.Uuid
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("whatsapp_routes")
+}

@@ -1,4 +1,5 @@
 import type { Company, Ticket } from '@zappy/db';
+import { normalizeDomain } from '../domains';
 
 export interface GuardrailResult {
   allowed: boolean;
@@ -90,4 +91,36 @@ export function resolveLanguage(company: Pick<Company, 'config'>): string {
 // resolved/closed and a new one is opened.
 export function isHumanHandling(ticket: Pick<Ticket, 'status'>): boolean {
   return ticket.status === 'waiting_human' || ticket.status === 'in_progress';
+}
+
+// G12 — the widget's <script data-company="slug"> is public by construction
+// (it's sitting in the HTML source of whatever page embeds it), so the slug
+// alone doesn't prove the caller is that company's own site. An empty
+// allowedDomains means the company hasn't locked it down yet (a fresh signup
+// can still test the widget anywhere) — once they add at least one domain in
+// the dashboard, only that domain (plus the Zappy app's own demo/preview
+// page) may talk to the API as this company. WhatsApp has no Origin header
+// and isn't affected — see orchestrator.ts, only checked for site_chat.
+export function checkOrigin(company: Pick<Company, 'allowedDomains'>, origin: string | null): GuardrailResult {
+  if (company.allowedDomains.length === 0) return { allowed: true };
+  if (!origin) return { allowed: false, reason: 'origin_not_allowed' };
+
+  let hostname: string;
+  try {
+    hostname = normalizeDomain(new URL(origin).hostname);
+  } catch {
+    return { allowed: false, reason: 'origin_not_allowed' };
+  }
+
+  const appHostname = (() => {
+    try {
+      return normalizeDomain(new URL(process.env.NEXT_PUBLIC_APP_URL ?? '').hostname);
+    } catch {
+      return null;
+    }
+  })();
+  if (appHostname && hostname === appHostname) return { allowed: true };
+
+  const allowed = company.allowedDomains.some((d) => normalizeDomain(d) === hostname);
+  return allowed ? { allowed: true } : { allowed: false, reason: 'origin_not_allowed' };
 }

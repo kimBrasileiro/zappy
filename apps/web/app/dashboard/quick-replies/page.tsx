@@ -3,6 +3,7 @@ import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { createTemplate, deleteTemplate, toggleTemplateActive } from './actions';
 import { TemplateForm } from './template-form';
+import { RefreshButton } from '../refresh-button';
 
 export default async function QuickRepliesPage() {
   const { companyId } = await requireSession();
@@ -14,8 +15,15 @@ export default async function QuickRepliesPage() {
 
   return (
     <>
-      <h1 className="dash-h1">Quick Replies</h1>
-      <p className="dash-subtitle">Respostas rápidas que sua equipe usa no dia a dia.</p>
+      <div className="dash-toolbar">
+        <div>
+          <h1 className="dash-h1">Quick Replies</h1>
+          <p className="dash-subtitle" style={{ marginBottom: 0 }}>
+            Respostas rápidas que sua equipe usa no dia a dia.
+          </p>
+        </div>
+        <RefreshButton />
+      </div>
 
       <div className="dash-card">
         <TemplateForm action={createTemplate} submitLabel="Criar quick reply" />

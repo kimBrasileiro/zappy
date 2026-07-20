@@ -1,6 +1,7 @@
 import { prisma } from '@zappy/db';
 import type { Service } from '@zappy/db';
 import { checkBookingRateLimit } from './rate-limit';
+import { notifyBookingCreated } from '../notifications';
 
 // Brazilian phone with DDD: 10 digits (landline, e.g. 11 3456-7890) or 11
 // (mobile, e.g. 11 98765-4321) once punctuation/spaces are stripped. Not a
@@ -102,7 +103,6 @@ export async function checkAvailability(companyId: string, serviceName: string, 
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) return { error: 'service_not_found', message: 'Empresa não encontrada.' };
 
-  const hours = getBusinessHours(company, service);
   // Built with Date.UTC throughout — never the local Date constructor/setHours
   // — so business hours mean the same wall-clock time regardless of which
   // timezone the server process happens to run in (this dev machine reports
@@ -113,19 +113,29 @@ export async function checkAvailability(companyId: string, serviceName: string, 
   // library + a dashboard field, not done here).
   const [year, month, day] = date.split('-').map(Number);
   const dayStart = new Date(Date.UTC(year!, month! - 1, day!));
-  const dayHours = hours[DAY_KEYS[dayStart.getUTCDay()]!];
-  if (!dayHours) {
-    return {
-      slots: [],
-      reason: 'closed_that_day',
-      message: `A empresa não abre no dia ${date} (fechado nesse dia da semana). Sugira ao cliente escolher outra data.`,
-    };
-  }
 
-  const [openH, openM] = dayHours[0].split(':').map(Number);
-  const [closeH, closeM] = dayHours[1].split(':').map(Number);
-  const openTime = new Date(Date.UTC(year!, month! - 1, day!, openH!, openM));
-  const closeTime = new Date(Date.UTC(year!, month! - 1, day!, closeH!, closeM));
+  // is24h bypasses both the day-of-week closed check and the open/close
+  // window entirely — every day is open, 00:00 through 23:59.
+  let openTime: Date;
+  let closeTime: Date;
+  if (service.is24h) {
+    openTime = dayStart;
+    closeTime = new Date(Date.UTC(year!, month! - 1, day!, 23, 59));
+  } else {
+    const hours = getBusinessHours(company, service);
+    const dayHours = hours[DAY_KEYS[dayStart.getUTCDay()]!];
+    if (!dayHours) {
+      return {
+        slots: [],
+        reason: 'closed_that_day',
+        message: `A empresa não abre no dia ${date} (fechado nesse dia da semana). Sugira ao cliente escolher outra data.`,
+      };
+    }
+    const [openH, openM] = dayHours[0].split(':').map(Number);
+    const [closeH, closeM] = dayHours[1].split(':').map(Number);
+    openTime = new Date(Date.UTC(year!, month! - 1, day!, openH!, openM));
+    closeTime = new Date(Date.UTC(year!, month! - 1, day!, closeH!, closeM));
+  }
 
   const dayEnd = new Date(Date.UTC(year!, month! - 1, day!, 23, 59, 59, 999));
   const existing = await prisma.booking.findMany({
@@ -303,6 +313,17 @@ export async function createBooking(
         notes: `Cliente: ${customerName}, Tel: ${normalizedPhone}`,
       },
     });
+
+    const requiresManualConfirmation = service.bookingMode === 'manual';
+    await notifyBookingCreated({
+      companyId,
+      serviceName: service.name,
+      scheduledAt: booking.scheduledAt,
+      customerName,
+      customerPhone: normalizedPhone,
+      requiresManualConfirmation,
+    });
+
     return {
       success: true,
       bookingId: booking.id,
@@ -310,7 +331,7 @@ export async function createBooking(
       scheduledAt: booking.scheduledAt.toISOString(),
       durationMinutes: booking.durationMinutes,
       priceCents: booking.priceCents,
-      requiresManualConfirmation: service.bookingMode === 'manual',
+      requiresManualConfirmation,
     };
   } catch {
     // idx_bookings_no_double_book caught a race the check above missed.

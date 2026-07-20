@@ -37,7 +37,13 @@ export async function POST(request: Request) {
   let generator: AsyncGenerator<string, OrchestrateResult, unknown>;
   let first: IteratorResult<string, OrchestrateResult>;
   try {
-    generator = orchestrate({ companySlug: companyId, conversationId, message });
+    generator = orchestrate({
+      companySlug: companyId,
+      channel: 'site_chat',
+      conversationId,
+      message,
+      origin: request.headers.get('origin'),
+    });
     // Force guardrail checks (which run before the first `yield`) to execute
     // now, so a blocked/invalid request returns a clean JSON error instead of
     // a stream that opens and then immediately errors.

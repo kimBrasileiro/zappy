@@ -124,7 +124,8 @@ export function buildStyles(primaryColor: string): string {
       flex: 1;
     }
     .header .close,
-    .header .restart {
+    .header .restart,
+    .header .whatsapp {
       background: none;
       border: none;
       color: #fff;
@@ -134,13 +135,18 @@ export function buildStyles(primaryColor: string): string {
       display: flex;
     }
     .header .close:hover,
-    .header .restart:hover {
+    .header .restart:hover,
+    .header .whatsapp:hover {
       opacity: 1;
     }
     .header .close svg,
-    .header .restart svg {
+    .header .restart svg,
+    .header .whatsapp svg {
       width: 18px;
       height: 18px;
+    }
+    .header .whatsapp {
+      color: #25d366;
     }
 
     .messages {

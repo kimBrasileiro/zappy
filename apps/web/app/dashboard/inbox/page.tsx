@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
+import { RefreshButton } from '../refresh-button';
 
 export default async function InboxPage() {
   const { companyId } = await requireSession();
@@ -14,10 +15,15 @@ export default async function InboxPage() {
 
   return (
     <>
-      <h1 className="dash-h1">Inbox</h1>
-      <p className="dash-subtitle">
-        Conversas que precisam de um atendente — escaladas pelo bot ou já assumidas por alguém do time.
-      </p>
+      <div className="dash-toolbar">
+        <div>
+          <h1 className="dash-h1">Inbox</h1>
+          <p className="dash-subtitle" style={{ marginBottom: 0 }}>
+            Conversas que precisam de um atendente — escaladas pelo bot ou já assumidas por alguém do time.
+          </p>
+        </div>
+        <RefreshButton />
+      </div>
 
       <table className="dash-table">
         <thead>

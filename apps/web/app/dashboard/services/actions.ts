@@ -26,6 +26,10 @@ function parsePriceCents(formData: FormData): number | null {
 }
 
 function parseBusinessHours(formData: FormData): BusinessHours | null {
+  // Mutually exclusive with is24h — the 24h checkbox hides this section in
+  // the form entirely, and businessHours is meaningless once every day/time
+  // is open anyway.
+  if (formData.get('is24h') === 'on') return null;
   if (formData.get('useCustomHours') !== 'on') return null;
 
   const hours: BusinessHours = {};
@@ -53,6 +57,7 @@ export async function createService(
   const durationMinutes = parseDurationMinutes(formData);
   const priceCents = parsePriceCents(formData);
   const bookingMode = String(formData.get('bookingMode') ?? 'auto') === 'manual' ? 'manual' : 'auto';
+  const is24h = formData.get('is24h') === 'on';
   const businessHours = parseBusinessHours(formData);
 
   if (!name) return { error: 'Nome é obrigatório.' };
@@ -67,6 +72,7 @@ export async function createService(
       durationMinutes,
       priceCents,
       bookingMode,
+      is24h,
       businessHours: businessHours ?? undefined,
       createdBy: userId,
     },
@@ -91,6 +97,7 @@ export async function updateService(
   const durationMinutes = parseDurationMinutes(formData);
   const priceCents = parsePriceCents(formData);
   const bookingMode = String(formData.get('bookingMode') ?? 'auto') === 'manual' ? 'manual' : 'auto';
+  const is24h = formData.get('is24h') === 'on';
   const businessHours = parseBusinessHours(formData);
 
   if (!name) return { error: 'Nome é obrigatório.' };
@@ -99,7 +106,15 @@ export async function updateService(
 
   await prisma.service.update({
     where: { id: serviceId },
-    data: { name, description, durationMinutes, priceCents, bookingMode, businessHours: businessHours ?? Prisma.JsonNull },
+    data: {
+      name,
+      description,
+      durationMinutes,
+      priceCents,
+      bookingMode,
+      is24h,
+      businessHours: businessHours ?? Prisma.JsonNull,
+    },
   });
 
   revalidatePath('/dashboard/services');

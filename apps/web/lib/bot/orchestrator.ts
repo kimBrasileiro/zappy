@@ -7,12 +7,19 @@ import {
   assertNoCrossTenantLeak,
   checkCompanyActive,
   checkMaliciousContent,
+  checkOrigin,
   checkTicketContext,
   detectHallucination,
   isHumanHandling,
   resolveLanguage,
 } from './guardrails';
-import { appendMessage, findOrCreateCustomer, findOrCreateOpenTicket, loadHistory } from './conversation';
+import {
+  appendMessage,
+  findOrCreateCustomer,
+  findOrCreateCustomerByPhone,
+  findOrCreateOpenTicket,
+  loadHistory,
+} from './conversation';
 import { BUSINESS_TOOLS, executeBusinessTool } from './tool-definitions';
 
 export class OrchestratorBlockedError extends Error {
@@ -26,8 +33,16 @@ export interface OrchestrateInput {
   // The widget only ever knows the company by its public slug, never the
   // internal UUID — despite the wire field being named `companyId`.
   companySlug: string;
+  channel: 'site_chat' | 'whatsapp';
+  // site_chat: the widget's localStorage conversationId (matched against
+  // Customer.externalId). whatsapp: the customer's phone in the same local
+  // (no country code) format resolveWhatsAppRoute already normalized to
+  // (matched against Customer.phone) — see lib/whatsapp/client.ts#toLocalPhone.
   conversationId: string;
   message: string;
+  // Browser's Origin header, site_chat only — WhatsApp has no equivalent
+  // (see guardrails.ts#checkOrigin, G12).
+  origin?: string | null;
 }
 
 export interface OrchestrateResult {
@@ -60,14 +75,22 @@ export async function* orchestrate(
   const g4 = checkCompanyActive(company);
   if (!g4.allowed) throw new OrchestratorBlockedError(g4.reason!);
 
+  if (input.channel === 'site_chat') {
+    const g12 = checkOrigin(company, input.origin ?? null);
+    if (!g12.allowed) throw new OrchestratorBlockedError(g12.reason!);
+  }
+
   const rl = checkRateLimit(company.id, input.conversationId);
   if (!rl.allowed) throw new OrchestratorBlockedError('rate_limited');
 
   const g3 = checkMaliciousContent(input.message);
   if (!g3.allowed) throw new OrchestratorBlockedError(g3.reason!);
 
-  const customer = await findOrCreateCustomer(company.id, input.conversationId);
-  const ticket = await findOrCreateOpenTicket(company.id, customer.id);
+  const customer =
+    input.channel === 'whatsapp'
+      ? await findOrCreateCustomerByPhone(company.id, input.conversationId)
+      : await findOrCreateCustomer(company.id, input.conversationId);
+  const ticket = await findOrCreateOpenTicket(company.id, customer.id, input.channel);
 
   const g5 = checkTicketContext(ticket);
   if (!g5.allowed) throw new OrchestratorBlockedError(g5.reason!);
@@ -106,6 +129,7 @@ export async function* orchestrate(
     'Se a mensagem do cliente já é (ou é muito parecida com) uma das perguntas retornadas por list_faqs — por exemplo, se ele clicou em um dos botões de pergunta — responda diretamente com a resposta exata dessa pergunta específica, sem listar as outras de novo.',
     'Nunca diga que um agendamento foi confirmado sem antes ter chamado create_booking e recebido sucesso — nunca invente horários, preços ou confirmações.',
     'As tools de agendamento identificam o serviço pelo nome exato (igual ao que list_services retornou), nunca por um id. Se não tiver certeza do nome exato do serviço mencionado pelo cliente, chame list_services de novo para confirmar antes de checar disponibilidade ou criar o agendamento.',
+    'Use o histórico da conversa pra saber qual serviço já está em jogo — se o cliente já perguntou sobre um serviço específico (ou só existe um serviço cadastrado) e depois disser algo genérico como "quero agendar" sem repetir o nome, assuma que é esse mesmo serviço e prossiga direto (chame check_availability), em vez de perguntar de novo qual serviço ele quer. Só pergunte de novo se houver mais de um serviço relevante na conversa e não estiver claro qual deles.',
     'Quando o cliente mencionar uma data relativa ou parcial (ex: "dia 9", "amanhã", "sexta-feira", "essa semana"), calcule você mesmo a data exata no formato YYYY-MM-DD usando a data de hoje acima como referência — nunca peça pro cliente reescrever a data nesse formato. Se o cliente disser só o dia do mês (ex: "dia 9") e esse dia já passou no mês atual, assuma o próximo mês; se ainda não passou, assuma o mês atual.',
     'Quando check_availability retornar horários (morningSlots/afternoonSlots), NÃO liste os horários no texto da sua resposta — eles já aparecem automaticamente como botões pro cliente clicar. Só confirme brevemente que encontrou horários de manhã e/ou tarde e pergunte qual ele prefere.',
     'Quando o cliente responder com um horário curto (ex: "09:00"), esse é um horário que veio dos botões do último check_availability, e combina com a data já estabelecida na conversa. Nome completo e telefone com DDD do cliente são OBRIGATÓRIOS para criar o agendamento — se ainda não tiver os dois, peça-os agora antes de chamar create_booking (não invente, não assuma). Assim que tiver o horário, a data, o nome E o telefone, chame create_booking IMEDIATAMENTE usando o "iso" correspondente a esse horário no resultado de check_availability mais recente, sem pedir mais nenhuma confirmação.',
@@ -129,17 +153,31 @@ export async function* orchestrate(
   let serviceButtons: string[] = [];
 
   for (;;) {
-    const gen = streamGeminiCompletion(currentMessages, toolsForThisRound);
     let toolCalls: ToolCall[] | null = null;
+    let gotAnything = false;
 
-    for (;;) {
-      const next = await gen.next();
-      if (next.done) {
-        toolCalls = next.value.toolCalls;
-        break;
+    // Gemini occasionally streams back a completely empty round — no text
+    // delta, no tool call — for no discernible reason tied to the input
+    // (reproduced ~1 in 5 tries on an innocuous message). Not worth failing
+    // the whole turn over: retried once, and since nothing is yielded until
+    // a real chunk arrives, a retry never shows the customer a truncated
+    // partial reply from the failed attempt.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const gen = streamGeminiCompletion(currentMessages, toolsForThisRound);
+
+      for (;;) {
+        const next = await gen.next();
+        if (next.done) {
+          toolCalls = next.value.toolCalls;
+          break;
+        }
+        gotAnything = true;
+        full += next.value;
+        yield next.value;
       }
-      full += next.value;
-      yield next.value;
+
+      if (gotAnything || (toolCalls && toolCalls.length > 0)) break;
+      console.log(`[chat] empty round response (attempt ${attempt + 1}/2)`);
     }
 
     if (!toolCalls || toolCalls.length === 0) break; // final text answer, we're done

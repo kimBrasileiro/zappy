@@ -10,6 +10,12 @@ function readConfig(script: HTMLOrSVGScriptElement): WidgetConfig {
     apiUrl: el.dataset['apiUrl'] ?? `${window.location.origin}/api/chat`,
     primaryColor: el.dataset['color'] ?? '#2563eb',
     botName: el.dataset['botName'] ?? 'Assistente',
+    whatsappNumber: el.dataset['whatsapp'] || undefined,
+    // Pipe-separated, e.g. data-quick-replies="Pergunta um?|Pergunta dois?"
+    quickReplies: el.dataset['quickReplies']
+      ?.split('|')
+      .map((q) => q.trim())
+      .filter(Boolean),
   };
 }
 

@@ -23,6 +23,7 @@ export default async function EditServicePage({ params }: { params: { id: string
             priceCents: service.priceCents,
             bookingMode: service.bookingMode,
             businessHours: service.businessHours as BusinessHours | null,
+            is24h: service.is24h,
           }}
           submitLabel="Salvar alterações"
         />

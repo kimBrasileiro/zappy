@@ -45,8 +45,8 @@ export const authStyles: Record<string, CSSProperties> = {
   googleButton: {
     marginTop: 2,
     background: '#fff',
-    color: '#333',
-    border: '1px solid #ddd',
+    color: '#3c4043',
+    border: '1px solid #dadce0',
     borderRadius: 8,
     padding: '10px 16px',
     fontSize: 14,
@@ -55,7 +55,7 @@ export const authStyles: Record<string, CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
   },
   divider: { textAlign: 'center', fontSize: 12, color: '#999', margin: '4px 0' },
   error: {

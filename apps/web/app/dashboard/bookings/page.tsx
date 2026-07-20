@@ -1,6 +1,7 @@
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { cancelBooking } from './actions';
+import { RefreshButton } from '../refresh-button';
 
 function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -33,8 +34,15 @@ export default async function BookingsPage() {
 
   return (
     <>
-      <h1 className="dash-h1">Agendamentos</h1>
-      <p className="dash-subtitle">Todos os agendamentos criados pelo bot (ou manualmente), mais recentes primeiro.</p>
+      <div className="dash-toolbar">
+        <div>
+          <h1 className="dash-h1">Agendamentos</h1>
+          <p className="dash-subtitle" style={{ marginBottom: 0 }}>
+            Todos os agendamentos criados pelo bot (ou manualmente), mais recentes primeiro.
+          </p>
+        </div>
+        <RefreshButton />
+      </div>
 
       <table className="dash-table">
         <thead>

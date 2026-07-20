@@ -3,6 +3,7 @@ import { prisma } from '@zappy/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { ReplyForm } from './reply-form';
 import { resolveTicket } from './actions';
+import { RefreshButton } from '../../refresh-button';
 
 const SENDER_LABEL: Record<string, string> = {
   customer: 'Cliente',
@@ -32,19 +33,24 @@ export default async function TicketDetailPage({ params }: { params: { ticketId:
 
   return (
     <>
-      <h1 className="dash-h1">
-        {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? 'Anônimo'}
-      </h1>
-      <p className="dash-subtitle" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        {ticket.channel} · <span className={`dash-badge dash-badge-${ticket.status}`}>{ticket.status}</span>
-        {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
-          <form action={resolveTicket.bind(null, ticket.id)}>
-            <button type="submit" className="dash-btn">
-              Marcar como resolvida
-            </button>
-          </form>
-        )}
-      </p>
+      <div className="dash-toolbar">
+        <div>
+          <h1 className="dash-h1">
+            {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? 'Anônimo'}
+          </h1>
+          <p className="dash-subtitle" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 0 }}>
+            {ticket.channel} · <span className={`dash-badge dash-badge-${ticket.status}`}>{ticket.status}</span>
+            {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
+              <form action={resolveTicket.bind(null, ticket.id)}>
+                <button type="submit" className="dash-btn">
+                  Marcar como resolvida
+                </button>
+              </form>
+            )}
+          </p>
+        </div>
+        <RefreshButton />
+      </div>
 
       <div className="dash-thread">
         {messages.map((m) => (

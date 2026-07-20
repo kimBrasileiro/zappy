@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
+import { RefreshButton } from '../refresh-button';
 
 export default async function ConversationsPage() {
   const { companyId } = await requireSession();
@@ -14,8 +15,15 @@ export default async function ConversationsPage() {
 
   return (
     <>
-      <h1 className="dash-h1">Conversas</h1>
-      <p className="dash-subtitle">Todos os tickets da sua empresa, mais recentes primeiro.</p>
+      <div className="dash-toolbar">
+        <div>
+          <h1 className="dash-h1">Conversas</h1>
+          <p className="dash-subtitle" style={{ marginBottom: 0 }}>
+            Todos os tickets da sua empresa, mais recentes primeiro.
+          </p>
+        </div>
+        <RefreshButton />
+      </div>
 
       <table className="dash-table">
         <thead>

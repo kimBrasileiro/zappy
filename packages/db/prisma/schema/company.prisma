@@ -12,6 +12,20 @@ model Company {
   slaConfig              Json     @default("{}") @map("sla_config")
   whatsappPhoneId        String?  @map("whatsapp_phone_id")
   whatsappTokenEncrypted String?  @map("whatsapp_token_encrypted")
+  // Hostnames (no protocol/www/port, see lib/domains.ts#normalizeDomain) the
+  // widget script is allowed to be embedded on. Empty = not configured yet =
+  // open to any origin (see guardrails.ts#checkOrigin) — a fresh signup can
+  // still test the widget anywhere before locking it down.
+  allowedDomains         String[] @default([]) @map("allowed_domains")
+  // Stripe billing (lib/stripe/client.ts, api/webhooks/stripe). subscriptionStatus
+  // mirrors Stripe's own subscription.status string verbatim (trialing/active/
+  // past_due/canceled/incomplete) for billing display — the existing `status`
+  // field above stays the simple active/inactive gate checkCompanyActive already
+  // uses, kept in sync by the webhook rather than repurposed.
+  stripeCustomerId       String?  @map("stripe_customer_id")
+  stripeSubscriptionId   String?  @map("stripe_subscription_id")
+  subscriptionStatus     String?  @map("subscription_status")
+  trialEndsAt            DateTime? @map("trial_ends_at") @db.Timestamptz(6)
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 
@@ -24,6 +38,7 @@ model Company {
   services           Service[]
   bookings           Booking[]
   faqs               Faq[]
+  whatsappRoutes     WhatsAppRoute[]
 
   @@map("companies")
 }

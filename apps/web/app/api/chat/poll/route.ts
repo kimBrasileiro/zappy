@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@zappy/db';
+import { checkOrigin } from '../../../../lib/bot/guardrails';
 
 // Lets the widget pick up agent replies sent from the dashboard without the
 // customer having to send another message first — the only kind of message
@@ -26,6 +27,10 @@ export async function GET(request: Request) {
 
   const company = await prisma.company.findUnique({ where: { slug: companySlug } });
   if (!company) return NextResponse.json({ messages: [] }, { headers: CORS_HEADERS });
+
+  if (!checkOrigin(company, request.headers.get('origin')).allowed) {
+    return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403, headers: CORS_HEADERS });
+  }
 
   const customer = await prisma.customer.findFirst({
     where: { companyId: company.id, externalId: conversationId },

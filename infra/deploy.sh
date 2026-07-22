@@ -29,7 +29,7 @@ cd "$REPO_ROOT"
 # baked into this build. Exported by you before running this script:
 #   export NEXT_PUBLIC_APP_URL=https://staging.suaempresa.com
 #   export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-: "${NEXT_PUBLIC_APP_URL:?Set NEXT_PUBLIC_APP_URL first (must match that environment's tfvars app_url)}"
+: "${NEXT_PUBLIC_APP_URL:?Set NEXT_PUBLIC_APP_URL first (must match app_url in that environment tfvars)}"
 : "${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:=}"
 
 echo "==> Building runner image (web service)"

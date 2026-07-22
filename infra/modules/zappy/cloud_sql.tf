@@ -16,6 +16,11 @@ resource "google_sql_database_instance" "main" {
 
   settings {
     tier              = var.db_tier
+    # New Cloud SQL instances default to the ENTERPRISE_PLUS edition, which
+    # dropped support for the classic shared-core tiers (db-f1-micro,
+    # db-g1-small) in favor of its own db-perf-optimized-N-* line —
+    # explicit ENTERPRISE is what unlocks db-f1-micro as a valid tier again.
+    edition           = "ENTERPRISE"
     availability_type = var.db_availability_type
     disk_size         = var.db_disk_size_gb
     disk_autoresize   = true

@@ -8,6 +8,10 @@ resource "google_cloud_run_v2_job" "migrate" {
   name     = "${local.name}-migrate"
   location = var.region
 
+  # See the same override on google_cloud_run_v2_service.web in cloud_run.tf
+  # — stateless definition, safe/desirable to let Terraform replace freely.
+  deletion_protection = false
+
   template {
     template {
       service_account = google_service_account.runtime.email

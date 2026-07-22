@@ -24,6 +24,14 @@ resource "google_cloud_run_v2_service" "web" {
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
+  # The provider defaults this to true — appropriate for Cloud SQL (where
+  # the actual data lives, see cloud_sql.tf) but not here: this resource is
+  # just a stateless service definition, trivially recreated from this same
+  # config, so protecting it from replacement only gets in the way (e.g.
+  # blocking Terraform from fixing a revision stuck from a prior failed
+  # apply, which is exactly what this override was added for).
+  deletion_protection = false
+
   template {
     service_account = google_service_account.runtime.email
 

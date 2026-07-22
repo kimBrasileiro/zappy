@@ -233,11 +233,23 @@ Levers, in each environment's `terraform.tfvars`:
   once cold starts (~1-2s) actually bother real customers.
 - `max_instances` — caps runaway cost from a traffic spike/abuse.
 
-A cheaper option for staging specifically, if idle cost still matters: skip
-Cloud SQL's `disk_autoresize`/backups tuning, or simply
-`terraform destroy -target=module.zappy.google_sql_database_instance.main`
-between test sessions and re-apply when you need it — staging's
-`db_deletion_protection` defaults to `false` for exactly this.
+### Pausing Cloud SQL between test sessions {#pausing-cloud-sql}
+
+Cloud Run already costs $0 while idle (`min_instances=0`) — nothing to do
+there. Cloud SQL is the one piece that's always provisioned, so it's the one
+worth pausing if staging sits idle for days between test sessions:
+
+```sh
+./infra/toggle-db.sh staging stop [gcp-project-id]   # stops billing for compute
+./infra/toggle-db.sh staging start [gcp-project-id]  # back up in well under a minute
+```
+
+Stopped, you only pay for the provisioned disk (~$1-2/mo for 10GB) instead
+of the compute (the bulk of the ~$12-14/mo db-f1-micro line) — data is
+untouched, so this is safe to do as often as you want. The web service will
+fail to serve requests while the DB is stopped (it needs a live connection),
+which is exactly the tradeoff: don't stop it if staging needs to stay
+reachable for something like a webhook test.
 
 ## Connecting locally (psql / Prisma Studio against a real environment) {#connecting-locally}
 

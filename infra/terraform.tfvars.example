@@ -1,0 +1,29 @@
+# Copy this file to terraform.tfvars and fill in your own project — that
+# file is gitignored (see ../.gitignore), this .example one is the only copy
+# meant to be committed.
+
+project_id = "your-gcp-project-id"
+region     = "southamerica-east1" # São Paulo
+
+# Leave the two *_image vars unset (placeholder default) for the very first
+# `terraform apply` — see README step 3.
+# container_image = "southamerica-east1-docker.pkg.dev/your-gcp-project-id/zappy/web:latest"
+# migration_image = "southamerica-east1-docker.pkg.dev/your-gcp-project-id/zappy/web:build-latest"
+
+# Set once you know it — either a custom domain you're mapping (see
+# README#custom-domain) or the *.run.app URL from the `cloud_run_url` output
+# after a first apply (see README#chicken-and-egg-app-url).
+# app_url = "https://app.suaempresa.com"
+
+# Non-secret but still build-time-baked, same story as app_url.
+# stripe_publishable_key = "pk_live_..."
+# google_client_id       = "....apps.googleusercontent.com"
+
+# resend_from_email        = "Zappy <onboarding@suaempresa.com>"
+# whatsapp_phone_number_id = "123456789012345"
+# whatsapp_number          = "+5511999999999"
+
+# Cost tuning — see README#cost for what each of these actually changes.
+# db_tier       = "db-f1-micro"
+# min_instances = 0
+# max_instances = 3

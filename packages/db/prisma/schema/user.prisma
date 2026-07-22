@@ -16,7 +16,6 @@ model User {
 
   company            Company?           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   assignedTickets    Ticket[]           @relation("TicketAssignedTo")
-  createdKbArticles  KbArticle[]        @relation("KbArticleCreatedBy")
   createdTemplates   ResponseTemplate[] @relation("ResponseTemplateCreatedBy")
   createdServices    Service[]          @relation("ServiceCreatedBy")
   createdFaqs        Faq[]              @relation("FaqCreatedBy")

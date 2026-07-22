@@ -22,10 +22,13 @@ packages/db/generated/
 # widget build artifact mirrored into the Next.js public dir for local preview
 apps/web/public/widget.js
 
-# cdk
-infra/cdk.out/
-infra/.cdk.staging/
-infra/cdk.context.json
+# terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars
+infra/*.tfplan
+infra/crash.log
 
 # logs
 *.log

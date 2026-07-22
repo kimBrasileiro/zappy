@@ -13,11 +13,21 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS build
 COPY . .
 RUN pnpm --filter @zappy/db db:generate
+
+# Next.js inlines every NEXT_PUBLIC_* var into the client bundle at build
+# time — passing these only as Cloud Run *runtime* env vars (infra/cloud_run.tf)
+# would ship a bundle with them permanently empty. Must be supplied as
+# `docker build --build-arg` (see infra/README.md#chicken-and-egg-app-url).
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
 RUN pnpm --filter @zappy/web build
 
 # The "build" stage still has the full workspace + node_modules + prisma CLI,
-# so infra/lib/ecs-stack.ts builds this image with `--target build` for the
-# migration task definition and overrides its command to:
+# so infra/cloud_run_job.tf's migration job builds this image with
+# `--target build` and overrides its command to:
 #   ["pnpm", "--filter", "@zappy/db", "db:migrate:prod"]
 # The pruned "runner" stage below is used for the web service only.
 

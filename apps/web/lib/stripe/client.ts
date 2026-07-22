@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { prisma } from '@zappy/db';
 
 let client: Stripe | null = null;
 
@@ -46,4 +47,55 @@ export function priceIdForPlan(plan: PlanKey): string | null {
 // might need it later.
 export function isBillingActive(subscriptionStatus: string | null): boolean {
   return subscriptionStatus === 'trialing' || subscriptionStatus === 'active';
+}
+
+// Shared by both places a company gets created with billing already wired up
+// — email/password signup (signup/actions.ts) and the Google OAuth onboarding
+// flow (onboarding/actions.ts), so a customer can't get an active company
+// without either failing this step or landing on the card-collection screen
+// either way. Returns the SetupIntent client secret to hand to <PaymentStep>,
+// or null if there's nothing further to collect (caller should redirect to
+// /dashboard in that case — the company is already created and usable, the
+// webhook picks up the real subscription status later regardless).
+export async function startTrialSubscription(params: {
+  companyId: string;
+  companyName: string;
+  email: string;
+  plan: PlanKey;
+}): Promise<string | null> {
+  const priceId = priceIdForPlan(params.plan);
+  if (!priceId) {
+    // Key is set but the Price id for this specific plan isn't — a config
+    // gap, not something the customer did wrong.
+    console.error(`[stripe] price id ausente para o plano "${params.plan}" (empresa ${params.companyId} criada sem assinatura)`);
+    return null;
+  }
+
+  const stripe = getStripe();
+  const customer = await stripe.customers.create({
+    email: params.email,
+    name: params.companyName,
+    metadata: { companyId: params.companyId },
+  });
+  const subscription = await stripe.subscriptions.create({
+    customer: customer.id,
+    items: [{ price: priceId }],
+    trial_period_days: 7,
+    payment_behavior: 'default_incomplete',
+    payment_settings: { save_default_payment_method: 'on_subscription' },
+    expand: ['pending_setup_intent'],
+  });
+
+  await prisma.company.update({
+    where: { id: params.companyId },
+    data: {
+      stripeCustomerId: customer.id,
+      stripeSubscriptionId: subscription.id,
+      subscriptionStatus: subscription.status,
+      trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+    },
+  });
+
+  const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null;
+  return setupIntent?.client_secret ?? null;
 }

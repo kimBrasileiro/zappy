@@ -31,7 +31,6 @@ model Company {
 
   users              User[]
   customers          Customer[]
-  kbArticles         KbArticle[]
   tickets            Ticket[]
   responseTemplates  ResponseTemplate[]
   auditLogs          AuditLog[]

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../lib/auth-server';
 import { RefreshButton } from './refresh-button';
+import { CopySnippet } from '../copy-snippet';
 
 export default async function DashboardHomePage() {
   const { companyId } = await requireSession();
@@ -9,8 +10,9 @@ export default async function DashboardHomePage() {
   const now = new Date();
   const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60_000);
 
-  const [ticketsByStatus, upcomingBookings, totalConfirmedBookings, activeServices, activeFaqs, quickReplies, recentTickets] =
+  const [company, ticketsByStatus, upcomingBookings, totalConfirmedBookings, activeServices, activeFaqs, quickReplies, recentTickets] =
     await Promise.all([
+      prisma.company.findUnique({ where: { id: companyId }, select: { slug: true, allowedDomains: true } }),
       prisma.ticket.groupBy({ by: ['status'], where: { companyId }, _count: true }),
       prisma.booking.count({
         where: { companyId, status: 'confirmed', scheduledAt: { gte: now, lte: weekFromNow } },
@@ -32,6 +34,26 @@ export default async function DashboardHomePage() {
   const inProgress = countByStatus['in_progress'] ?? 0;
   const totalConversations = ticketsByStatus.reduce((sum, t) => sum + t._count, 0);
 
+  // "Primeiros passos" — a getting-started checklist, not a permanent
+  // fixture: once every step is done the section stops rendering at all
+  // (see `allStepsDone` below) so it doesn't clutter the home page for
+  // companies that are already up and running.
+  const hasDomain = (company?.allowedDomains.length ?? 0) > 0;
+  const checklist = [
+    { label: 'Cadastre seu primeiro serviço', href: '/dashboard/services', done: activeServices > 0 },
+    { label: 'Cadastre suas primeiras FAQs', href: '/dashboard/faq', done: activeFaqs > 0 },
+    { label: 'Crie Quick Replies para respostas comuns', href: '/dashboard/quick-replies', done: quickReplies > 0 },
+    { label: 'Instale o widget no site da sua empresa', href: '/dashboard/instalacao', done: hasDomain },
+  ];
+  const allStepsDone = checklist.every((step) => step.done);
+
+  const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
+  const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
+  const waLink =
+    whatsappDigits && company
+      ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Z:${company.slug} Olá!`)}`
+      : null;
+
   return (
     <>
       <div className="dash-toolbar">
@@ -42,6 +64,47 @@ export default async function DashboardHomePage() {
           </p>
         </div>
         <RefreshButton />
+      </div>
+
+      {!allStepsDone && (
+        <div className="dash-card">
+          <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 12 }}>Primeiros passos</h3>
+          <ul className="dash-checklist">
+            {checklist.map((step) => (
+              <li key={step.href} className="dash-checklist-item">
+                <span className={`dash-checklist-check ${step.done ? 'dash-checklist-check-done' : ''}`}>
+                  {step.done ? '✓' : ''}
+                </span>
+                {step.done ? (
+                  <span className="dash-checklist-label-done">{step.label}</span>
+                ) : (
+                  <Link href={step.href} className="dash-checklist-label">
+                    {step.label}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="dash-card">
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Link direto do WhatsApp</h3>
+        {waLink ? (
+          <>
+            <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
+              Compartilhe este link (redes sociais, bio, QR code) pra clientes iniciarem uma
+              conversa já identificando sua empresa pro bot:
+            </p>
+            <CopySnippet snippet={waLink} />
+          </>
+        ) : (
+          <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
+            O número compartilhado de WhatsApp da Zappy ainda não foi configurado nesta
+            instância — assim que estiver, o link aparece aqui automaticamente. Veja mais em{' '}
+            <Link href="/dashboard/instalacao">Instalação</Link>.
+          </p>
+        )}
       </div>
 
       <div className="dash-section-title">Atendimento</div>

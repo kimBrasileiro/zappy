@@ -127,6 +127,12 @@
 .dash-badge-in_progress { background: #dcfce7; color: #166534; }
 .dash-badge-resolved { background: #f3f4f6; color: #374151; }
 .dash-badge-closed { background: #f3f4f6; color: #9ca3af; }
+.dash-badge-trialing { background: #e0e7ff; color: #3730a3; }
+.dash-badge-active { background: #dcfce7; color: #166534; }
+.dash-badge-past_due { background: #fef3c7; color: #92400e; }
+.dash-badge-canceled { background: #fee2e2; color: #991b1b; }
+.dash-badge-incomplete { background: #fef3c7; color: #92400e; }
+.dash-badge-unpaid { background: #fee2e2; color: #991b1b; }
 
 .dash-card {
   background: #fff;
@@ -277,6 +283,49 @@
 .dash-stat-label {
   font-size: 12.5px;
   color: #666;
+}
+
+.dash-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dash-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.dash-checklist-check {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+}
+.dash-checklist-check-done {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+.dash-checklist-label {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+.dash-checklist-label:hover {
+  text-decoration: underline;
+}
+.dash-checklist-label-done {
+  color: #9ca3af;
+  text-decoration: line-through;
 }
 
 .dash-refresh-btn {

@@ -37,6 +37,25 @@ export default async function InstalacaoPage() {
       </p>
 
       <div className="dash-card">
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Link direto do WhatsApp</h3>
+        {waLink ? (
+          <>
+            <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
+              Copie e cole esse link no site da sua empresa ou na ficha do Google Maps (campo de
+              site/agendamento) — o jeito mais fácil de deixar seus clientes agendando
+              automaticamente pelo WhatsApp, sem precisar instalar nada:
+            </p>
+            <CopySnippet snippet={waLink} />
+          </>
+        ) : (
+          <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
+            O número compartilhado de WhatsApp da Zappy ainda não foi configurado nesta
+            instância — assim que estiver, o link aparece aqui automaticamente.
+          </p>
+        )}
+      </div>
+
+      <div className="dash-card">
         <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Script do chat</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
           Uma linha de <code>&lt;script&gt;</code>, sem mudanças no resto do site:
@@ -54,25 +73,6 @@ export default async function InstalacaoPage() {
           como sua empresa.
         </p>
         <DomainsForm defaultDomains={company.allowedDomains} />
-      </div>
-
-      <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Link direto do WhatsApp</h3>
-        {waLink ? (
-          <>
-            <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-              Use este link em botões, redes sociais ou um QR code — abre o WhatsApp já
-              identificando sua empresa pro bot:
-            </p>
-            <CopySnippet snippet={waLink} />
-          </>
-        ) : (
-          <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
-            O número compartilhado de WhatsApp da Zappy ainda não foi configurado nesta
-            instância — assim que estiver, o link e o botão do chat aparecem aqui
-            automaticamente.
-          </p>
-        )}
       </div>
     </>
   );

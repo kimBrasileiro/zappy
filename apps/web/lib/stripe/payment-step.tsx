@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { authStyles as s } from '../auth-styles';
+import { authStyles as s } from '../../app/(auth)/auth-styles';
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
@@ -20,10 +20,11 @@ function ConfirmCardForm() {
     setSubmitting(true);
     setError(null);
 
-    // No charge happens here — this is a SetupIntent (see signup/actions.ts),
-    // it only attaches a payment method to the subscription for when the
-    // 7-day trial ends. On success Stripe redirects to return_url itself;
-    // we only ever see this function return when it *didn't* succeed.
+    // No charge happens here — this is a SetupIntent (see signup/actions.ts
+    // and onboarding/actions.ts), it only attaches a payment method to the
+    // subscription for when the 7-day trial ends. On success Stripe redirects
+    // to return_url itself; we only ever see this function return when it
+    // *didn't* succeed.
     const { error: confirmError } = await stripe.confirmSetup({
       elements,
       confirmParams: { return_url: `${window.location.origin}/dashboard` },

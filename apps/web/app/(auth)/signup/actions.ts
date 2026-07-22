@@ -2,12 +2,11 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import type Stripe from 'stripe';
 import { prisma } from '@zappy/db';
 import { auth } from '../../../lib/auth';
 import { generateUniqueSlug } from '../../../lib/slug';
 import { createDefaultFaqs } from '../../../lib/default-faqs';
-import { getStripe, isPlanKey, isStripeConfigured, priceIdForPlan, type PlanKey } from '../../../lib/stripe/client';
+import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../../lib/stripe/client';
 
 export interface SignUpState {
   error?: string;
@@ -61,48 +60,19 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     redirect('/dashboard');
   }
 
-  const priceId = priceIdForPlan(plan);
-  if (!priceId) {
-    // Key is set but the Price id for this specific plan isn't — a config
-    // gap, not something the customer did wrong. The account itself is
-    // already created and usable; just skip billing setup rather than
-    // block someone who already successfully signed up.
-    console.error(`[stripe] price id ausente para o plano "${plan}" (empresa ${company.id} criada sem assinatura)`);
-    redirect('/dashboard');
-  }
-
-  const stripe = getStripe();
-  const customer = await stripe.customers.create({
+  const clientSecret = await startTrialSubscription({
+    companyId: company.id,
+    companyName,
     email,
-    name: companyName,
-    metadata: { companyId: company.id },
-  });
-  const subscription = await stripe.subscriptions.create({
-    customer: customer.id,
-    items: [{ price: priceId }],
-    trial_period_days: 7,
-    payment_behavior: 'default_incomplete',
-    payment_settings: { save_default_payment_method: 'on_subscription' },
-    expand: ['pending_setup_intent'],
+    plan,
   });
 
-  await prisma.company.update({
-    where: { id: company.id },
-    data: {
-      stripeCustomerId: customer.id,
-      stripeSubscriptionId: subscription.id,
-      subscriptionStatus: subscription.status,
-      trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-    },
-  });
-
-  const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null;
-  if (!setupIntent?.client_secret) {
-    // Shouldn't happen given trial_period_days + default_incomplete above,
-    // but the account already exists either way — the webhook picks up the
-    // real subscription status later regardless of what happens here.
+  // The account itself is already created and usable either way — a missing
+  // price id or setup intent just means there's nothing further to collect
+  // right now, not something the customer did wrong.
+  if (!clientSecret) {
     redirect('/dashboard');
   }
 
-  return { clientSecret: setupIntent.client_secret };
+  return { clientSecret };
 }

@@ -7,6 +7,8 @@ import { auth } from '../../../lib/auth';
 import { generateUniqueSlug } from '../../../lib/slug';
 import { createDefaultFaqs } from '../../../lib/default-faqs';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../../lib/stripe/client';
+import { TERMS_VERSION } from '../../../lib/legal';
+import { validatePassword } from '../../../lib/password';
 
 export interface SignUpState {
   error?: string;
@@ -23,12 +25,17 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
   const planRaw = String(formData.get('plan') ?? 'basico');
+  const acceptedTerms = formData.get('terms') === 'on';
 
   if (!companyName || !name || !email || !password) {
     return { error: 'Preenche todos os campos.' };
   }
-  if (password.length < 8) {
-    return { error: 'A senha precisa ter pelo menos 8 caracteres.' };
+  const passwordError = validatePassword(password, email);
+  if (passwordError) {
+    return { error: passwordError };
+  }
+  if (!acceptedTerms) {
+    return { error: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade pra continuar.' };
   }
 
   const stripeEnabled = isStripeConfigured();
@@ -53,6 +60,10 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   }
 
   await createDefaultFaqs(company.id);
+  await prisma.user.update({
+    where: { email },
+    data: { termsAcceptedAt: new Date(), termsVersion: TERMS_VERSION },
+  });
 
   // No Stripe key configured — same behavior as before this feature existed,
   // which is also what keeps local dev working without a Stripe account.

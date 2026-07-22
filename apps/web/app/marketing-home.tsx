@@ -101,9 +101,46 @@ const PRICING = [
 ];
 
 const STEPS = [
-  { title: 'Cadastre sua empresa', body: 'Leva menos de dois minutos — sem cartão, sem burocracia.' },
+  { title: 'Cadastre sua empresa', body: 'Leva menos de dois minutos — sem burocracia.' },
   { title: 'Configure serviços e FAQ', body: 'Cadastre o que você vende e as perguntas que já responde todo dia.' },
   { title: 'Cole o script no seu site', body: 'Uma linha de código e o chat (e o WhatsApp) já estão no ar.' },
+];
+
+// Mirrors packages/db/prisma/schema/migrations/20260722010000_seed_zappy_company
+// (the Zappy company's own cadastrado FAQ, used by the live chat below) —
+// kept as separate static copy here on purpose, same reasoning as PRICING
+// above: this is crawlable page content for search engines, not something
+// that should depend on a database round-trip on every page load.
+const FAQ_ITEMS = [
+  {
+    question: 'O que é a Zappy?',
+    answer:
+      'A Zappy é uma plataforma de atendimento via IA que conversa com seus clientes no seu site e no WhatsApp, tira dúvidas, responde o FAQ da sua empresa e agenda horários automaticamente — com um humano do seu time podendo assumir a conversa a qualquer momento.',
+  },
+  {
+    question: 'Quanto custa?',
+    answer:
+      'O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappy. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar.',
+  },
+  {
+    question: 'Como funciona o agendamento automático?',
+    answer:
+      'Você cadastra seus serviços (nome, duração, preço) no dashboard, e o bot verifica os horários livres e confirma o agendamento direto com o cliente, respeitando o horário de funcionamento da sua empresa — sem ninguém do seu time precisar digitar nada.',
+  },
+  {
+    question: 'Como funciona o suporte via WhatsApp?',
+    answer:
+      'Toda empresa que assina a Zappy já sai com acesso a um número de WhatsApp compartilhado — o mesmo bot que atende no seu site também atende por lá, identificando automaticamente qual empresa o cliente quer falar.',
+  },
+  {
+    question: 'E se o bot não souber responder?',
+    answer:
+      'O bot encaminha a conversa pra um atendente humano automaticamente, e ela aparece na aba Inbox do seu dashboard pra alguém do seu time responder.',
+  },
+  {
+    question: 'Como instalo no meu site?',
+    answer: 'Depois de assinar, você cola uma única linha de <script> no seu site, sem mexer em mais nada, e o chat já aparece funcionando.',
+  },
 ];
 
 function Button({
@@ -136,6 +173,42 @@ function Button({
   );
 }
 
+// Rich-result eligibility for "sistema de agendamento" / "suporte via
+// whatsapp" / pricing searches (SoftwareApplication+offers) and for the FAQ
+// section above (FAQPage) — escaping `<` defensively even though every
+// input here is our own static copy, not user data, so a stray `</script>`
+// substring can never prematurely close this tag.
+function jsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Zappy',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  description:
+    'Plataforma de atendimento via IA com agendamento automático e suporte via WhatsApp e chat no site, com FAQ automático e handoff pra atendimento humano.',
+  offers: PRICING.map((plan) => ({
+    '@type': 'Offer',
+    name: plan.name,
+    price: plan.price.replace(/\D/g, ''),
+    priceCurrency: 'BRL',
+    url: plan.cta.href,
+  })),
+});
+
+const FAQ_JSON_LD = jsonLd({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+});
+
 export async function MarketingHome() {
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
   const installSnippet = [
@@ -155,6 +228,9 @@ export async function MarketingHome() {
         color: '#1a1a1a',
       }}
     >
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: SOFTWARE_APPLICATION_JSON_LD }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: FAQ_JSON_LD }} />
+
       <header
         style={{
           position: 'sticky',
@@ -198,6 +274,9 @@ export async function MarketingHome() {
           <a href="#instalacao" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
             Como instalar
           </a>
+          <a href="#faq" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
+            FAQ
+          </a>
           <Button href="/login" variant="secondary">
             Entrar
           </Button>
@@ -225,15 +304,15 @@ export async function MarketingHome() {
             marginBottom: 20,
           }}
         >
-          Atendimento via IA para o seu negócio
+          Sistema de agendamento e suporte via WhatsApp com IA
         </span>
         <h1 style={{ fontSize: 42, lineHeight: 1.2, margin: '0 auto 16px', maxWidth: 720 }}>
-          Um assistente que atende, tira dúvidas e agenda por você — no site e no WhatsApp
+          Agendamento automático e suporte via WhatsApp com IA para o seu negócio
         </h1>
         <p style={{ fontSize: 16.5, color: '#555', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
-          A Zappy conversa com seus clientes o dia todo, responde o que você já ensinou pra ela e
-          agenda horários de verdade. Quando ela não souber algo, um humano do seu time assume a
-          conversa, sem enrolação.
+          A Zappy conversa com seus clientes o dia todo no site e no WhatsApp, responde o FAQ da
+          sua empresa e marca horários de verdade sem ninguém do seu time digitar nada. Quando ela
+          não souber algo, um humano assume a conversa, sem enrolação.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           <Button href="/signup">Começar agora</Button>
@@ -402,6 +481,33 @@ export async function MarketingHome() {
         </div>
       </section>
 
+      {/* FAQ — real, crawlable Q&A content (also emitted as FAQPage JSON-LD
+          below), not just something buried inside the live chat widget. */}
+      <section id="faq" style={{ padding: '80px 24px', background: '#f8f9fb' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>Perguntas frequentes</h2>
+          <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 40 }}>
+            Ou pergunte direto pro assistente no canto da tela — ele responde com base nesse mesmo FAQ.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {FAQ_ITEMS.map((item) => (
+              <details
+                key={item.question}
+                style={{
+                  background: '#fff',
+                  borderRadius: 12,
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  padding: '16px 20px',
+                }}
+              >
+                <summary style={{ fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>{item.question}</summary>
+                <p style={{ fontSize: 13.5, color: '#555', lineHeight: 1.7, margin: '10px 0 0' }}>{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Chat CTA */}
       <section
         id="assistente"
@@ -442,7 +548,9 @@ export async function MarketingHome() {
         }}
       >
         © {new Date().getFullYear()} Zappy · <a href="/login" style={{ color: '#999' }}>Entrar</a> ·{' '}
-        <a href="/signup" style={{ color: '#999' }}>Criar conta</a>
+        <a href="/signup" style={{ color: '#999' }}>Criar conta</a> ·{' '}
+        <a href="/terms" style={{ color: '#999' }}>Termos de Uso</a> ·{' '}
+        <a href="/privacy" style={{ color: '#999' }}>Privacidade</a>
       </footer>
 
       <Script

@@ -109,7 +109,7 @@ export async function* orchestrate(
   }
 
   const language = resolveLanguage(company);
-  const config = company.config as { botName?: string } | null;
+  const config = company.config as { botName?: string; extraInstructions?: string } | null;
   const botName = config?.botName ?? 'Assistente';
   // UTC "today", consistent with services.ts treating businessHours/slots as
   // UTC throughout (see checkAvailability) — real per-company timezone
@@ -136,6 +136,13 @@ export async function* orchestrate(
     'Quando o cliente pedir para ver serviços, horários disponíveis ou quiser agendar, chame a tool correspondente IMEDIATAMENTE nesta mesma resposta — nunca diga "vou verificar" ou peça confirmação antes de chamar a tool, apenas chame.',
     'Ao confirmar um agendamento, nunca exiba o bookingId interno pro cliente — mencione só o serviço, data, hora e preço.',
     'O resultado de create_booking pode vir com "requiresManualConfirmation": true. Se vier true, NÃO diga que o agendamento está confirmado — diga que o horário foi reservado e que alguém do time vai entrar em contato pelo telefone informado pelo cliente para confirmar o agendamento e os detalhes do serviço. Se vier false (ou ausente), confirme normalmente que o agendamento está confirmado.',
+    // Per-company refinement on top of everything above — e.g. the "zappy"
+    // company itself (seeded in migrations/*_seed_zappy_company) uses this
+    // to override the FAQ x Serviços rule: its only cadastrado Service is a
+    // free demo call, not a priced product, so pricing questions there
+    // should go through list_faqs (the real R$ plans) instead of
+    // list_services like a normal tenant's catalog would.
+    ...(config?.extraInstructions ? [config.extraInstructions] : []),
   ].join(' ');
 
   let currentMessages: ChatMessage[] = [

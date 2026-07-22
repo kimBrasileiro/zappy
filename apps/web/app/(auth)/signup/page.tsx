@@ -55,7 +55,10 @@ export default function SignUpPage() {
         </label>
         <label style={s.label}>
           Senha
-          <input name="password" type="password" required minLength={8} style={s.input} />
+          <input name="password" type="password" required minLength={10} style={s.input} />
+          <span style={{ fontSize: 11.5, color: '#999', fontWeight: 400 }}>
+            Mínimo de 10 caracteres, com pelo menos uma letra e um número.
+          </span>
         </label>
 
         {stripeConfiguredOnClient && (
@@ -69,6 +72,21 @@ export default function SignUpPage() {
             ))}
           </div>
         )}
+
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#555' }}>
+          <input type="checkbox" name="terms" required style={{ marginTop: 2 }} />
+          <span>
+            Li e concordo com os{' '}
+            <Link href="/terms" target="_blank" style={{ color: '#2563eb' }}>
+              Termos de Uso
+            </Link>{' '}
+            e a{' '}
+            <Link href="/privacy" target="_blank" style={{ color: '#2563eb' }}>
+              Política de Privacidade
+            </Link>
+            .
+          </span>
+        </label>
 
         <SubmitButton />
 

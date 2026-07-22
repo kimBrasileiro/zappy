@@ -1,6 +1,7 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
+import Link from 'next/link';
 import { completeOnboarding, type OnboardingState } from './actions';
 import { authStyles as s } from '../(auth)/auth-styles';
 import { PaymentStep } from '../../lib/stripe/payment-step';
@@ -53,6 +54,21 @@ export function OnboardingForm() {
           ))}
         </div>
       )}
+
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#555' }}>
+        <input type="checkbox" name="terms" required style={{ marginTop: 2 }} />
+        <span>
+          Li e concordo com os{' '}
+          <Link href="/terms" target="_blank" style={{ color: '#2563eb' }}>
+            Termos de Uso
+          </Link>{' '}
+          e a{' '}
+          <Link href="/privacy" target="_blank" style={{ color: '#2563eb' }}>
+            Política de Privacidade
+          </Link>
+          .
+        </span>
+      </label>
 
       <SubmitButton />
     </form>

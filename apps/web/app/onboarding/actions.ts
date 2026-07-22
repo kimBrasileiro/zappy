@@ -7,6 +7,7 @@ import { auth } from '../../lib/auth';
 import { generateUniqueSlug } from '../../lib/slug';
 import { createDefaultFaqs } from '../../lib/default-faqs';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../lib/stripe/client';
+import { TERMS_VERSION } from '../../lib/legal';
 
 export interface OnboardingState {
   error?: string;
@@ -28,6 +29,9 @@ export async function completeOnboarding(
   if (!companyName) {
     return { error: 'Digite o nome da sua empresa.' };
   }
+  if (formData.get('terms') !== 'on') {
+    return { error: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade pra continuar.' };
+  }
 
   const stripeEnabled = isStripeConfigured();
   const planRaw = String(formData.get('plan') ?? 'basico');
@@ -40,7 +44,7 @@ export async function completeOnboarding(
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { companyId: company.id, role: 'admin' },
+    data: { companyId: company.id, role: 'admin', termsAcceptedAt: new Date(), termsVersion: TERMS_VERSION },
   });
 
   await createDefaultFaqs(company.id);

@@ -12,6 +12,12 @@ export const auth = betterAuth({
     // No RESEND_API_KEY configured yet — email verification/reset would have
     // nowhere to send to. Revisit once transactional email is wired up.
     requireEmailVerification: false,
+    // Defense in depth — the real character-class/blocklist checks live in
+    // signup/actions.ts#validatePassword (better-auth itself has no concept
+    // of "must contain a digit"), but this is the actual floor Better Auth
+    // enforces regardless of what calls it, so it can't drift out of sync
+    // with that check.
+    minPasswordLength: 10,
   },
 
   socialProviders: {

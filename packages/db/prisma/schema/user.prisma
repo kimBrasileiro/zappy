@@ -11,6 +11,15 @@ model User {
   role          String   @default("agent") // admin | agent | viewer
   avatarUrl     String?  @map("avatar_url") // Better Auth's "image" field, mapped via auth.ts fields config
   status        String   @default("active")
+  // Set at signup (apps/web/app/(auth)/signup/actions.ts) or onboarding
+  // (apps/web/app/onboarding/actions.ts) when the required Terms/Privacy
+  // checkbox is submitted — never backfilled for existing rows, so a null
+  // termsAcceptedAt is meaningful (this user predates the requirement, or
+  // never actually accepted). termsVersion records *which* version they
+  // agreed to (see lib/legal.ts#TERMS_VERSION) — re-prompting on future
+  // material changes needs to compare against this, not just check null.
+  termsAcceptedAt DateTime? @map("terms_accepted_at") @db.Timestamptz(6)
+  termsVersion    String?   @map("terms_version")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 

@@ -4,7 +4,7 @@
 # (see cloud_run.tf), hence `host=/cloudsql/...` instead of a TCP host:port.
 resource "google_secret_manager_secret" "database_url" {
   depends_on = [google_project_service.apis]
-  secret_id  = "${var.app_name}-database-url"
+  secret_id  = "${local.name}-database-url"
 
   replication {
     auto {}
@@ -24,8 +24,8 @@ resource "google_secret_manager_secret_version" "database_url" {
 
 # --- Everything else — secret *containers* only. Terraform can't know your
 # Stripe/Gemini/Resend/etc keys, so it just makes room for them. Populate
-# real values after `terraform apply` (see README step 4):
-#   echo -n "sk_live_..." | gcloud secrets versions add zappy-stripe-secret-key --data-file=-
+# real values after `terraform apply` (see ../../README.md step 4):
+#   echo -n "sk_test_..." | gcloud secrets versions add zappy-staging-stripe-secret-key --data-file=-
 # Cloud Run won't start until each of these has at least one version.
 locals {
   # name (matches .env.example) -> Secret Manager secret_id suffix
@@ -50,7 +50,7 @@ resource "google_secret_manager_secret" "runtime" {
   for_each = local.runtime_secrets
 
   depends_on = [google_project_service.apis]
-  secret_id  = "${var.app_name}-${each.value}"
+  secret_id  = "${local.name}-${each.value}"
 
   replication {
     auto {}

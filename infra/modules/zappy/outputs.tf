@@ -9,12 +9,12 @@ output "artifact_registry_repo" {
 }
 
 output "cloud_sql_connection_name" {
-  description = "Cloud SQL instance connection name (PROJECT:REGION:INSTANCE) — used by the Cloud SQL Auth Proxy for local access, see README#connecting-locally."
+  description = "Cloud SQL instance connection name (PROJECT:REGION:INSTANCE) — used by the Cloud SQL Auth Proxy for local access."
   value       = google_sql_database_instance.main.connection_name
 }
 
 output "cloud_sql_instance_ip" {
-  description = "Cloud SQL public IP — only reachable if your local machine's IP is authorized (see README#connecting-locally), Cloud Run itself never uses this path."
+  description = "Cloud SQL public IP — only reachable if your local machine's IP is authorized, Cloud Run itself never uses this path."
   value       = google_sql_database_instance.main.public_ip_address
 }
 
@@ -29,6 +29,18 @@ output "migration_job_name" {
 }
 
 output "secrets_to_populate" {
-  description = "Secret Manager secret ids that Terraform created empty — see README step 4."
+  description = "Secret Manager secret ids that Terraform created empty — populate before Cloud Run can actually start."
   value       = [for s in google_secret_manager_secret.runtime : s.secret_id]
+}
+
+# --- CI/CD (wif.tf) --------------------------------------------------------
+
+output "workload_identity_provider" {
+  description = "Full resource name to set as `workload_identity_provider` in the GitHub Actions workflow's google-github-actions/auth step."
+  value       = google_iam_workload_identity_pool_provider.github.name
+}
+
+output "deployer_service_account" {
+  description = "Email to set as `service_account` in the GitHub Actions workflow's google-github-actions/auth step."
+  value       = google_service_account.deployer.email
 }

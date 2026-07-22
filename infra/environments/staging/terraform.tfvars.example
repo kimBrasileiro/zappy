@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+
+project_id  = "your-gcp-project-id"
+github_repo = "kimBrasileiro/zappy"
+
+# Leave the two *_image vars unset (placeholder default) for the very first
+# `terraform apply` — see ../../README.md step 3.
+
+# Set once you know it — either a custom domain (staging.suaempresa.com) or
+# the cloud_run_url output after a first apply. See
+# ../../README.md#chicken-and-egg-app-url.
+# app_url = "https://staging.suaempresa.com"
+
+# stripe_publishable_key = "pk_test_..."   # staging always uses TEST mode keys
+# google_client_id       = "....apps.googleusercontent.com"

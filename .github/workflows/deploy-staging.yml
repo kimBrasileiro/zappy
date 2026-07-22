@@ -1,0 +1,16 @@
+name: Deploy to staging
+
+# Every push to main goes straight to staging, no approval gate — that's the
+# point of having a staging environment. Production only ever deploys off a
+# published GitHub Release (see deploy-production.yml).
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      image_tag: ${{ github.sha }}
+    secrets: inherit

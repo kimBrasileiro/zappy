@@ -20,7 +20,7 @@ locals {
 resource "google_cloud_run_v2_service" "web" {
   depends_on = [google_project_service.apis]
 
-  name     = "${var.app_name}-web"
+  name     = "${local.name}-web"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
@@ -107,11 +107,12 @@ resource "google_cloud_run_v2_service" "web" {
   }
 
   lifecycle {
-    # Deploys pushed with `gcloud run deploy --image` (README's fast path,
-    # see infra/deploy.sh) move the live image out from under whatever
-    # var.container_image was at the last `terraform apply` — without this,
-    # the next unrelated `terraform apply` (e.g. bumping max_instances)
-    # would silently roll the service back to that stale image.
+    # Deploys pushed by the deploy-staging/deploy-production GitHub Actions
+    # workflow (or infra/deploy.sh run by hand) move the live image out from
+    # under whatever var.container_image was at the last `terraform apply`
+    # — without this, the next unrelated `terraform apply` (e.g. bumping
+    # max_instances) would silently roll the service back to that stale
+    # image.
     ignore_changes = [template[0].containers[0].image]
   }
 }

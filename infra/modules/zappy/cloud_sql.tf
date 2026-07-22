@@ -8,7 +8,7 @@ resource "random_password" "db" {
 resource "google_sql_database_instance" "main" {
   depends_on = [google_project_service.apis]
 
-  name             = "${var.app_name}-pg"
+  name             = "${local.name}-pg"
   region           = var.region
   database_version = var.postgres_version
 

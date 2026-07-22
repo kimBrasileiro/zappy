@@ -1,9 +1,12 @@
-// idx_bookings_no_double_book (partial, UNIQUE (service_id, scheduled_at)
-// WHERE status = 'confirmed') is hand-written directly into
-// migrations/*_init_services_bookings/migration.sql — Prisma has no partial
-// unique index syntax. It's a defense-in-depth backstop against the
-// application-level availability check racing itself, not the primary
-// mechanism (that's the re-check inside create_booking).
+// idx_bookings_no_double_book (partial, UNIQUE (service_id, scheduled_at,
+// COALESCE(staff_name, '')) WHERE status = 'confirmed', see migrations/
+// *_staff_aware_no_double_book) is hand-written directly into migration SQL —
+// Prisma has no partial/expression unique index syntax. It's a
+// defense-in-depth backstop against the application-level availability check
+// racing itself, not the primary mechanism (that's the re-check inside
+// create_booking). staff_name is COALESCE'd because Postgres treats NULL <>
+// NULL — without it, uniqueness would silently stop being enforced for every
+// service with no staff roster (staff_name always NULL there).
 model Booking {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   companyId       String   @map("company_id") @db.Uuid
@@ -16,8 +19,12 @@ model Booking {
   // changes on the service must not rewrite booking history.
   durationMinutes Int      @map("duration_minutes")
   priceCents      Int      @map("price_cents")
-  status          String   @default("confirmed") // confirmed | cancelled | completed
+  status          String   @default("confirmed") // confirmed | cancelled | completed | no_show
   notes           String?
+  // Which name from Service.staffNames this booking was assigned to — null
+  // for services with no staff concept (staffNames empty), which keeps every
+  // pre-existing booking and every single-provider service unaffected.
+  staffName       String?  @map("staff_name")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)

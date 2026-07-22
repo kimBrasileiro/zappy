@@ -78,6 +78,23 @@ async function resolveService(companyId: string, serviceName: string): Promise<S
   );
 }
 
+// Same fuzzy match as resolveService, applied to Service.staffNames — the
+// model only ever has the name as plain text from a prior list_services/
+// check_availability reply, never an id.
+function resolveStaffName(service: Service, staffName: string): string | null {
+  const target = normalizeForMatch(staffName);
+  if (!target) return null;
+  return (
+    service.staffNames.find((n) => normalizeForMatch(n) === target) ??
+    service.staffNames.find((n) => normalizeForMatch(n).includes(target) || target.includes(normalizeForMatch(n))) ??
+    null
+  );
+}
+
+function hasStaffConcept(service: Service): boolean {
+  return service.staffNames.length > 0;
+}
+
 export async function listServices(companyId: string) {
   const services = await prisma.service.findMany({
     where: { companyId, active: true },
@@ -88,16 +105,50 @@ export async function listServices(companyId: string) {
     description: s.description,
     durationMinutes: s.durationMinutes,
     priceCents: s.priceCents,
+    // Present only for services with a staff roster — tells the model it can
+    // (and should) ask the customer's preference or pass a staffName, instead
+    // of assuming a single generic provider.
+    ...(s.staffNames.length > 0 ? { staffOptions: s.staffNames } : {}),
+    // Present only when the service actually has a notice window configured
+    // — most services default to 0/0 (no restriction), not worth cluttering
+    // every reply with "sem multa, cancele quando quiser".
+    ...(s.cancellationNoticeHours > 0
+      ? {
+          cancellationPolicy: `Cancelamento gratuito até ${s.cancellationNoticeHours}h antes do horário marcado${
+            s.cancellationFeeCents > 0
+              ? `; depois disso há multa de ${(s.cancellationFeeCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+              : ''
+          }.`,
+        }
+      : {}),
   }));
 }
 
-export async function checkAvailability(companyId: string, serviceName: string, date: string) {
+export async function checkAvailability(
+  companyId: string,
+  serviceName: string,
+  date: string,
+  staffName?: string,
+) {
   const service = await resolveService(companyId, serviceName);
   if (!service) {
     return {
       error: 'service_not_found',
       message: `Não encontrei nenhum serviço ativo chamado "${serviceName}". Chame list_services de novo para ver os nomes exatos disponíveis.`,
     };
+  }
+
+  // Resolved once up front (rather than inline in the slot loop below) so an
+  // unknown/absent name short-circuits before doing any date-math at all.
+  let requestedStaff: string | null = null;
+  if (hasStaffConcept(service) && staffName?.trim()) {
+    requestedStaff = resolveStaffName(service, staffName);
+    if (!requestedStaff) {
+      return {
+        error: 'unknown_staff',
+        message: `Não encontrei "${staffName}" na equipe desse serviço. Profissionais disponíveis: ${service.staffNames.join(', ')}.`,
+      };
+    }
   }
 
   const company = await prisma.company.findUnique({ where: { id: companyId } });
@@ -142,27 +193,87 @@ export async function checkAvailability(companyId: string, serviceName: string, 
     where: { serviceId: service.id, status: 'confirmed', scheduledAt: { gte: dayStart, lte: dayEnd } },
   });
 
+  // Eligible staff for this date: the full roster minus anyone marked absent
+  // (see dashboard/services/[id]'s absence list). Only computed when this
+  // service actually has a staff roster — cost-free for every other service.
+  let eligibleStaff: string[] = [];
+  if (hasStaffConcept(service)) {
+    const absences = await prisma.staffAbsence.findMany({ where: { serviceId: service.id, date: dayStart } });
+    const absentStaff = new Set(absences.map((a) => a.staffName));
+
+    if (requestedStaff) {
+      if (absentStaff.has(requestedStaff)) {
+        return {
+          slots: [],
+          reason: 'staff_absent',
+          message: `${requestedStaff} não está disponível no dia ${date}. Pergunte se o cliente quer outro profissional da equipe (${service.staffNames.join(', ')}) ou outra data.`,
+        };
+      }
+      eligibleStaff = [requestedStaff];
+    } else {
+      eligibleStaff = service.staffNames.filter((n) => !absentStaff.has(n));
+      if (eligibleStaff.length === 0) {
+        return {
+          slots: [],
+          reason: 'all_staff_absent',
+          message: `Nenhum profissional está disponível no dia ${date}. Sugira ao cliente escolher outra data.`,
+        };
+      }
+    }
+  }
+
   const stepMinutes = service.durationMinutes;
   const now = Date.now();
+  // Appointments always START on a round grid (:00/:15/:30/:45), independent
+  // of how long the service itself takes — advancing by stepMinutes instead
+  // (the old behavior) drifted onto non-round times for any service whose
+  // duration isn't a clean divisor of 60 (a 33-minute service produced 09:00,
+  // 09:33, 10:06...). The service's actual duration still governs how far
+  // ahead each slot's overlap check (and the close-time cutoff below) look —
+  // only the grid the customer picks *from* is fixed.
+  const SLOT_GRID_MINUTES = 15;
+  const gridMs = SLOT_GRID_MINUTES * 60_000;
+  // Snapped up to the grid too, in case business hours themselves were ever
+  // entered as something off-grid (e.g. "09:05") — every candidate start
+  // time this loop considers is a round mark, full stop.
+  const firstGridStart = Math.ceil(openTime.getTime() / gridMs) * gridMs;
   // Bucketed into manhã/tarde (UTC noon cutoff, same "businessHours are UTC
   // for now" simplification as the rest of this function) and capped at 3
   // each — the orchestrator turns these directly into quick-reply buttons,
   // so the customer picks a time instead of typing one back.
-  const morningSlots: { time: string; iso: string }[] = [];
-  const afternoonSlots: { time: string; iso: string }[] = [];
+  const morningSlots: { time: string; iso: string; staffAvailable?: string[] }[] = [];
+  const afternoonSlots: { time: string; iso: string; staffAvailable?: string[] }[] = [];
   for (
-    let t = openTime.getTime();
+    let t = firstGridStart;
     t + stepMinutes * 60_000 <= closeTime.getTime();
-    t += stepMinutes * 60_000
+    t += gridMs
   ) {
     if (t < now) continue; // no slots in the past
-    const conflict = existing.some((b) => overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes));
-    if (conflict) continue;
+
+    // No staff roster: one shared conflict pool for the whole service,
+    // exactly the pre-staff behavior. With a roster: the slot survives as
+    // long as at least one eligible staff member is free at that time —
+    // different staff can legitimately hold overlapping bookings.
+    let staffAvailable: string[] | undefined;
+    if (hasStaffConcept(service)) {
+      const free = eligibleStaff.filter(
+        (name) => !existing.some((b) => b.staffName === name && overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes)),
+      );
+      if (free.length === 0) continue;
+      // Only surfaced when the customer didn't already pin a specific
+      // person — once requestedStaff is set, eligibleStaff is just that one
+      // name and repeating it back adds nothing.
+      if (!requestedStaff) staffAvailable = free;
+    } else {
+      const conflict = existing.some((b) => overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes));
+      if (conflict) continue;
+    }
 
     const d = new Date(t);
     const entry = {
       time: `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`,
       iso: d.toISOString(),
+      ...(staffAvailable ? { staffAvailable } : {}),
     };
     if (d.getUTCHours() < 12) {
       if (morningSlots.length < 3) morningSlots.push(entry);
@@ -188,7 +299,7 @@ export async function createBooking(
   companyId: string,
   ticketId: string,
   customerId: string | null,
-  args: { serviceName: string; scheduledAt: string; customerName: string; customerPhone: string },
+  args: { serviceName: string; scheduledAt: string; customerName: string; customerPhone: string; staffName?: string },
 ) {
   const service = await resolveService(companyId, args.serviceName);
   if (!service) {
@@ -260,15 +371,77 @@ export async function createBooking(
       },
     },
   });
-  const hasConflict = sameDay.some((b) =>
-    overlaps(scheduledAt.getTime(), service.durationMinutes, b.scheduledAt.getTime(), b.durationMinutes),
-  );
-  if (hasConflict) {
-    return {
-      error: 'slot_unavailable',
-      message:
-        'Esse horário específico já está reservado por outro cliente (não é que a empresa esteja fechada) — chame check_availability de novo pra oferecer outros horários livres nesse mesmo dia.',
-    };
+
+  // Which name (if any) this booking ends up assigned to. Stays null for
+  // services with no staff roster — same shared-pool conflict check as
+  // before staff support existed.
+  let assignedStaff: string | null = null;
+
+  if (hasStaffConcept(service)) {
+    const dayStart = new Date(Date.UTC(scheduledAt.getUTCFullYear(), scheduledAt.getUTCMonth(), scheduledAt.getUTCDate()));
+    const absences = await prisma.staffAbsence.findMany({ where: { serviceId: service.id, date: dayStart } });
+    const absentStaff = new Set(absences.map((a) => a.staffName));
+
+    const conflictsFor = (name: string) =>
+      sameDay.some(
+        (b) => b.staffName === name && overlaps(scheduledAt.getTime(), service.durationMinutes, b.scheduledAt.getTime(), b.durationMinutes),
+      );
+
+    if (args.staffName?.trim()) {
+      const requested = resolveStaffName(service, args.staffName);
+      if (!requested) {
+        return {
+          error: 'unknown_staff',
+          message: `Não encontrei "${args.staffName}" na equipe desse serviço. Profissionais disponíveis: ${service.staffNames.join(', ')}.`,
+        };
+      }
+      if (absentStaff.has(requested)) {
+        return {
+          error: 'staff_absent',
+          message: `${requested} não está disponível nesse dia. Pergunte se o cliente quer outro profissional ou outra data — nunca troque de profissional sem perguntar.`,
+        };
+      }
+      if (conflictsFor(requested)) {
+        // Deliberately does NOT fall back to another staff member on its
+        // own — the customer asked for this specific person, so the bot has
+        // to offer alternatives and let them choose, not silently reassign.
+        const otherFree = service.staffNames.filter((n) => n !== requested && !absentStaff.has(n) && !conflictsFor(n));
+        return {
+          error: 'slot_unavailable',
+          message:
+            otherFree.length > 0
+              ? `${requested} já está ocupado(a) nesse horário. ${otherFree.join(', ')} está(ão) livre(s) nesse mesmo horário — pergunte se o cliente aceita trocar de profissional, ou chame check_availability de novo pra outros horários com ${requested}.`
+              : `${requested} já está ocupado(a) nesse horário e não há outro profissional livre no mesmo horário — chame check_availability de novo pra oferecer outros horários.`,
+        };
+      }
+      assignedStaff = requested;
+    } else {
+      // Customer has no preference ("tanto faz") — auto-allocate among
+      // whoever's free at this exact time, favoring whoever has the fewest
+      // bookings that day so it doesn't pile everything onto the first name
+      // in the list (a light round-robin, not a real fairness algorithm).
+      const free = service.staffNames.filter((n) => !absentStaff.has(n) && !conflictsFor(n));
+      if (free.length === 0) {
+        return {
+          error: 'slot_unavailable',
+          message:
+            'Esse horário específico já está reservado por outro cliente com todos os profissionais disponíveis — chame check_availability de novo pra oferecer outros horários livres.',
+        };
+      }
+      const countForDay = (name: string) => sameDay.filter((b) => b.staffName === name).length;
+      assignedStaff = free.reduce((best, n) => (countForDay(n) < countForDay(best) ? n : best), free[0]!);
+    }
+  } else {
+    const hasConflict = sameDay.some((b) =>
+      overlaps(scheduledAt.getTime(), service.durationMinutes, b.scheduledAt.getTime(), b.durationMinutes),
+    );
+    if (hasConflict) {
+      return {
+        error: 'slot_unavailable',
+        message:
+          'Esse horário específico já está reservado por outro cliente (não é que a empresa esteja fechada) — chame check_availability de novo pra oferecer outros horários livres nesse mesmo dia.',
+      };
+    }
   }
 
   // Persists the name/phone onto the customer record so the dashboard shows
@@ -300,6 +473,32 @@ export async function createBooking(
     }
   }
 
+  // No separate "reschedule" tool — the model always calls create_booking,
+  // so this is what makes rescheduling actually replace the old appointment
+  // instead of leaving both confirmed. Scoped to this same customer+service
+  // and still in the future (a past "confirmed" booking already happened —
+  // see dashboard/bookings' attended/no-show marking — cancelling it here
+  // would misrepresent history, not fix a double-booking).
+  let rescheduledFrom: string | null = null;
+  if (effectiveCustomerId) {
+    const previous = await prisma.booking.findMany({
+      where: {
+        companyId,
+        serviceId: service.id,
+        customerId: effectiveCustomerId,
+        status: 'confirmed',
+        scheduledAt: { gt: new Date() },
+      },
+    });
+    if (previous.length > 0) {
+      await prisma.booking.updateMany({
+        where: { id: { in: previous.map((b) => b.id) } },
+        data: { status: 'cancelled' },
+      });
+      rescheduledFrom = previous[0]!.scheduledAt.toISOString();
+    }
+  }
+
   try {
     const booking = await prisma.booking.create({
       data: {
@@ -310,6 +509,7 @@ export async function createBooking(
         scheduledAt,
         durationMinutes: service.durationMinutes,
         priceCents: service.priceCents,
+        staffName: assignedStaff,
         notes: `Cliente: ${customerName}, Tel: ${normalizedPhone}`,
       },
     });
@@ -332,6 +532,14 @@ export async function createBooking(
       durationMinutes: booking.durationMinutes,
       priceCents: booking.priceCents,
       requiresManualConfirmation,
+      // Present only for services with a staff roster — tell the customer
+      // who they're booked with, especially important when they said "tanto
+      // faz" and the auto-allocation picked for them.
+      ...(assignedStaff ? { staffName: assignedStaff } : {}),
+      // Present only when this call replaced an existing future booking for
+      // the same customer+service — see lib/bot/orchestrator.ts's system
+      // prompt for how this changes the confirmation wording.
+      rescheduledFrom,
     };
   } catch {
     // idx_bookings_no_double_book caught a race the check above missed.

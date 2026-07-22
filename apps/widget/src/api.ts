@@ -1,12 +1,14 @@
 export interface StreamBotReplyResult {
   fullText: string;
   options: string[];
+  escalated: boolean;
 }
 
 interface ServerEvent {
   type: 'delta' | 'options' | 'done' | 'error';
   text?: string;
   options?: string[];
+  escalated?: boolean;
 }
 
 // Real backend call, replacing the old mock. Uses fetch + a manually read
@@ -63,20 +65,25 @@ export async function streamBotReply(
       } else if (event.type === 'options') {
         options = event.options ?? [];
       } else if (event.type === 'done') {
-        return { fullText: full, options };
+        return { fullText: full, options, escalated: event.escalated ?? false };
       } else if (event.type === 'error') {
         throw new Error('chat stream errored');
       }
     }
   }
 
-  return { fullText: full, options };
+  return { fullText: full, options, escalated: false };
 }
 
 export interface PolledAgentMessage {
   id: string;
   content: string;
   createdAt: string;
+}
+
+export interface PollResult {
+  messages: PolledAgentMessage[];
+  escalated: boolean;
 }
 
 // GET rather than the SSE endpoint above — this is a plain poll, not a
@@ -86,14 +93,14 @@ export async function pollAgentMessages(
   companyId: string,
   conversationId: string,
   after: string | null,
-): Promise<PolledAgentMessage[]> {
+): Promise<PollResult> {
   const params = new URLSearchParams({ companyId, conversationId });
   if (after) params.set('after', after);
   const url = `${apiUrl.replace(/\/chat\/?$/, '/chat/poll')}?${params.toString()}`;
 
   const response = await fetch(url);
-  if (!response.ok) return [];
+  if (!response.ok) return { messages: [], escalated: false };
 
-  const data = (await response.json()) as { messages?: PolledAgentMessage[] };
-  return data.messages ?? [];
+  const data = (await response.json()) as { messages?: PolledAgentMessage[]; escalated?: boolean };
+  return { messages: data.messages ?? [], escalated: data.escalated ?? false };
 }

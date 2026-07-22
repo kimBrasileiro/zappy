@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import { CopySnippet } from './copy-snippet';
+import { FREE_TIER_MODE } from '../lib/stripe/plans';
 
 const BRAND_COLOR = '#2563eb';
 
@@ -119,8 +120,12 @@ const FAQ_ITEMS = [
   },
   {
     question: 'Quanto custa?',
-    answer:
-      'O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappy. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar.',
+    // FREE_TIER_MODE (lib/stripe/plans.ts) — real pricing returns here the
+    // moment that flips back to false; the paid-tier copy is preserved in
+    // git history rather than deleted.
+    answer: FREE_TIER_MODE
+      ? 'Nada! Estamos no período de lançamento e a Zappy está gratuita pra todo mundo, incluindo o widget de chat pro seu site e um número de WhatsApp compartilhado. Sem cartão, sem pegadinha — quando isso mudar no futuro, avisamos com bastante antecedência.'
+      : 'O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappy. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar.',
   },
   {
     question: 'Como funciona o agendamento automático?',
@@ -190,13 +195,15 @@ const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
   operatingSystem: 'Web',
   description:
     'Plataforma de atendimento via IA com agendamento automático e suporte via WhatsApp e chat no site, com FAQ automático e handoff pra atendimento humano.',
-  offers: PRICING.map((plan) => ({
-    '@type': 'Offer',
-    name: plan.name,
-    price: plan.price.replace(/\D/g, ''),
-    priceCurrency: 'BRL',
-    url: plan.cta.href,
-  })),
+  offers: FREE_TIER_MODE
+    ? [{ '@type': 'Offer', name: 'Grátis (lançamento)', price: '0', priceCurrency: 'BRL', url: '/signup' }]
+    : PRICING.map((plan) => ({
+        '@type': 'Offer',
+        name: plan.name,
+        price: plan.price.replace(/\D/g, ''),
+        priceCurrency: 'BRL',
+        url: plan.cta.href,
+      })),
 });
 
 const FAQ_JSON_LD = jsonLd({
@@ -369,10 +376,68 @@ export async function MarketingHome() {
       {/* Pricing */}
       <section id="precos" style={{ padding: '80px 24px', background: '#f8f9fb' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>Planos</h2>
+          <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>
+            {FREE_TIER_MODE ? 'Grátis por enquanto' : 'Planos'}
+          </h2>
           <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 48 }}>
-            Comece com o plano básico e fale com a gente se precisar de algo sob medida.
+            {FREE_TIER_MODE
+              ? 'Estamos em lançamento — use a Zappy sem custo, sem cartão, com o WhatsApp compartilhado da plataforma.'
+              : 'Comece com o plano básico e fale com a gente se precisar de algo sob medida.'}
           </p>
+
+          {FREE_TIER_MODE ? (
+            <div
+              style={{
+                maxWidth: 420,
+                margin: '0 auto',
+                background: '#fff',
+                borderRadius: 16,
+                padding: 32,
+                border: `2px solid ${BRAND_COLOR}`,
+                boxShadow: '0 8px 24px rgba(37,99,235,0.12)',
+                textAlign: 'center',
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-block',
+                  background: BRAND_COLOR,
+                  color: '#fff',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: '3px 10px',
+                  borderRadius: 999,
+                  marginBottom: 14,
+                }}
+              >
+                Lançamento
+              </span>
+              <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>Zappy Grátis</h3>
+              <div style={{ marginBottom: 20 }}>
+                <span style={{ fontSize: 30, fontWeight: 700 }}>R$ 0</span>
+                <span style={{ fontSize: 13.5, color: '#888' }}> /mês</span>
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', textAlign: 'left' }}>
+                {[
+                  'Dashboard de agendamentos, conversas e FAQ',
+                  'Widget de chat no seu site',
+                  'Número de WhatsApp compartilhado da Zappy',
+                  'Handoff pra atendimento humano',
+                ].map((item) => (
+                  <li key={item} style={{ display: 'flex', gap: 8, fontSize: 13.5, color: '#444', marginBottom: 10 }}>
+                    <span
+                      style={{ color: BRAND_COLOR, flexShrink: 0, width: 16, height: 16, marginTop: 1 }}
+                      dangerouslySetInnerHTML={{ __html: ICON_CHECK }}
+                    />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Button href="/signup" variant="primary">
+                Começar grátis
+              </Button>
+            </div>
+          ) : (
           <div
             style={{
               display: 'grid',
@@ -435,6 +500,7 @@ export async function MarketingHome() {
               </div>
             ))}
           </div>
+          )}
         </div>
       </section>
 

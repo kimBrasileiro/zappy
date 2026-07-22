@@ -22,14 +22,29 @@ model Service {
   // checkAvailability. Mutually exclusive with businessHours in the
   // dashboard form; the flag wins if both are somehow set.
   is24h           Boolean  @default(false) @map("is_24h")
+  // Cancellation policy — purely informational for now (quoted to the
+  // customer, not enforced by an actual charge anywhere in this codebase;
+  // there's no payment collection on bookings at all yet). 0 hours means "no
+  // minimum notice required"; 0 cents means "no fee".
+  cancellationNoticeHours Int @default(0) @map("cancellation_notice_hours")
+  cancellationFeeCents    Int @default(0) @map("cancellation_fee_cents")
+  // Just names, no separate Staff entity — who performs this service, for
+  // conflict checking (see lib/bot/services.ts#checkAvailability/
+  // createBooking, which switch from per-service to per-staff-member
+  // availability the moment this is non-empty) and so the bot can ask which
+  // person the customer wants, or auto-allocate whoever's free. Empty means
+  // "no staff concept" — a single generic provider, the original behavior,
+  // fully unaffected.
+  staffNames      String[] @default([]) @map("staff_names")
   active          Boolean  @default(true)
   createdBy       String?  @map("created_by") @db.Uuid
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdByUser User?     @relation("ServiceCreatedBy", fields: [createdBy], references: [id])
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdByUser User?          @relation("ServiceCreatedBy", fields: [createdBy], references: [id])
   bookings      Booking[]
+  staffAbsences StaffAbsence[]
 
   @@index([companyId])
   @@map("services")

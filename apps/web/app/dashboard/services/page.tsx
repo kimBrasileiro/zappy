@@ -60,6 +60,18 @@ export default async function ServicesPage() {
                     24h
                   </span>
                 )}
+                {service.cancellationNoticeHours > 0 && (
+                  <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                    Cancelamento até {service.cancellationNoticeHours}h antes
+                    {service.cancellationFeeCents > 0 &&
+                      ` — multa de ${formatPrice(service.cancellationFeeCents)}`}
+                  </div>
+                )}
+                {service.staffNames.length > 0 && (
+                  <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                    Equipe: {service.staffNames.join(', ')}
+                  </div>
+                )}
               </td>
               <td>{formatDuration(service.durationMinutes)}</td>
               <td>{formatPrice(service.priceCents)}</td>

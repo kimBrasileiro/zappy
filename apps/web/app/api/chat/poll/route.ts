@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@zappy/db';
-import { checkOrigin } from '../../../../lib/bot/guardrails';
+import { checkOrigin, isHumanHandling } from '../../../../lib/bot/guardrails';
 
 // Lets the widget pick up agent replies sent from the dashboard without the
 // customer having to send another message first — the only kind of message
@@ -60,6 +60,11 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       messages: messages.map((m) => ({ id: m.id, content: m.content, createdAt: m.createdAt.toISOString() })),
+      // Lets the widget re-derive the "aguardando atendente" flag (see
+      // api/chat/route.ts's `escalated` field) after a page reload, when
+      // there's no in-flight streamed response to carry it — polling is
+      // already happening for agent messages, this just rides along.
+      escalated: isHumanHandling(ticket),
     },
     { headers: CORS_HEADERS },
   );

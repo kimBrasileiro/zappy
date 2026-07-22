@@ -1,6 +1,6 @@
-import { prisma } from '@zappy/db';
+import { prisma, type Prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
-import { cancelBooking } from './actions';
+import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
 import { RefreshButton } from '../refresh-button';
 
 function formatPrice(cents: number): string {
@@ -20,13 +20,48 @@ const STATUS_BADGE: Record<string, string> = {
   confirmed: 'dash-badge-in_progress',
   completed: 'dash-badge-open',
   cancelled: 'dash-badge-closed',
+  no_show: 'dash-badge-canceled',
 };
 
-export default async function BookingsPage() {
+const STATUS_LABEL: Record<string, string> = {
+  confirmed: 'confirmado',
+  completed: 'compareceu',
+  cancelled: 'cancelado',
+  no_show: 'faltou',
+};
+
+export default async function BookingsPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; date?: string };
+}) {
   const { companyId } = await requireSession();
+  const q = searchParams.q?.trim();
+  const date = searchParams.date?.trim();
+
+  const where: Prisma.BookingWhereInput = { companyId };
+
+  if (q) {
+    // Same free-text field searches both name and phone — the customer
+    // record is already resolved by the time a booking exists, so this is
+    // just an OR across the two fields most people would actually type.
+    where.customer = { is: { OR: [{ name: { contains: q, mode: 'insensitive' } }, { phone: { contains: q } }] } };
+  }
+
+  if (date) {
+    // scheduledAt is UTC-anchored (see formatScheduledAt above) — the date
+    // filter matches that same convention, not the server or browser's
+    // local timezone.
+    const [year, month, day] = date.split('-').map(Number);
+    if (year && month && day) {
+      const dayStart = new Date(Date.UTC(year, month - 1, day));
+      const dayEnd = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      where.scheduledAt = { gte: dayStart, lte: dayEnd };
+    }
+  }
 
   const bookings = await prisma.booking.findMany({
-    where: { companyId },
+    where,
     include: { service: true, customer: true },
     orderBy: { scheduledAt: 'desc' },
     take: 200,
@@ -43,6 +78,25 @@ export default async function BookingsPage() {
         </div>
         <RefreshButton />
       </div>
+
+      <form method="get" className="dash-card" style={{ display: 'flex', gap: 10, alignItems: 'flex-end', padding: '16px 20px', marginBottom: 20 }}>
+        <label className="dash-form-row" style={{ flex: 1, marginBottom: 0 }}>
+          Nome ou telefone
+          <input type="text" name="q" defaultValue={q} placeholder="Ex: Maria ou 11 98765-4321" />
+        </label>
+        <label className="dash-form-row" style={{ marginBottom: 0 }}>
+          Data
+          <input type="date" name="date" defaultValue={date} />
+        </label>
+        <button type="submit" className="dash-btn">
+          Buscar
+        </button>
+        {(q || date) && (
+          <a href="/dashboard/bookings" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>
+            Limpar
+          </a>
+        )}
+      </form>
 
       <table className="dash-table">
         <thead>
@@ -68,16 +122,28 @@ export default async function BookingsPage() {
               <td>{formatPrice(booking.priceCents)}</td>
               <td>
                 <span className={`dash-badge ${STATUS_BADGE[booking.status] ?? 'dash-badge-closed'}`}>
-                  {booking.status}
+                  {STATUS_LABEL[booking.status] ?? booking.status}
                 </span>
               </td>
               <td>
                 {booking.status === 'confirmed' && (
-                  <form action={cancelBooking.bind(null, booking.id)}>
-                    <button type="submit" className="dash-btn dash-btn-danger">
-                      Cancelar
-                    </button>
-                  </form>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <form action={markBookingAttended.bind(null, booking.id)}>
+                      <button type="submit" className="dash-btn dash-btn-secondary" title="Marcar que o cliente compareceu">
+                        Compareceu
+                      </button>
+                    </form>
+                    <form action={markBookingNoShow.bind(null, booking.id)}>
+                      <button type="submit" className="dash-btn dash-btn-secondary" title="Marcar que o cliente faltou">
+                        Faltou
+                      </button>
+                    </form>
+                    <form action={cancelBooking.bind(null, booking.id)}>
+                      <button type="submit" className="dash-btn dash-btn-danger">
+                        Cancelar
+                      </button>
+                    </form>
+                  </div>
                 )}
               </td>
             </tr>
@@ -85,7 +151,7 @@ export default async function BookingsPage() {
           {bookings.length === 0 && (
             <tr>
               <td colSpan={8} style={{ color: '#999' }}>
-                Nenhum agendamento ainda.
+                {q || date ? 'Nenhum agendamento encontrado com esse filtro.' : 'Nenhum agendamento ainda.'}
               </td>
             </tr>
           )}

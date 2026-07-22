@@ -1,6 +1,7 @@
 import { prisma } from '@zappy/db';
 import { sendEmail } from './email/resend';
 import { sendWhatsAppMessage, toWhatsAppPhone } from './whatsapp/client';
+import { SUPER_ADMIN_EMAIL } from './admin-auth';
 
 // "Cliente" here is Zappy's own customer — the company that signed up, not
 // the end consumer chatting with its bot. Both notifyBookingCreated and
@@ -55,5 +56,42 @@ export async function notifyEscalation(companyId: string): Promise<void> {
     company.emails,
     `Conversa precisa de atenção — ${company.companyName}`,
     `<p>Uma conversa foi encaminhada para atendimento humano.</p><p><a href="${appUrl}/dashboard/inbox">Abrir Inbox</a></p>`,
+  );
+}
+
+const BILLING_EVENT_COPY = {
+  subscription_created: { customer: 'Assinatura criada', admin: 'Nova assinatura' },
+  plan_changed: { customer: 'Seu plano foi alterado', admin: 'Plano alterado' },
+  subscription_canceled: { customer: 'Sua assinatura foi cancelada', admin: 'Assinatura cancelada' },
+  subscription_reactivated: { customer: 'Sua assinatura foi reativada', admin: 'Assinatura reativada' },
+} as const;
+
+// Fires on every billing state change (lib/stripe/client.ts#startTrialSubscription
+// for creation, dashboard/billing/actions.ts for plan/cancel/reactivate) — one
+// copy to the company's own admins (what changed on their account) and one to
+// SUPER_ADMIN_EMAIL (so the platform operator has a running log of billing
+// activity without needing to check Stripe directly for every customer).
+export async function notifyBillingEvent(params: {
+  companyId: string;
+  event: keyof typeof BILLING_EVENT_COPY;
+  planLabel: string;
+}): Promise<void> {
+  const company = await getActiveAdminEmails(params.companyId);
+  if (!company) return;
+
+  const copy = BILLING_EVENT_COPY[params.event];
+
+  if (company.emails.length) {
+    await sendEmail(
+      company.emails,
+      `${copy.customer} — Zappy`,
+      `<p>${copy.customer}: plano <strong>${params.planLabel}</strong>.</p><p>Veja os detalhes em <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/dashboard/billing">Assinatura</a>.</p>`,
+    );
+  }
+
+  await sendEmail(
+    SUPER_ADMIN_EMAIL,
+    `[Zappy] ${copy.admin} — ${company.companyName}`,
+    `<p><strong>${company.companyName}</strong>: ${copy.admin.toLowerCase()}, plano <strong>${params.planLabel}</strong>.</p>`,
   );
 }

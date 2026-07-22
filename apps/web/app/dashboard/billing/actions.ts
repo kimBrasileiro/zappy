@@ -4,6 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { getStripe, isPlanKey, priceIdForPlan } from '../../../lib/stripe/client';
+import { PLANS, planRank } from '../../../lib/stripe/plans';
+import { notifyBillingEvent } from '../../../lib/notifications';
+
+function planLabel(plan: string): string {
+  return PLANS.find((p) => p.key === plan)?.label ?? plan;
+}
 
 async function getCompanyWithSubscription(companyId: string) {
   const company = await prisma.company.findUnique({ where: { id: companyId } });
@@ -21,6 +27,14 @@ export async function cancelSubscription(): Promise<void> {
   if (!company) return;
 
   await getStripe().subscriptions.update(company.stripeSubscriptionId!, { cancel_at_period_end: true });
+  // Stripe's subscription.status string doesn't change until the period
+  // actually ends (still "trialing"/"active" until then), so this flag is
+  // the only place the DB records "will cancel" in the meantime — the
+  // webhook re-syncs it too (see api/webhooks/stripe/route.ts), this just
+  // means the dashboard reflects it immediately instead of waiting on that
+  // round-trip.
+  await prisma.company.update({ where: { id: companyId }, data: { cancelAtPeriodEnd: true } });
+  await notifyBillingEvent({ companyId, event: 'subscription_canceled', planLabel: planLabel(company.plan) });
   revalidatePath('/dashboard/billing');
 }
 
@@ -30,6 +44,8 @@ export async function reactivateSubscription(): Promise<void> {
   if (!company) return;
 
   await getStripe().subscriptions.update(company.stripeSubscriptionId!, { cancel_at_period_end: false });
+  await prisma.company.update({ where: { id: companyId }, data: { cancelAtPeriodEnd: false } });
+  await notifyBillingEvent({ companyId, event: 'subscription_reactivated', planLabel: planLabel(company.plan) });
   revalidatePath('/dashboard/billing');
 }
 
@@ -44,6 +60,9 @@ export async function changePlan(_prevState: ChangePlanState, formData: FormData
   if (!isPlanKey(planRaw)) {
     return { error: 'Plano inválido.' };
   }
+  if (formData.get('confirm') !== 'on') {
+    return { error: 'Confirma a troca de plano e o aceite dos Termos pra continuar.' };
+  }
 
   const company = await getCompanyWithSubscription(companyId);
   if (!company) {
@@ -52,6 +71,13 @@ export async function changePlan(_prevState: ChangePlanState, formData: FormData
 
   if (company.plan === planRaw) {
     return {};
+  }
+
+  // Self-service is upgrade-only — a downgrade changes what the customer's
+  // already relying on (e.g. loses their own WhatsApp number), so it goes
+  // through support instead of a single click on the dashboard.
+  if (planRank(planRaw) < planRank(company.plan)) {
+    return { error: 'Downgrade de plano não é feito por aqui — fale com o suporte.' };
   }
 
   const priceId = priceIdForPlan(planRaw);
@@ -79,6 +105,7 @@ export async function changePlan(_prevState: ChangePlanState, formData: FormData
   // directly so the dashboard reflects the new plan without waiting on the
   // webhook round-trip.
   await prisma.company.update({ where: { id: companyId }, data: { plan: planRaw } });
+  await notifyBillingEvent({ companyId, event: 'plan_changed', planLabel: planLabel(planRaw) });
 
   revalidatePath('/dashboard/billing');
   return {};

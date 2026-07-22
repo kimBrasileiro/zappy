@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         if (result?.quickReplies?.length) {
           sendFrame(controller, { type: 'options', options: result.quickReplies });
         }
-        sendFrame(controller, { type: 'done' });
+        sendFrame(controller, { type: 'done', escalated: result?.escalated ?? false });
       } catch (err) {
         console.error('[chat] stream failed mid-flight', err);
         sendFrame(controller, { type: 'error' });

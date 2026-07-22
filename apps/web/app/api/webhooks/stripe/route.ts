@@ -18,6 +18,11 @@ async function syncSubscriptionStatus(subscription: Stripe.Subscription): Promis
       subscriptionStatus: subscription.status,
       status: isBillingActive(subscription.status) ? 'active' : 'inactive',
       trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      // Re-synced here regardless of source — dashboard/billing/actions.ts
+      // already sets this immediately for our own UI, but a subscription
+      // changed directly in the Stripe dashboard (or by Stripe itself,
+      // e.g. dunning) would otherwise never update it.
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
     },
   });
 }

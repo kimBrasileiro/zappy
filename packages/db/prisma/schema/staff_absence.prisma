@@ -1,0 +1,20 @@
+// A single day a staff member is unavailable for a given service — the
+// deliberately minimal alternative to a full HR-style calendar (see
+// lib/bot/services.ts, which filters staff out of availability/allocation
+// for any date they have a row here). Add/remove only, no recurring rules,
+// no time-of-day granularity: "fulano não vem dia X" is the whole feature.
+model StaffAbsence {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  serviceId String   @map("service_id") @db.Uuid
+  staffName String   @map("staff_name")
+  date      DateTime @map("date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, staffName, date])
+  @@index([companyId])
+  @@map("staff_absences")
+}

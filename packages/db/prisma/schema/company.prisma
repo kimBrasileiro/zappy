@@ -25,6 +25,15 @@ model Company {
   stripeCustomerId       String?  @map("stripe_customer_id")
   stripeSubscriptionId   String?  @map("stripe_subscription_id")
   subscriptionStatus     String?  @map("subscription_status")
+  // Mirrors Stripe's Subscription.cancel_at_period_end — without this, the
+  // DB has no record at all of "will cancel at period end" (Stripe's status
+  // string itself doesn't change until the period actually ends), which
+  // meant the only place that ever showed it was a live Stripe API call on
+  // every dashboard/billing page load. Kept in sync from both directions:
+  // dashboard/billing/actions.ts writes it immediately on cancel/reactivate,
+  // the webhook (api/webhooks/stripe/route.ts) re-syncs it on every
+  // subscription event regardless of where the change came from.
+  cancelAtPeriodEnd      Boolean  @default(false) @map("cancel_at_period_end")
   trialEndsAt            DateTime? @map("trial_ends_at") @db.Timestamptz(6)
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
@@ -38,6 +47,7 @@ model Company {
   bookings           Booking[]
   faqs               Faq[]
   whatsappRoutes     WhatsAppRoute[]
+  staffAbsences      StaffAbsence[]
 
   @@map("companies")
 }

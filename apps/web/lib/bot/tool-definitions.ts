@@ -30,6 +30,11 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
           description:
             'Data no formato YYYY-MM-DD. Sempre resolva você mesmo datas relativas ou parciais ditas pelo cliente (ex: "dia 9", "amanhã", "sexta-feira", "essa semana") usando a data de hoje informada no prompt do sistema — nunca peça pro cliente reescrever a data nesse formato.',
         },
+        staffName: {
+          type: 'string',
+          description:
+            'Opcional. Só existe pra serviços cujo list_services trouxe "staffOptions" (equipe com mais de uma pessoa). Se o cliente já disse qual profissional prefere, passe o nome aqui pra ver só os horários dele(a). Se o cliente disse "tanto faz", NÃO preencha esse campo — os horários retornados já consideram qualquer pessoa da equipe livre.',
+        },
       },
       required: ['serviceName', 'date'],
     },
@@ -48,6 +53,11 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
         scheduledAt: { type: 'string', description: 'Data e hora em ISO 8601, ex: 2026-08-15T15:00:00' },
         customerName: { type: 'string', description: 'Nome completo do cliente — obrigatório' },
         customerPhone: { type: 'string', description: 'Telefone do cliente com DDD, ex: (11) 98765-4321 — obrigatório' },
+        staffName: {
+          type: 'string',
+          description:
+            'Opcional. Só existe pra serviços com mais de uma pessoa na equipe (staffOptions em list_services). Se o cliente escolheu um profissional específico, passe o nome exato — se der conflito, a tool rejeita em vez de trocar de profissional sozinha. Se o cliente disse "tanto faz", NÃO preencha: a tool aloca automaticamente quem estiver livre e informa quem foi escolhido no retorno.',
+        },
       },
       required: ['serviceName', 'scheduledAt', 'customerName', 'customerPhone'],
     },
@@ -86,7 +96,12 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
       return JSON.stringify(await listFaqs(ctx.companyId));
     case 'check_availability':
       return JSON.stringify(
-        await checkAvailability(ctx.companyId, String(args.serviceName ?? ''), String(args.date ?? '')),
+        await checkAvailability(
+          ctx.companyId,
+          String(args.serviceName ?? ''),
+          String(args.date ?? ''),
+          args.staffName ? String(args.staffName) : undefined,
+        ),
       );
     case 'create_booking':
       return JSON.stringify(
@@ -95,6 +110,7 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
           scheduledAt: String(args.scheduledAt ?? ''),
           customerName: String(args.customerName ?? ''),
           customerPhone: String(args.customerPhone ?? ''),
+          staffName: args.staffName ? String(args.staffName) : undefined,
         }),
       );
     case 'escalate_human':

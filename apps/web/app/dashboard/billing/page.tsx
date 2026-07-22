@@ -1,7 +1,7 @@
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { getStripe, isStripeConfigured } from '../../../lib/stripe/client';
-import { PLANS } from '../../../lib/stripe/plans';
+import { PLANS, FREE_TIER_MODE } from '../../../lib/stripe/plans';
 import { cancelSubscription, reactivateSubscription } from './actions';
 import { ChangePlanForm } from './change-plan-form';
 
@@ -29,9 +29,33 @@ export default async function BillingPage() {
       <>
         <h1 className="dash-h1">Assinatura</h1>
         <div className="dash-card">
-          <p style={{ color: '#999', fontSize: 13.5, margin: 0 }}>
-            Cobrança ainda não está configurada nesta instância — fale com o suporte.
-          </p>
+          {FREE_TIER_MODE ? (
+            <>
+              <span
+                style={{
+                  display: 'inline-block',
+                  background: '#dcfce7',
+                  color: '#166534',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  marginBottom: 10,
+                }}
+              >
+                Período de lançamento — grátis
+              </span>
+              <p style={{ color: '#555', fontSize: 13.5, margin: 0, lineHeight: 1.6 }}>
+                Enquanto estivermos em lançamento, sua conta usa a Zappy sem custo, com o número
+                de WhatsApp compartilhado da plataforma — sem cartão, sem cobrança. Se isso mudar
+                no futuro, avisamos com bastante antecedência antes de qualquer cobrança começar.
+              </p>
+            </>
+          ) : (
+            <p style={{ color: '#999', fontSize: 13.5, margin: 0 }}>
+              Cobrança ainda não está configurada nesta instância — fale com o suporte.
+            </p>
+          )}
         </div>
       </>
     );

@@ -25,6 +25,48 @@ function parsePriceCents(formData: FormData): number | null {
   return Math.round(value * 100);
 }
 
+const CANCELLATION_NOTICE_OPTIONS = [0, 2, 12, 24, 48];
+
+function parseCancellationNoticeHours(formData: FormData): number {
+  const value = Number(formData.get('cancellationNoticeHours'));
+  // Falls back to 0 (no restriction) for anything outside the fixed set the
+  // <select> actually offers — never trust a raw client-submitted number
+  // here, this isn't meant to be freely arbitrary.
+  return CANCELLATION_NOTICE_OPTIONS.includes(value) ? value : 0;
+}
+
+function parseCancellationFeeCents(formData: FormData): number {
+  const raw = String(formData.get('cancellationFee') ?? '').trim();
+  if (!raw) return 0;
+  const value = Number(raw.replace(',', '.'));
+  if (Number.isNaN(value) || value < 0) return 0;
+  return Math.round(value * 100);
+}
+
+function parseStaffNames(formData: FormData): string[] {
+  const raw = String(formData.get('staffNames') ?? '');
+  const names = raw
+    .split(',')
+    .map((n) => n.trim())
+    .filter(Boolean);
+  // De-duplicated case/accent-insensitively but keeps the first spelling
+  // typed — two entries that only differ by casing/accents would otherwise
+  // silently create two "different" staff members that conflict-checking
+  // treats as distinct people.
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  for (const name of names) {
+    const key = name
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(name);
+  }
+  return deduped;
+}
+
 function parseBusinessHours(formData: FormData): BusinessHours | null {
   // Mutually exclusive with is24h — the 24h checkbox hides this section in
   // the form entirely, and businessHours is meaningless once every day/time
@@ -59,6 +101,9 @@ export async function createService(
   const bookingMode = String(formData.get('bookingMode') ?? 'auto') === 'manual' ? 'manual' : 'auto';
   const is24h = formData.get('is24h') === 'on';
   const businessHours = parseBusinessHours(formData);
+  const cancellationNoticeHours = parseCancellationNoticeHours(formData);
+  const cancellationFeeCents = parseCancellationFeeCents(formData);
+  const staffNames = parseStaffNames(formData);
 
   if (!name) return { error: 'Nome é obrigatório.' };
   if (durationMinutes === null) return { error: 'Duração inválida.' };
@@ -74,6 +119,9 @@ export async function createService(
       bookingMode,
       is24h,
       businessHours: businessHours ?? undefined,
+      cancellationNoticeHours,
+      cancellationFeeCents,
+      staffNames,
       createdBy: userId,
     },
   });
@@ -99,6 +147,9 @@ export async function updateService(
   const bookingMode = String(formData.get('bookingMode') ?? 'auto') === 'manual' ? 'manual' : 'auto';
   const is24h = formData.get('is24h') === 'on';
   const businessHours = parseBusinessHours(formData);
+  const cancellationNoticeHours = parseCancellationNoticeHours(formData);
+  const cancellationFeeCents = parseCancellationFeeCents(formData);
+  const staffNames = parseStaffNames(formData);
 
   if (!name) return { error: 'Nome é obrigatório.' };
   if (durationMinutes === null) return { error: 'Duração inválida.' };
@@ -114,6 +165,9 @@ export async function updateService(
       bookingMode,
       is24h,
       businessHours: businessHours ?? Prisma.JsonNull,
+      cancellationNoticeHours,
+      cancellationFeeCents,
+      staffNames,
     },
   });
 
@@ -142,4 +196,50 @@ export async function deleteService(serviceId: string): Promise<void> {
     // "Desativar" instead of a hard delete that would break booking history.
   }
   revalidatePath('/dashboard/services');
+}
+
+export interface StaffAbsenceFormState {
+  error?: string;
+}
+
+// Deliberately just add/remove by date — no recurring rules, no time-of-day
+// granularity. See lib/bot/services.ts, which excludes any staff member with
+// a row here (for that service+date) from both check_availability and
+// create_booking's auto-allocation.
+export async function addStaffAbsence(
+  serviceId: string,
+  _prevState: StaffAbsenceFormState,
+  formData: FormData,
+): Promise<StaffAbsenceFormState> {
+  const { companyId } = await requireSession();
+  const service = await prisma.service.findUnique({ where: { id: serviceId } });
+  if (!service || service.companyId !== companyId) return { error: 'Serviço não encontrado.' };
+
+  const staffName = String(formData.get('staffName') ?? '').trim();
+  const dateRaw = String(formData.get('date') ?? '').trim();
+  if (!staffName || !service.staffNames.includes(staffName)) {
+    return { error: 'Escolha uma pessoa da equipe desse serviço.' };
+  }
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateRaw);
+  if (!match) return { error: 'Escolha uma data válida.' };
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+
+  try {
+    await prisma.staffAbsence.create({ data: { companyId, serviceId, staffName, date } });
+  } catch (err) {
+    // (service_id, staff_name, date) unique — already marked, nothing to do.
+    if ((err as { code?: string }).code !== 'P2002') throw err;
+  }
+
+  revalidatePath(`/dashboard/services/${serviceId}`);
+  return {};
+}
+
+export async function removeStaffAbsence(serviceId: string, absenceId: string): Promise<void> {
+  const { companyId } = await requireSession();
+  const service = await prisma.service.findUnique({ where: { id: serviceId } });
+  if (!service || service.companyId !== companyId) return;
+
+  await prisma.staffAbsence.deleteMany({ where: { id: absenceId, serviceId } });
+  revalidatePath(`/dashboard/services/${serviceId}`);
 }

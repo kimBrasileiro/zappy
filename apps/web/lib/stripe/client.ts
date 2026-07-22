@@ -1,5 +1,7 @@
 import Stripe from 'stripe';
 import { prisma } from '@zappy/db';
+import { PLANS, FREE_TIER_MODE } from './plans';
+import { notifyBillingEvent } from '../notifications';
 
 let client: Stripe | null = null;
 
@@ -7,9 +9,12 @@ let client: Stripe | null = null;
 // no key configured, signup falls back to the pre-Stripe behavior (no plan,
 // no card, immediate active company) rather than half-rendering a payment
 // step that can't actually work. This is what lets local dev keep working
-// without ever needing a Stripe account.
+// without ever needing a Stripe account. FREE_TIER_MODE (plans.ts) forces
+// this false too, regardless of whether real keys are present — the launch
+// strategy is "free for everyone right now", not "free only where we forgot
+// to configure billing".
 export function isStripeConfigured(): boolean {
-  return !!process.env.STRIPE_SECRET_KEY;
+  return !FREE_TIER_MODE && !!process.env.STRIPE_SECRET_KEY;
 }
 
 export function getStripe(): Stripe {
@@ -94,6 +99,12 @@ export async function startTrialSubscription(params: {
       subscriptionStatus: subscription.status,
       trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
     },
+  });
+
+  await notifyBillingEvent({
+    companyId: params.companyId,
+    event: 'subscription_created',
+    planLabel: PLANS.find((p) => p.key === params.plan)?.label ?? params.plan,
   });
 
   const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null;

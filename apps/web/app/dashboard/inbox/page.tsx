@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@zappy/db';
 import { requireSession } from '../../../lib/auth-server';
 import { RefreshButton } from '../refresh-button';
+import { AutoRefresh } from './auto-refresh';
 
 export default async function InboxPage() {
   const { companyId } = await requireSession();
@@ -15,6 +16,7 @@ export default async function InboxPage() {
 
   return (
     <>
+      <AutoRefresh />
       <div className="dash-toolbar">
         <div>
           <h1 className="dash-h1">Inbox</h1>

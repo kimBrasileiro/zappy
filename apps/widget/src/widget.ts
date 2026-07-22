@@ -47,6 +47,7 @@ export class ChatWidget {
 
   private panelEl!: HTMLDivElement;
   private fabEl!: HTMLButtonElement;
+  private escalatedBannerEl!: HTMLDivElement;
   private messagesEl!: HTMLDivElement;
   private quickRepliesEl!: HTMLDivElement;
   private inputEl!: HTMLInputElement;
@@ -85,6 +86,7 @@ export class ChatWidget {
         <button class="restart" aria-label="Reiniciar conversa" title="Reiniciar conversa">${ICON_RESTART}</button>
         <button class="close" aria-label="Fechar chat">${ICON_CLOSE}</button>
       </div>
+      <div class="escalated-banner"><span class="dot"></span>Aguardando um atendente humano</div>
       <div class="messages"></div>
       <div class="quick-replies"></div>
       <div class="input-row">
@@ -94,6 +96,7 @@ export class ChatWidget {
       <div class="footer">Powered by Zappy</div>
     `;
     this.panelEl = panel;
+    this.escalatedBannerEl = panel.querySelector('.escalated-banner')!;
     this.messagesEl = panel.querySelector('.messages')!;
     this.quickRepliesEl = panel.querySelector('.quick-replies')!;
     this.inputEl = panel.querySelector('.input')!;
@@ -173,16 +176,20 @@ export class ChatWidget {
     this.isPolling = true;
     const conversationIdAtPoll = this.state.conversationId;
     try {
-      const messages = await pollAgentMessages(
+      const { messages, escalated } = await pollAgentMessages(
         this.config.apiUrl,
         this.config.companyId,
         conversationIdAtPoll,
         this.state.lastAgentMessageAt,
       );
-      if (this.state.conversationId !== conversationIdAtPoll || messages.length === 0) return;
+      if (this.state.conversationId !== conversationIdAtPoll) return;
+      // Nothing changed since last tick — skip the render/save, same as before.
+      if (messages.length === 0 && escalated === this.state.escalated) return;
+
       for (const m of messages) {
         appendAgentMessage(this.state, m.id, m.content, m.createdAt);
       }
+      this.state.escalated = escalated;
       this.renderMessages();
       saveState(this.config.companyId, this.state);
     } catch {
@@ -193,6 +200,8 @@ export class ChatWidget {
   }
 
   private renderMessages(): void {
+    this.escalatedBannerEl.classList.toggle('visible', this.state.escalated);
+
     const lastIndex = this.state.messages.length - 1;
     this.messagesEl.innerHTML = this.state.messages
       .map((m, i) => bubbleHtml(m, i === lastIndex))
@@ -250,6 +259,7 @@ export class ChatWidget {
     let liveBubble: HTMLDivElement | null = null;
     let full: string;
     let options: string[] = [];
+    let escalated = this.state.escalated;
 
     try {
       const result = await streamBotReply(
@@ -271,6 +281,7 @@ export class ChatWidget {
       );
       full = result.fullText;
       options = result.options;
+      escalated = result.escalated;
     } catch {
       full = FALLBACK_REPLY;
     }
@@ -281,14 +292,16 @@ export class ChatWidget {
     if (this.state.conversationId !== conversationIdAtSend) return;
 
     this.hideTyping();
+    this.state.escalated = escalated;
     // Empty means the backend went quiet on purpose (ticket handed off to a
     // human — see orchestrator.ts's G11) rather than a real empty reply;
-    // nothing to show, so no bubble.
+    // nothing to show, so no bubble — but still re-render/save so the
+    // escalated banner (which may have just turned on) reflects that.
     if (full) {
       appendMessage(this.state, 'bot', full, options);
-      this.renderMessages();
-      saveState(this.config.companyId, this.state);
     }
+    this.renderMessages();
+    saveState(this.config.companyId, this.state);
 
     this.isBotTyping = false;
     this.sendBtnEl.disabled = false;

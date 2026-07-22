@@ -41,6 +41,9 @@ export function ServiceForm({
     bookingMode: string;
     businessHours: BusinessHours | null;
     is24h: boolean;
+    cancellationNoticeHours: number;
+    cancellationFeeCents: number;
+    staffNames: string[];
   };
   submitLabel: string;
 }) {
@@ -55,6 +58,7 @@ export function ServiceForm({
     : undefined;
   const priceValue = defaultValues ? (defaultValues.priceCents / 100).toFixed(2) : undefined;
   const hasCustomHours = !!defaultValues?.businessHours;
+  const cancellationFeeValue = defaultValues ? (defaultValues.cancellationFeeCents / 100).toFixed(2) : '0.00';
 
   return (
     <form action={formAction}>
@@ -83,6 +87,20 @@ export function ServiceForm({
       <div className="dash-form-row">
         <label>Preço (R$)</label>
         <input name="price" type="number" min={0} step="0.01" required defaultValue={priceValue} placeholder="50.00" />
+      </div>
+
+      <div className="dash-form-row">
+        <label>Quem faz esse serviço (opcional)</label>
+        <input
+          name="staffNames"
+          defaultValue={defaultValues?.staffNames?.join(', ') ?? ''}
+          placeholder="Ex: Ana, Bruno, Carla"
+        />
+        <span style={{ fontSize: 11.5, color: '#999' }}>
+          Nomes separados por vírgula. Deixe em branco se qualquer pessoa da equipe atende — nesse
+          caso o sistema não controla quem faz o quê. Se preencher, o sistema passa a garantir que a
+          mesma pessoa nunca fica marcada em dois horários que se sobrepõem.
+        </span>
       </div>
 
       <div className="dash-form-row">
@@ -143,6 +161,46 @@ export function ServiceForm({
             </div>
           );
         })}
+      </div>
+
+      <div
+        style={{
+          marginTop: 20,
+          marginBottom: 20,
+          padding: 16,
+          background: '#f8f9fb',
+          borderRadius: 10,
+          border: '1px solid #eee',
+        }}
+      >
+        <h3 style={{ fontSize: 14, margin: '0 0 4px' }}>Política de cancelamento</h3>
+        <p style={{ fontSize: 12, color: '#777', margin: '0 0 14px', lineHeight: 1.5 }}>
+          Define até quanto tempo antes do horário marcado o cliente pode cancelar sem multa. Isso
+          é só informativo — o bot e o dashboard mostram essa regra pro cliente, mas nenhuma
+          cobrança é feita automaticamente.
+        </p>
+        <div className="dash-form-row">
+          <label>Prazo mínimo para cancelar sem multa</label>
+          <select name="cancellationNoticeHours" defaultValue={String(defaultValues?.cancellationNoticeHours ?? 0)}>
+            <option value="0">Sem restrição — o cliente pode cancelar a qualquer momento</option>
+            <option value="2">Até 2 horas antes do horário marcado</option>
+            <option value="12">Até 12 horas antes do horário marcado</option>
+            <option value="24">Até 24 horas antes do horário marcado</option>
+            <option value="48">Até 48 horas antes do horário marcado</option>
+          </select>
+        </div>
+        <div className="dash-form-row">
+          <label>Multa por cancelamento fora do prazo (R$)</label>
+          <input
+            name="cancellationFee"
+            type="number"
+            min={0}
+            step="0.01"
+            defaultValue={cancellationFeeValue}
+            placeholder="0.00"
+          />
+          <span style={{ fontSize: 11.5, color: '#999' }}>Deixe 0,00 se não cobrar multa nenhuma.</span>
+        </div>
       </div>
 
       <SubmitButton label={submitLabel} />

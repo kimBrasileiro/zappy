@@ -47,6 +47,12 @@ export interface OrchestrateInput {
 
 export interface OrchestrateResult {
   quickReplies: string[];
+  // True whenever this ticket is (now, or already was) waiting on a human —
+  // either escalate_human was just called this turn, or it was called on an
+  // earlier turn and the bot is staying silent (see G11 below). The widget
+  // uses this to show a persistent "aguardando atendente" flag rather than
+  // customers having to infer it from the bot's wording.
+  escalated: boolean;
 }
 
 const FALLBACK_MESSAGE =
@@ -105,7 +111,7 @@ export async function* orchestrate(
   // the bot stays silent so it never talks over the human.
   if (isHumanHandling(ticket)) {
     yield '';
-    return { quickReplies: [] };
+    return { quickReplies: [], escalated: true };
   }
 
   const language = resolveLanguage(company);
@@ -136,6 +142,9 @@ export async function* orchestrate(
     'Quando o cliente pedir para ver serviços, horários disponíveis ou quiser agendar, chame a tool correspondente IMEDIATAMENTE nesta mesma resposta — nunca diga "vou verificar" ou peça confirmação antes de chamar a tool, apenas chame.',
     'Ao confirmar um agendamento, nunca exiba o bookingId interno pro cliente — mencione só o serviço, data, hora e preço.',
     'O resultado de create_booking pode vir com "requiresManualConfirmation": true. Se vier true, NÃO diga que o agendamento está confirmado — diga que o horário foi reservado e que alguém do time vai entrar em contato pelo telefone informado pelo cliente para confirmar o agendamento e os detalhes do serviço. Se vier false (ou ausente), confirme normalmente que o agendamento está confirmado.',
+    'Não existe uma tool separada para "editar" um agendamento existente — se o cliente já tem um horário marcado e quer mudar de data/hora (reagendar), trate exatamente como um agendamento novo: chame check_availability pra nova data e depois create_booking normalmente. O sistema cancela o agendamento antigo automaticamente. Se o resultado de create_booking vier com "rescheduledFrom" preenchido, isso significa que um agendamento anterior desse mesmo cliente pra esse mesmo serviço foi cancelado automaticamente — avise o cliente que o horário antigo foi cancelado e o novo está confirmado (ou reservado, se requiresManualConfirmation vier true), nunca dê a entender que agora ele tem dois agendamentos.',
+    'Se list_services trouxer "cancellationPolicy" pra um serviço, use esse texto exato pra responder perguntas do cliente sobre cancelamento/multa desse serviço — não invente prazos ou valores diferentes. Se não vier "cancellationPolicy", esse serviço não tem restrição: pode cancelar a qualquer momento sem multa.',
+    'Alguns serviços têm mais de uma pessoa que atende (list_services retorna "staffOptions" nesses casos). Se houver staffOptions, pergunte ao cliente se ele tem preferência de profissional antes ou depois de checar disponibilidade — se ele já disser um nome, passe staffName em check_availability/create_booking; se disser "tanto faz" ou não tiver preferência, não passe staffName e deixe o sistema alocar automaticamente (o retorno de create_booking traz "staffName" com quem foi escolhido — sempre informe isso ao cliente). Se o cliente pedir um profissional específico e create_booking retornar erro "slot_unavailable" ou "staff_absent", NUNCA troque de profissional por conta própria — informe que esse horário/dia não está disponível com essa pessoa e, se a mensagem de erro mencionar outro profissional livre, pergunte se o cliente aceita trocar; só chame create_booking de novo com outro staffName se o cliente concordar.',
     // Per-company refinement on top of everything above — e.g. the "zappy"
     // company itself (seeded in migrations/*_seed_zappy_company) uses this
     // to override the FAQ x Serviços rule: its only cadastrado Service is a
@@ -158,6 +167,7 @@ export async function* orchestrate(
   let slotButtons: string[] = [];
   let faqButtons: string[] = [];
   let serviceButtons: string[] = [];
+  let escalated = false;
 
   for (;;) {
     let toolCalls: ToolCall[] | null = null;
@@ -217,6 +227,10 @@ export async function* orchestrate(
       } catch {
         slotButtons = [];
       }
+    }
+
+    if (toolCall.name === 'escalate_human') {
+      escalated = true;
     }
 
     if (toolCall.name === 'list_services') {
@@ -285,5 +299,5 @@ export async function* orchestrate(
 
   await appendMessage(ticket.id, company.id, 'bot', full);
 
-  return { quickReplies };
+  return { quickReplies, escalated };
 }

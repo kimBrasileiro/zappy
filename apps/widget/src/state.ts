@@ -22,6 +22,12 @@ export interface WidgetState {
   // from the start of this conversation". Only advances for 'agent'
   // messages; bot replies never come through the poller (see api.ts).
   lastAgentMessageAt: string | null;
+  // Mirrors the ticket's waiting_human/in_progress status server-side (see
+  // lib/bot/orchestrator.ts's `escalated` result field and
+  // api/chat/poll/route.ts's `escalated` response field) — persisted so the
+  // "aguardando atendente" banner survives a page reload, not just the
+  // in-memory session that triggered the escalation.
+  escalated: boolean;
 }
 
 function storageKey(companyId: string): string {
@@ -34,6 +40,7 @@ function createFreshState(): WidgetState {
     messages: [],
     hasSentFirstMessage: false,
     lastAgentMessageAt: null,
+    escalated: false,
   };
 }
 

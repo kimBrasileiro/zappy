@@ -149,6 +149,29 @@ export function buildStyles(primaryColor: string): string {
       color: #25d366;
     }
 
+    .escalated-banner {
+      display: none;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .escalated-banner.visible {
+      display: flex;
+    }
+    .escalated-banner .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #d97706;
+      flex-shrink: 0;
+      animation: cia-bounce 1.6s infinite ease-in-out;
+    }
+
     .messages {
       flex: 1;
       overflow-y: auto;

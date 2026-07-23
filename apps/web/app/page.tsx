@@ -26,6 +26,7 @@ export default async function HomePage({
   const snippet = [
     `<script src="https://cdn.seudominio.com/widget.js"`,
     `        data-company="${companySlug}"`,
+    `        data-company-name="${company?.name ?? companySlug}"`,
     `        data-color="${BRAND_COLOR}"`,
     whatsappNumber ? `        data-whatsapp="${whatsappNumber}"` : null,
     `        async></script>`,
@@ -173,6 +174,7 @@ export default async function HomePage({
           src="/widget.js"
           strategy="afterInteractive"
           data-company={companySlug}
+          data-company-name={company?.name ?? companySlug}
           data-color={BRAND_COLOR}
           data-whatsapp={whatsappNumber}
         />

@@ -17,6 +17,7 @@ export default async function InstalacaoPage() {
   const snippet = [
     `<script src="${appUrl}/widget.js"`,
     `        data-company="${company.slug}"`,
+    `        data-company-name="${company.name}"`,
     `        data-color="${BRAND_COLOR}"`,
     whatsappNumber ? `        data-whatsapp="${whatsappNumber}"` : null,
     `        async></script>`,
@@ -25,7 +26,7 @@ export default async function InstalacaoPage() {
     .join('\n');
 
   const waLink = whatsappDigits
-    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Z:${company.slug} Olá!`)}`
+    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de falar com a ${company.name}`)}`
     : null;
 
   return (

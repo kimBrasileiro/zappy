@@ -30,6 +30,7 @@ resource "google_secret_manager_secret_version" "database_url" {
 locals {
   # name (matches .env.example) -> Secret Manager secret_id suffix
   runtime_secrets = {
+    BETTER_AUTH_SECRET            = "better-auth-secret"
     STRIPE_SECRET_KEY             = "stripe-secret-key"
     STRIPE_WEBHOOK_SECRET         = "stripe-webhook-secret"
     STRIPE_PRICE_BASICO           = "stripe-price-basico"

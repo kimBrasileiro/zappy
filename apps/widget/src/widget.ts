@@ -18,6 +18,11 @@ export interface WidgetConfig {
   apiUrl: string;
   primaryColor: string;
   botName: string;
+  // Company.name, used to build the "Continuar no WhatsApp" button's
+  // pre-filled message (see openWhatsApp) — falls back to companyId (the
+  // slug) if the install snippet doesn't set data-company-name, so an old
+  // snippet still produces something routable rather than breaking.
+  companyName: string;
   // E.164, e.g. "+5511999999999" — the platform's shared WhatsApp number.
   // Omitted entirely (no data-whatsapp attribute) hides the button.
   whatsappNumber?: string;
@@ -144,15 +149,18 @@ export class ChatWidget {
   }
 
   // Opens a fresh WhatsApp conversation with the platform's shared number,
-  // pre-filled with the "Z:<slug>" prefix the webhook uses to route the
-  // message to this company (see lib/bot/conversation.ts#resolveWhatsAppRoute
-  // on the backend). This starts a NEW thread on WhatsApp — it does not, and
-  // cannot, carry over this conversation's message history, since WhatsApp
-  // only lets you pre-fill text the customer would type themselves.
+  // pre-filled with a natural message naming the company — the backend
+  // routes a cold first contact by matching that name against the company
+  // directory (see lib/bot/conversation.ts#resolveWhatsAppRoute), so this
+  // reads to the customer as something they'd actually type themselves
+  // instead of an opaque "Z:<slug>" code. This starts a NEW thread on
+  // WhatsApp — it does not, and cannot, carry over this conversation's
+  // message history, since WhatsApp only lets you pre-fill text the
+  // customer would type themselves.
   private openWhatsApp(): void {
     if (!this.config.whatsappNumber) return;
     const digits = this.config.whatsappNumber.replace(/\D/g, '');
-    const text = `Z:${this.config.companyId} Olá, vim do chat do site`;
+    const text = `Olá, gostaria de falar com a ${this.config.companyName}`;
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 

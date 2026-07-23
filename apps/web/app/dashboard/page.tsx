@@ -3,6 +3,7 @@ import { prisma } from '@zappy/db';
 import { requireSession } from '../../lib/auth-server';
 import { RefreshButton } from './refresh-button';
 import { CopySnippet } from '../copy-snippet';
+import { CompanyNameForm } from './company-name-form';
 
 export default async function DashboardHomePage() {
   const { companyId } = await requireSession();
@@ -12,7 +13,7 @@ export default async function DashboardHomePage() {
 
   const [company, ticketsByStatus, upcomingBookings, totalConfirmedBookings, activeServices, activeFaqs, quickReplies, recentTickets] =
     await Promise.all([
-      prisma.company.findUnique({ where: { id: companyId }, select: { slug: true, allowedDomains: true } }),
+      prisma.company.findUnique({ where: { id: companyId }, select: { name: true, slug: true, allowedDomains: true } }),
       prisma.ticket.groupBy({ by: ['status'], where: { companyId }, _count: true }),
       prisma.booking.count({
         where: { companyId, status: 'confirmed', scheduledAt: { gte: now, lte: weekFromNow } },
@@ -51,7 +52,7 @@ export default async function DashboardHomePage() {
   const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
   const waLink =
     whatsappDigits && company
-      ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Z:${company.slug} Olá!`)}`
+      ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de falar com a ${company.name}`)}`
       : null;
 
   return (
@@ -64,6 +65,15 @@ export default async function DashboardHomePage() {
           </p>
         </div>
         <RefreshButton />
+      </div>
+
+      <div className="dash-card">
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Nome da empresa</h3>
+        <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
+          Esse nome aparece pro cliente no botão de WhatsApp do widget (ex: "Olá, gostaria de
+          falar com a {company?.name}") e é como o bot se identifica nas conversas.
+        </p>
+        <CompanyNameForm defaultName={company?.name ?? ''} />
       </div>
 
       {!allStepsDone && (

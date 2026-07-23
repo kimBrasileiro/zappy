@@ -13,6 +13,12 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS build
 COPY . .
 RUN pnpm --filter @zappy/db db:generate
+# apps/web/public/widget.js is gitignored (build output, not source) —
+# @zappy/widget's own build script writes it there directly (see
+# apps/widget/scripts/copy-to-web.js). Nothing else produces this file, so a
+# clean checkout (CI, or anyone besides whoever last ran the widget build
+# locally) would otherwise ship apps/web/public without it.
+RUN pnpm --filter @zappy/widget build
 
 # Next.js inlines every NEXT_PUBLIC_* var into the client bundle at build
 # time — passing these only as Cloud Run *runtime* env vars (infra/cloud_run.tf)

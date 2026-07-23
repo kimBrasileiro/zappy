@@ -221,6 +221,7 @@ export async function MarketingHome() {
   const installSnippet = [
     `<script src="https://cdn.seudominio.com/widget.js"`,
     `        data-company="sua-empresa"`,
+    `        data-company-name="Sua Empresa"`,
     `        data-color="${BRAND_COLOR}"`,
     whatsappNumber ? `        data-whatsapp="${whatsappNumber}"` : null,
     `        async></script>`,
@@ -623,6 +624,7 @@ export async function MarketingHome() {
         src="/widget.js"
         strategy="afterInteractive"
         data-company="zappy"
+        data-company-name="Zappy"
         data-color={BRAND_COLOR}
         data-whatsapp={whatsappNumber}
         data-quick-replies={ZAPPY_QUICK_REPLIES}

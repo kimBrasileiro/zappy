@@ -149,18 +149,20 @@ export class ChatWidget {
   }
 
   // Opens a fresh WhatsApp conversation with the platform's shared number,
-  // pre-filled with a natural message naming the company — the backend
-  // routes a cold first contact by matching that name against the company
-  // directory (see lib/bot/conversation.ts#resolveWhatsAppRoute), so this
-  // reads to the customer as something they'd actually type themselves
-  // instead of an opaque "Z:<slug>" code. This starts a NEW thread on
-  // WhatsApp — it does not, and cannot, carry over this conversation's
-  // message history, since WhatsApp only lets you pre-fill text the
-  // customer would type themselves.
+  // pre-filled with an exact trigger phrase the backend recognizes (see
+  // lib/bot/conversation.ts#SCHEDULE_SWITCH_PATTERN) — matching this exact
+  // wording is what lets it switch/route to THIS company even when the
+  // customer's phone number was already mid-conversation with a different
+  // one (e.g. clicked this same button on two different clients' sites).
+  // It reads to the customer as something they'd type themselves, unlike
+  // the old opaque "Z:<slug>" code. This starts a NEW thread on WhatsApp —
+  // it does not, and cannot, carry over this conversation's message
+  // history, since WhatsApp only lets you pre-fill text the customer would
+  // type themselves.
   private openWhatsApp(): void {
     if (!this.config.whatsappNumber) return;
     const digits = this.config.whatsappNumber.replace(/\D/g, '');
-    const text = `Olá, gostaria de falar com a ${this.config.companyName}`;
+    const text = `Olá, gostaria de agendar serviços com ${this.config.companyName}`;
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 

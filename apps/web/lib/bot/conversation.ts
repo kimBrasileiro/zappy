@@ -66,23 +66,42 @@ function normalizeForMatch(value: string): string {
 }
 
 // The whole platform shares ONE WhatsApp Business number, so a raw inbound
-// phone number alone doesn't say which company the message is for. Three
+// phone number alone doesn't say which company the message is for. Four
 // ways to resolve it, in priority order:
-//   1. Explicit "Z:<company-slug>" prefix — from the widget's "Continuar no
-//      WhatsApp" button or the dashboard's Instalação page/QR code. Always
-//      wins, even over an existing route, since it's how a customer
-//      explicitly switches which company they're talking to.
-//   2. An existing route for this phone number — most messages, once a
+//   1. Explicit "Z:<company-slug>" prefix — legacy code-based switch, kept
+//      for anything still generating it. Always wins, even over an existing
+//      route.
+//   2. The "Olá, gostaria de agendar serviços com <empresa>" pattern — this
+//      exact phrase is what the widget's WhatsApp button and the dashboard's
+//      direct WhatsApp link send (see apps/widget/src/widget.ts#openWhatsApp
+//      and dashboard/instalacao, dashboard home). A customer clicking that
+//      button on a DIFFERENT company's site than whichever one this phone
+//      number was last talking to needs this to actually switch — so, like
+//      the Z: prefix, it always wins over an existing route. Scoped to this
+//      one rigid phrase specifically because we control its exact wording
+//      end to end (it's never something a customer free-types), which is
+//      what makes it safe to let it override an active conversation — a
+//      loose "any company name mentioned" match here would risk switching a
+//      customer away from company A just because they mentioned company B in
+//      passing conversation.
+//   3. An existing route for this phone number — most messages, once a
 //      conversation is established.
-//   3. The company's name mentioned in the free text itself (e.g. "Oi,
+//   4. The company's name mentioned in the free text itself (e.g. "Oi,
 //      queria falar com a Zappy") — a best-effort fallback for a cold first
 //      contact who didn't come through a link/QR code and won't know to
-//      type a code. Only trusted when exactly one active company's name
-//      appears; anything ambiguous falls through to asking for the code
-//      rather than guessing wrong.
-// With none of the three, there's no way to know which company a cold first
+//      type a code or use the exact phrase above. Only trusted when exactly
+//      one active company's name appears, and only as a first-contact
+//      fallback (after the existing-route check) — anything ambiguous, or
+//      any mid-conversation mention, falls through instead of guessing.
+// With none of the four, there's no way to know which company a cold first
 // contact is for, so the caller is told to ask for the code instead.
 const WHATSAPP_CODE_PATTERN = /^Z:([a-z0-9-]+)\s*/i;
+const SCHEDULE_SWITCH_PATTERN = /agendar\s+servi[cç]os?\s+com\s+["“]?([^"”.!?\n]+?)["”]?[.!?]?\s*$/i;
+// What the bot actually receives once the switch phrase itself is stripped
+// out — phrased to trigger orchestrator.ts's "customer wants to see
+// services" rule (list_services) immediately, matching the button's whole
+// point: land straight on this company's service list, no extra back-and-forth.
+const SCHEDULE_SWITCH_DEFAULT_MESSAGE = 'Quero ver os serviços disponíveis para agendar.';
 
 async function matchCompanyByNameInText(rawText: string): Promise<Company | null> {
   const normalizedText = normalizeForMatch(rawText);
@@ -101,19 +120,51 @@ async function matchCompanyByNameInText(rawText: string): Promise<Company | null
   return matches.length === 1 ? matches[0]! : null;
 }
 
+// Resolves a single already-isolated candidate name (e.g. the captured group
+// from SCHEDULE_SWITCH_PATTERN) against the company directory — exact match
+// first, then substring either direction, same shape as
+// lib/bot/services.ts#resolveService's name matching.
+async function resolveCompanyByName(candidate: string): Promise<Company | null> {
+  const target = normalizeForMatch(candidate);
+  if (!target) return null;
+
+  const companies = await prisma.company.findMany({ where: { status: 'active' } });
+  const exact = companies.find((c) => normalizeForMatch(c.name) === target || normalizeForMatch(c.slug) === target);
+  if (exact) return exact;
+
+  return (
+    companies.find((c) => {
+      const normalizedName = normalizeForMatch(c.name);
+      return normalizedName.length >= 3 && (normalizedName.includes(target) || target.includes(normalizedName));
+    }) ?? null
+  );
+}
+
+async function switchRoute(fromWaPhoneNumber: string, company: Company): Promise<Customer> {
+  const customer = await findOrCreateCustomerByPhone(company.id, toLocalPhone(fromWaPhoneNumber));
+  await prisma.whatsAppRoute.upsert({
+    where: { waPhoneNumber: fromWaPhoneNumber },
+    create: { waPhoneNumber: fromWaPhoneNumber, companyId: company.id, customerId: customer.id },
+    update: { companyId: company.id, customerId: customer.id },
+  });
+  return customer;
+}
+
 export async function resolveWhatsAppRoute(fromWaPhoneNumber: string, rawText: string): Promise<WhatsAppRouteResult> {
   const codeMatch = rawText.match(WHATSAPP_CODE_PATTERN);
   const company = codeMatch ? await prisma.company.findUnique({ where: { slug: codeMatch[1]!.toLowerCase() } }) : null;
 
   if (company) {
-    const customer = await findOrCreateCustomerByPhone(company.id, toLocalPhone(fromWaPhoneNumber));
-    await prisma.whatsAppRoute.upsert({
-      where: { waPhoneNumber: fromWaPhoneNumber },
-      create: { waPhoneNumber: fromWaPhoneNumber, companyId: company.id, customerId: customer.id },
-      update: { companyId: company.id, customerId: customer.id },
-    });
+    const customer = await switchRoute(fromWaPhoneNumber, company);
     const message = rawText.slice(codeMatch![0].length).trim() || 'Olá!';
     return { needsCode: false, company, customer, message };
+  }
+
+  const switchMatch = rawText.match(SCHEDULE_SWITCH_PATTERN);
+  const switchCompany = switchMatch ? await resolveCompanyByName(switchMatch[1]!) : null;
+  if (switchCompany) {
+    const customer = await switchRoute(fromWaPhoneNumber, switchCompany);
+    return { needsCode: false, company: switchCompany, customer, message: SCHEDULE_SWITCH_DEFAULT_MESSAGE };
   }
 
   const route = await prisma.whatsAppRoute.findUnique({ where: { waPhoneNumber: fromWaPhoneNumber } });

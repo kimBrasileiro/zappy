@@ -52,7 +52,7 @@ export default async function DashboardHomePage() {
   const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
   const waLink =
     whatsappDigits && company
-      ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de falar com a ${company.name}`)}`
+      ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de agendar serviços com ${company.name}`)}`
       : null;
 
   return (
@@ -71,7 +71,7 @@ export default async function DashboardHomePage() {
         <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Nome da empresa</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
           Esse nome aparece pro cliente no botão de WhatsApp do widget (ex: "Olá, gostaria de
-          falar com a {company?.name}") e é como o bot se identifica nas conversas.
+          agendar serviços com {company?.name}") e é como o bot se identifica nas conversas.
         </p>
         <CompanyNameForm defaultName={company?.name ?? ''} />
       </div>

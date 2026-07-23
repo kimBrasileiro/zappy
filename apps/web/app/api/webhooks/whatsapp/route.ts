@@ -88,9 +88,10 @@ export async function POST(request: Request) {
       conversationId: route.customer.phone!,
       message: route.message,
     });
-    // Empty means the ticket is already human-handled (G11 in
-    // orchestrator.ts) — nothing to send, same as the widget's own handling
-    // of an empty reply.
+    // Empty only happens for a channel/guardrail case orchestrate() itself
+    // has nothing to say about — G11 (already human-handled) now always
+    // returns real text (see orchestrator.ts's STILL_ESCALATED_MESSAGE), so
+    // this isn't that.
     if (reply) await sendWhatsAppMessage(inbound.fromWaPhoneNumber, reply);
   } catch (err) {
     if (!(err instanceof OrchestratorBlockedError)) {

@@ -58,6 +58,16 @@ export interface OrchestrateResult {
 const FALLBACK_MESSAGE =
   'Desculpa, não consegui processar isso agora. Pode tentar reformular ou pedir pra falar com um atendente?';
 
+// G11 — sent whenever the customer messages again after the ticket is
+// already being human-handled. The widget also has a persistent "aguardando
+// atendente" banner for this same state, but that alone isn't enough — a
+// customer who sends another message and gets nothing back (no bubble at
+// all) reasonably reads that as broken/stuck rather than "already in queue,
+// keep waiting." WhatsApp has no banner equivalent at all, so for that
+// channel this text is the only signal.
+const STILL_ESCALATED_MESSAGE =
+  'Você já está na fila de atendimento — um atendente humano vai te responder por aqui assim que possível.';
+
 // G9 — at most two business-tool rounds, then a forced final-answer round.
 // Started at 1 (round 1: tool, round 2: text only) per the original spec's
 // anti-loop rule; raised to 2 after finding a real hallucination it caused:
@@ -107,10 +117,13 @@ export async function* orchestrate(
   await appendMessage(ticket.id, company.id, 'customer', input.message);
 
   // G11 — a human is already handling this ticket (escalated or an agent
-  // already replied): the message above is saved for the Inbox thread, but
-  // the bot stays silent so it never talks over the human.
+  // already replied): the message above is saved for the Inbox thread, and
+  // the bot never generates a real answer (no LLM call, no talking over the
+  // human) — but it does send this one canned line so the customer isn't
+  // left staring at nothing.
   if (isHumanHandling(ticket)) {
-    yield '';
+    yield STILL_ESCALATED_MESSAGE;
+    await appendMessage(ticket.id, company.id, 'bot', STILL_ESCALATED_MESSAGE);
     return { quickReplies: [], escalated: true };
   }
 

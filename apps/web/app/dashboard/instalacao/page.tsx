@@ -26,7 +26,7 @@ export default async function InstalacaoPage() {
     .join('\n');
 
   const waLink = whatsappDigits
-    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de falar com a ${company.name}`)}`
+    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de agendar serviços com ${company.name}`)}`
     : null;
 
   return (

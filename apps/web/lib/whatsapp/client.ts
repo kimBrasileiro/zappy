@@ -7,12 +7,12 @@ const GRAPH_API_VERSION = 'v20.0';
 // the caller (the webhook still has to record the conversation and ack the
 // Meta request either way) — it just means the reply never actually reaches
 // WhatsApp, which is loudly logged instead of thrown.
-export async function sendWhatsAppMessage(toWaPhoneNumber: string, text: string): Promise<void> {
+async function sendWhatsAppPayload(toWaPhoneNumber: string, body: Record<string, unknown>, logExcerpt: string): Promise<void> {
   const token = process.env.WHATSAPP_CLOUD_API_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_CLOUD_API_PHONE_NUMBER_ID;
 
   if (!token || !phoneNumberId) {
-    console.warn(`[whatsapp] credenciais ausentes — não enviado para ${toWaPhoneNumber}: "${text.slice(0, 80)}"`);
+    console.warn(`[whatsapp] credenciais ausentes — não enviado para ${toWaPhoneNumber}: "${logExcerpt.slice(0, 80)}"`);
     return;
   }
 
@@ -23,12 +23,7 @@ export async function sendWhatsAppMessage(toWaPhoneNumber: string, text: string)
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: toWaPhoneNumber,
-        type: 'text',
-        text: { body: text },
-      }),
+      body: JSON.stringify({ messaging_product: 'whatsapp', to: toWaPhoneNumber, ...body }),
     });
     if (!response.ok) {
       console.error(`[whatsapp] send failed (${response.status}) for ${toWaPhoneNumber}: ${await response.text()}`);
@@ -36,6 +31,80 @@ export async function sendWhatsAppMessage(toWaPhoneNumber: string, text: string)
   } catch (err) {
     console.error(`[whatsapp] send threw for ${toWaPhoneNumber}`, err);
   }
+}
+
+export async function sendWhatsAppMessage(toWaPhoneNumber: string, text: string): Promise<void> {
+  await sendWhatsAppPayload(toWaPhoneNumber, { type: 'text', text: { body: text } }, text);
+}
+
+// WhatsApp reply buttons: max 3, each title capped at 20 chars. List
+// messages: max 10 rows, each title capped at 24 chars. Both surface the
+// same orchestrator-computed quickReplies the web widget already renders as
+// chips (see apps/web/app/api/chat/route.ts's "options" frame) — the row/
+// button `id` carries the full, untruncated text (well under Meta's 200/256
+// char id limits for these short prompts) so a tap round-trips through
+// parseInboundMessage as if the customer had typed that exact quick reply.
+const BUTTON_TITLE_MAX = 20;
+const LIST_ROW_TITLE_MAX = 24;
+const MAX_LIST_ROWS = 10;
+
+function truncateTitle(text: string, max: number): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
+}
+
+export async function sendWhatsAppQuickReplies(
+  toWaPhoneNumber: string,
+  bodyText: string,
+  options: string[],
+): Promise<void> {
+  if (options.length === 0) {
+    await sendWhatsAppMessage(toWaPhoneNumber, bodyText);
+    return;
+  }
+
+  if (options.length <= 3) {
+    await sendWhatsAppPayload(
+      toWaPhoneNumber,
+      {
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          body: { text: bodyText },
+          action: {
+            buttons: options.map((option) => ({
+              type: 'reply',
+              reply: { id: option, title: truncateTitle(option, BUTTON_TITLE_MAX) },
+            })),
+          },
+        },
+      },
+      bodyText,
+    );
+    return;
+  }
+
+  await sendWhatsAppPayload(
+    toWaPhoneNumber,
+    {
+      type: 'interactive',
+      interactive: {
+        type: 'list',
+        body: { text: bodyText },
+        action: {
+          button: 'Escolher',
+          sections: [
+            {
+              rows: options.slice(0, MAX_LIST_ROWS).map((option) => ({
+                id: option,
+                title: truncateTitle(option, LIST_ROW_TITLE_MAX),
+              })),
+            },
+          ],
+        },
+      },
+    },
+    bodyText,
+  );
 }
 
 // Meta signs the raw request body with the app secret (HMAC-SHA256) and
@@ -62,24 +131,45 @@ export interface InboundWhatsAppMessage {
   wamid: string;
 }
 
-// Meta's webhook payload shape: entry[].changes[].value.messages[]. Only
-// text messages are handled — media/location/etc. come back as `null` and
-// are silently ignored by the caller (no tool in this system's catalog can
-// do anything useful with them yet).
+// Meta's webhook payload shape: entry[].changes[].value.messages[]. Handles
+// plain text and taps on our own interactive messages (button_reply/list_reply)
+// — both come back as `null` for anything else (media/location/etc.), since no
+// tool in this system's catalog can do anything useful with those yet.
 export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | null {
   const entry = (payload as { entry?: unknown[] })?.entry?.[0] as
     | { changes?: { value?: { messages?: unknown[] } }[] }
     | undefined;
   const value = entry?.changes?.[0]?.value;
   const message = value?.messages?.[0] as
-    | { from?: string; id?: string; type?: string; text?: { body?: string } }
+    | {
+        from?: string;
+        id?: string;
+        type?: string;
+        text?: { body?: string };
+        interactive?: {
+          type?: string;
+          button_reply?: { id?: string };
+          list_reply?: { id?: string };
+        };
+      }
     | undefined;
 
-  if (!message || message.type !== 'text' || !message.from || !message.id || !message.text?.body) {
-    return null;
+  if (!message?.from || !message.id) return null;
+
+  if (message.type === 'text' && message.text?.body) {
+    return { fromWaPhoneNumber: message.from, text: message.text.body, wamid: message.id };
   }
 
-  return { fromWaPhoneNumber: message.from, text: message.text.body, wamid: message.id };
+  // A button/list tap's `id` is the full original quick-reply text we sent it
+  // as (see sendWhatsAppQuickReplies) — feeding it back through as if the
+  // customer typed it themselves keeps the orchestrator's contract (it only
+  // ever deals in free text) unchanged.
+  if (message.type === 'interactive') {
+    const tappedId = message.interactive?.button_reply?.id ?? message.interactive?.list_reply?.id;
+    if (tappedId) return { fromWaPhoneNumber: message.from, text: tappedId, wamid: message.id };
+  }
+
+  return null;
 }
 
 // services.ts#normalizePhone already normalizes customer-provided phone

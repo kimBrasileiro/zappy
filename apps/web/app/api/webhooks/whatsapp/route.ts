@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { resolveWhatsAppRoute } from '../../../../lib/bot/conversation';
 import { OrchestratorBlockedError, orchestrate } from '../../../../lib/bot/orchestrator';
-import { parseInboundMessage, sendWhatsAppMessage, verifyWebhookSignature } from '../../../../lib/whatsapp/client';
+import {
+  parseInboundMessage,
+  sendWhatsAppMessage,
+  sendWhatsAppQuickReplies,
+  verifyWebhookSignature,
+} from '../../../../lib/whatsapp/client';
 
 const NEEDS_CODE_MESSAGE =
   'Oi! Esse número atende várias empresas — me diga o nome da empresa que você quer falar (ex: "quero falar com a Zappigo") que eu já te conecto.';
@@ -25,18 +30,20 @@ function isDuplicate(wamid: string): boolean {
 }
 
 // Collects orchestrate()'s streamed deltas into one string — WhatsApp has no
-// concept of a streaming reply, unlike the SSE-based /api/chat endpoint.
+// concept of a streaming reply, unlike the SSE-based /api/chat endpoint —
+// and keeps its final quickReplies (same contextual suggestions the web
+// widget renders as chips; see api/chat/route.ts's "options" frame), sent
+// here as real WhatsApp buttons/list instead.
 async function collectReply(
   input: Parameters<typeof orchestrate>[0],
-): Promise<string> {
+): Promise<{ text: string; quickReplies: string[] }> {
   const gen = orchestrate(input);
   let full = '';
   for (;;) {
     const next = await gen.next();
-    if (next.done) break;
+    if (next.done) return { text: full, quickReplies: next.value.quickReplies };
     full += next.value;
   }
-  return full;
 }
 
 export function GET(request: Request) {
@@ -81,15 +88,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
   if (route.needsConfirmation) {
-    await sendWhatsAppMessage(
+    await sendWhatsAppQuickReplies(
       inbound.fromWaPhoneNumber,
-      `Olá! Você gostaria de agendar serviços ou suporte com a ${route.company.name}? Me conta o que precisa que eu já te ajudo — se for outra empresa, é só me dizer o nome dela.`,
+      `Olá! Você gostaria de agendar serviços ou suporte com a ${route.company.name}? Se for outra empresa, é só me dizer o nome dela.`,
+      ['Sim', 'Não'],
     );
     return NextResponse.json({ ok: true });
   }
 
   try {
-    const reply = await collectReply({
+    const { text: reply, quickReplies } = await collectReply({
       companySlug: route.company.slug,
       channel: 'whatsapp',
       conversationId: route.customer.phone!,
@@ -99,7 +107,7 @@ export async function POST(request: Request) {
     // has nothing to say about — G11 (already human-handled) now always
     // returns real text (see orchestrator.ts's STILL_ESCALATED_MESSAGE), so
     // this isn't that.
-    if (reply) await sendWhatsAppMessage(inbound.fromWaPhoneNumber, reply);
+    if (reply) await sendWhatsAppQuickReplies(inbound.fromWaPhoneNumber, reply, quickReplies);
   } catch (err) {
     if (!(err instanceof OrchestratorBlockedError)) {
       console.error('[whatsapp] orchestrate failed', err);

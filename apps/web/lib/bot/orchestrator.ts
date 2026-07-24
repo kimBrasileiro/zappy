@@ -1,5 +1,5 @@
 import { prisma } from '@zappy/db';
-import { streamGeminiCompletion, suggestQuickReplies } from '../ai/gemini';
+import { FALLBACK_GEMINI_MODEL, PRIMARY_GEMINI_MODEL, streamGeminiCompletion, suggestQuickReplies } from '../ai/gemini';
 import type { ChatMessage, ToolCall } from '../ai/types';
 import { scrubForLog } from '../pii/scrubber';
 import { checkRateLimit } from './rate-limit';
@@ -193,26 +193,40 @@ export async function* orchestrate(
 
     // Gemini occasionally streams back a completely empty round — no text
     // delta, no tool call — for no discernible reason tied to the input
-    // (reproduced ~1 in 5 tries on an innocuous message). Not worth failing
-    // the whole turn over: retried once, and since nothing is yielded until
-    // a real chunk arrives, a retry never shows the customer a truncated
-    // partial reply from the failed attempt.
+    // (reproduced ~1 in 5 tries on an innocuous message), or throws outright
+    // (network hiccup, that specific model overloaded/rate-limited). Not
+    // worth failing the whole turn over either way: attempt 2 switches to
+    // FALLBACK_GEMINI_MODEL, a different Gemini model on the same
+    // account/API — covers a model-specific issue, not a full Gemini outage,
+    // which would take both down together (a genuinely different provider
+    // is the real fix for that, not implemented yet). Since nothing is
+    // yielded until a real chunk arrives, a retry never shows the customer a
+    // truncated partial reply from the failed attempt — UNLESS a chunk
+    // already went out before the error hit mid-stream, in which case
+    // there's nothing safe left to retry and the error just propagates.
     for (let attempt = 0; attempt < 2; attempt++) {
-      const gen = streamGeminiCompletion(currentMessages, toolsForThisRound);
-
-      for (;;) {
-        const next = await gen.next();
-        if (next.done) {
-          toolCalls = next.value.toolCalls;
-          break;
+      const model = attempt === 0 ? PRIMARY_GEMINI_MODEL : FALLBACK_GEMINI_MODEL;
+      let attemptGotAnything = false;
+      try {
+        const gen = streamGeminiCompletion(currentMessages, toolsForThisRound, model);
+        for (;;) {
+          const next = await gen.next();
+          if (next.done) {
+            toolCalls = next.value.toolCalls;
+            break;
+          }
+          attemptGotAnything = true;
+          gotAnything = true;
+          full += next.value;
+          yield next.value;
         }
-        gotAnything = true;
-        full += next.value;
-        yield next.value;
+      } catch (err) {
+        if (attemptGotAnything) throw err;
+        console.log(`[chat] model ${model} threw on attempt ${attempt + 1}/2`, err);
       }
 
       if (gotAnything || (toolCalls && toolCalls.length > 0)) break;
-      console.log(`[chat] empty round response (attempt ${attempt + 1}/2)`);
+      console.log(`[chat] empty round response from ${model} (attempt ${attempt + 1}/2)`);
     }
 
     if (!toolCalls || toolCalls.length === 0) break; // final text answer, we're done

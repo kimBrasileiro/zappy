@@ -7,6 +7,15 @@ import type { ChatMessage, StreamResult, ToolDefinition } from './types';
 // other OpenAI-compat provider (Mistral, GPT), per the original pool design.
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/';
 
+// Two Gemini models, not two providers — protects against a specific model
+// being overloaded/rate-limited/erroring (the failure mode actually seen in
+// practice), not a full outage of Gemini itself (both models share the same
+// underlying API/account, so an outage there takes both down together).
+// Falling back to a genuinely different provider is a real follow-up once
+// there's a second provider's API key configured — there isn't one yet.
+export const PRIMARY_GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
+export const FALLBACK_GEMINI_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-2.0-flash';
+
 let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
@@ -59,8 +68,8 @@ function toOpenAiTools(tools: ToolDefinition[]): ChatCompletionTool[] {
 export async function* streamGeminiCompletion(
   messages: ChatMessage[],
   tools?: ToolDefinition[],
+  model: string = PRIMARY_GEMINI_MODEL,
 ): AsyncGenerator<string, StreamResult, unknown> {
-  const model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
   const stream = await getClient().chat.completions.create({
     model,
     messages: toOpenAiMessages(messages),
@@ -104,9 +113,11 @@ export async function* streamGeminiCompletion(
 
   // Diagnostic for the empty-completion issue reasoning_effort: 'none' above
   // mitigates but doesn't fully eliminate — orchestrator.ts retries once on
-  // this, but if it keeps showing up, this is where to look.
+  // this (with the fallback model, see PRIMARY_GEMINI_MODEL/
+  // FALLBACK_GEMINI_MODEL above), but if it keeps showing up, this is where
+  // to look.
   if (!sawAnyContent && toolCallsByIndex.size === 0) {
-    console.log(`[gemini] empty stream — finish_reason=${lastFinishReason}`);
+    console.log(`[gemini] empty stream (model=${model}) — finish_reason=${lastFinishReason}`);
   }
 
   if (toolCallsByIndex.size === 0) return { toolCalls: null };
@@ -129,9 +140,8 @@ const QUICK_REPLY_SYSTEM_PROMPT =
 // means that turn has no suggested buttons.
 export async function suggestQuickReplies(userMessage: string, botMessage: string): Promise<string[]> {
   try {
-    const model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
     const response = await getClient().chat.completions.create({
-      model,
+      model: PRIMARY_GEMINI_MODEL,
       messages: [
         { role: 'system', content: QUICK_REPLY_SYSTEM_PROMPT },
         { role: 'user', content: `Cliente: ${userMessage}\nAssistente: ${botMessage}` },

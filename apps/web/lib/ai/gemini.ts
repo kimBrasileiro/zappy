@@ -137,6 +137,9 @@ const QUICK_REPLY_SYSTEM_PROMPT =
   'resposta do assistente pedir pra escolher entre opções específicas que ela mesma não listou ' +
   '(ex: "qual serviço você quer?" sem nomear nenhum), sugira só respostas genéricas de continuação ' +
   '(ex: "Quero ver as opções", "Não sei, me mostra", "Outra dúvida") em vez de adivinhar itens de catálogo. ' +
+  'Se a resposta do assistente estiver perguntando EM QUE DIA o cliente quer agendar (ainda sem checar ' +
+  'horários), sugira exatamente relativos fáceis de responder — "Hoje", "Amanhã", "Semana que vem" — ' +
+  'nunca algo vago tipo "Mês que vem" ou uma data solta sem contexto. ' +
   'Responda APENAS com o array JSON, nada mais — sem markdown, sem explicação.';
 
 // Best-effort and isolated from the main reply: a failure here (bad JSON,

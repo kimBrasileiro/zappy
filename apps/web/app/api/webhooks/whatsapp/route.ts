@@ -102,6 +102,7 @@ export async function POST(request: Request) {
       channel: 'whatsapp',
       conversationId: route.customer.phone!,
       message: route.message,
+      isNewContext: route.isSwitch,
     });
     // Empty only happens for a channel/guardrail case orchestrate() itself
     // has nothing to say about — G11 (already human-handled) now always

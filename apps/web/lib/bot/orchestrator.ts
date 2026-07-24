@@ -44,6 +44,15 @@ export interface OrchestrateInput {
   // Browser's Origin header, site_chat only — WhatsApp has no equivalent
   // (see guardrails.ts#checkOrigin, G12).
   origin?: string | null;
+  // True whenever resolveWhatsAppRoute (conversation.ts) just resolved or
+  // switched which company this WhatsApp conversation is for — a Z:<slug>
+  // code, an explicit company name in the text, or true first contact.
+  // Skips the LLM for this one turn in favor of a fixed greeting: the whole
+  // point of a switch is the customer finding out, unambiguously, which
+  // company they just landed on, which an LLM-generated reply to whatever
+  // they happened to type isn't guaranteed to make clear. Never set for
+  // site_chat — there's no shared-number ambiguity to resolve there.
+  isNewContext?: boolean;
 }
 
 export interface OrchestrateResult {
@@ -68,6 +77,12 @@ const FALLBACK_MESSAGE =
 // channel this text is the only signal.
 const STILL_ESCALATED_MESSAGE =
   'Você já está na fila de atendimento — um atendente humano vai te responder por aqui assim que possível.';
+
+// Fixed top-level menu shown on every fresh/switched context (see
+// isNewContext) instead of whatever the LLM or suggestQuickReplies would
+// otherwise guess — the three things a customer actually comes to this bot
+// for, always available at the very start of a conversation.
+const NEW_CONTEXT_QUICK_REPLIES = ['Agendar um serviço', 'Cancelar um agendamento', 'Tenho uma dúvida'];
 
 // G9 — at most two business-tool rounds, then a forced final-answer round.
 // Started at 1 (round 1: tool, round 2: text only) per the original spec's
@@ -117,6 +132,20 @@ export async function* orchestrate(
   const history = await loadHistory(ticket.id);
   await appendMessage(ticket.id, company.id, 'customer', input.message);
 
+  // Fresh/switched company context — reply with a fixed greeting instead of
+  // running this turn through the LLM at all, so the customer finds out,
+  // unambiguously, which company they just landed on (see OrchestrateInput's
+  // isNewContext and conversation.ts#resolveWhatsAppRoute). Whatever the
+  // customer actually typed to trigger the switch is still logged above,
+  // but is deliberately not answered here — it's picked up normally on
+  // their next message once the fixed menu below has set expectations.
+  if (input.isNewContext) {
+    const greeting = `Olá, sou a assistente virtual da ${company.name}. Em que posso ajudar?`;
+    yield greeting;
+    await appendMessage(ticket.id, company.id, 'bot', greeting);
+    return { quickReplies: NEW_CONTEXT_QUICK_REPLIES, escalated: isEscalated(ticket) };
+  }
+
   // G11 — only once an agent has actually replied (in_progress) does the bot
   // go fully silent, so it never talks over a human. Merely being flagged
   // for a human (waiting_human, nobody's picked it up yet) does NOT stop the
@@ -151,8 +180,9 @@ export async function* orchestrate(
     'As tools de agendamento identificam o serviço pelo nome exato (igual ao que list_services retornou), nunca por um id. Se não tiver certeza do nome exato do serviço mencionado pelo cliente, chame list_services de novo para confirmar antes de checar disponibilidade ou criar o agendamento.',
     'Use o histórico da conversa pra saber qual serviço já está em jogo — se o cliente já perguntou sobre um serviço específico (ou só existe um serviço cadastrado) e depois disser algo genérico como "quero agendar" sem repetir o nome, assuma que é esse mesmo serviço e prossiga direto (chame check_availability), em vez de perguntar de novo qual serviço ele quer. Só pergunte de novo se houver mais de um serviço relevante na conversa e não estiver claro qual deles.',
     'Quando o cliente mencionar uma data relativa ou parcial (ex: "dia 9", "amanhã", "sexta-feira", "essa semana"), calcule você mesmo a data exata no formato YYYY-MM-DD usando a data de hoje acima como referência — nunca peça pro cliente reescrever a data nesse formato. Se o cliente disser só o dia do mês (ex: "dia 9") e esse dia já passou no mês atual, assuma o próximo mês; se ainda não passou, assuma o mês atual.',
-    'Quando check_availability retornar horários (morningSlots/afternoonSlots), NÃO liste os horários no texto da sua resposta — eles já aparecem automaticamente como botões pro cliente clicar. Só confirme brevemente que encontrou horários de manhã e/ou tarde e pergunte qual ele prefere.',
-    'Quando o cliente responder com um horário curto (ex: "09:00"), esse é um horário que veio dos botões do último check_availability, e combina com a data já estabelecida na conversa. Nome completo e telefone com DDD do cliente são OBRIGATÓRIOS para criar o agendamento — se ainda não tiver os dois, peça-os agora antes de chamar create_booking (não invente, não assuma). Assim que tiver o horário, a data, o nome E o telefone, chame create_booking IMEDIATAMENTE usando o "iso" correspondente a esse horário no resultado de check_availability mais recente, sem pedir mais nenhuma confirmação.',
+    'Quando check_availability retornar horários (morningSlots/afternoonSlots), NÃO liste os horários no texto da sua resposta — eles já aparecem automaticamente como botões pro cliente clicar. Confirme brevemente MENCIONANDO A DATA exata que você acabou de checar (formato dia/mês, ex: "Encontrei horários pro dia 15/08:") e pergunte qual ele prefere — essa menção da data é obrigatória, porque as mensagens de ferramentas (tool calls) NÃO ficam salvas entre uma mensagem e outra do cliente: sua PRÓPRIA frase em texto é a única forma de lembrar depois qual data estava em jogo.',
+    'Quando o cliente responder só com um horário curto (ex: "09:00"), é um horário que veio dos botões do check_availability anterior — NUNCA pergunte a data de novo nesse caso: releia sua própria mensagem anterior (a que confirmou "Encontrei horários pro dia X") pra saber qual data combina com esse horário, e monte você mesmo o horário completo em ISO 8601 juntando essa data com o horário clicado (ex: data 2026-08-15 + horário "09:00" = "2026-08-15T09:00:00"). Nome completo e telefone com DDD do cliente são OBRIGATÓRIOS para criar o agendamento — se ainda não tiver os dois, peça-os agora antes de chamar create_booking (não invente, não assuma). Assim que tiver horário, data (da sua própria mensagem anterior), nome E telefone, chame create_booking IMEDIATAMENTE com esse horário montado, sem pedir mais nenhuma confirmação.',
+    'Ao perguntar em QUE DIA o cliente quer agendar (antes de chamar check_availability), prefira relativos fáceis de responder — "hoje", "amanhã", "essa semana", "semana que vem" — e nunca sugira algo vago tipo "mês que vem" ou uma data solta sem contexto: o cliente deve conseguir responder com uma palavra curta que você já sabe resolver pro formato YYYY-MM-DD.',
     'Quando o cliente pedir para ver serviços, horários disponíveis ou quiser agendar, chame a tool correspondente IMEDIATAMENTE nesta mesma resposta — nunca diga "vou verificar" ou peça confirmação antes de chamar a tool, apenas chame.',
     'Ao confirmar um agendamento, nunca exiba o bookingId interno pro cliente — mencione só o serviço, data, hora e preço.',
     'O resultado de create_booking pode vir com "requiresManualConfirmation": true. Se vier true, NÃO diga que o agendamento está confirmado — diga que o horário foi reservado e que alguém do time vai entrar em contato pelo telefone informado pelo cliente para confirmar o agendamento e os detalhes do serviço. Se vier false (ou ausente), confirme normalmente que o agendamento está confirmado.',

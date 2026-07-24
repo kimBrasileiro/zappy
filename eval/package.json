@@ -1,0 +1,19 @@
+{
+  "name": "@zappy/eval",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Behavioral eval suite for the chat orchestrator — scripted conversations against a real (ephemeral) company/service, graded by deterministic assertions plus a Gemini judge.",
+  "scripts": {
+    "eval": "tsx runner.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@zappy/db": "workspace:*",
+    "@zappy/web": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "openai": "^4.77.0"
+  }
+}

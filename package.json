@@ -11,6 +11,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "eval": "pnpm --filter @zappy/eval eval",
     "db:generate": "pnpm --filter @zappy/db db:generate",
     "db:migrate": "pnpm --filter @zappy/db db:migrate",
     "db:migrate:prod": "pnpm --filter @zappy/db db:migrate:prod",

@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/dashboard/bookings', label: 'Agendamentos' },
   { href: '/dashboard/instalacao', label: 'Instalação' },
   { href: '/dashboard/billing', label: 'Assinatura' },
+  { href: '/dashboard/suporte', label: 'Suporte' },
 ];
 
 export function NavLinks() {

@@ -1,0 +1,87 @@
+[
+  {
+    "name": "booking_happy_path",
+    "description": "Customer books the only service, letting the bot pick a slot and asking for name/phone.",
+    "service": { "name": "Corte de Cabelo", "durationMinutes": 40, "priceCents": 5000, "is24h": true },
+    "turns": [
+      { "message": "Oi, quero marcar um corte de cabelo pra amanhã de manhã" },
+      {
+        "message": "Pode ser o primeiro horário que tiver. Meu nome é Ana Souza, telefone 11987654321.",
+        "expectContains": ["confirmad"]
+      }
+    ],
+    "expectBookingCount": 1,
+    "successCriteria": "The assistant helped the customer book 'Corte de Cabelo': it worked out a real available time (whether it picked one itself or asked the customer to choose from real options is fine either way), collected the customer's name and phone before booking, and confirmed the booking clearly (service, date/time) without exposing any internal booking id."
+  },
+  {
+    "name": "reschedule_flow",
+    "description": "Customer already has a confirmed booking (seeded directly) and reschedules it via chat — the old slot must be cancelled, not left double-booked.",
+    "service": { "name": "Manicure", "durationMinutes": 30, "priceCents": 4000, "is24h": true },
+    "seedBooking": { "scheduledAtOffsetHours": 48, "customerPhone": "11912345678", "sameCustomer": true },
+    "turns": [
+      { "message": "Preciso remarcar minha manicure pra depois de amanhã" },
+      {
+        "message": "Pode ser o primeiro horário que tiver. Nome: Carla Dias, telefone 11912345678.",
+        "expectContains": ["confirmad"]
+      }
+    ],
+    "expectBookingCount": 1,
+    "successCriteria": "The assistant helped reschedule the customer's manicure to a new time and confirmed it (it doesn't need to explicitly narrate that the old slot was cancelled in so many words — what matters is there is exactly one confirmed booking at the end, not two)."
+  },
+  {
+    "name": "staff_conflict_and_autoallocate",
+    "description": "Service has two staff members. Requesting the busy one at a taken slot must be rejected (not silently reassigned); asking with no preference at the same slot must auto-allocate the free one.",
+    "service": {
+      "name": "Sobrancelha",
+      "durationMinutes": 30,
+      "priceCents": 3000,
+      "is24h": true,
+      "staffNames": ["Ana", "Bruno"]
+    },
+    "seedBooking": { "scheduledAtOffsetHours": 24, "staffName": "Ana", "customerPhone": "11955556666" },
+    "turns": [
+      {
+        "message": "Quero marcar sobrancelha com a Ana amanhã no mesmo horário que ela já tem ocupado — às 10h.",
+        "expectNotContains": ["confirmad"]
+      },
+      {
+        "message": "Ok, então tanto faz quem, pode ser amanhã às 10h mesmo. Nome: Julia Prado, telefone 11944443333."
+      }
+    ],
+    "expectBookingCount": 2,
+    "expectBookingStaff": "Bruno",
+    "successCriteria": "When the customer explicitly asked for Ana at a time she's already booked, the assistant did NOT confirm a booking with Ana and did not silently swap her for someone else without asking — it explained the conflict. When the customer then said they had no preference for the same time, the assistant booked successfully (implicitly with Bruno, the only one free) and confirmed it."
+  },
+  {
+    "name": "cancellation_policy_question",
+    "description": "Service has a configured cancellation policy — the bot must quote the real configured terms, not invent generic ones.",
+    "service": {
+      "name": "Massagem Relaxante",
+      "durationMinutes": 60,
+      "priceCents": 15000,
+      "is24h": true,
+      "cancellationNoticeHours": 24,
+      "cancellationFeeCents": 5000
+    },
+    "turns": [
+      {
+        "message": "Se eu agendar uma massagem relaxante, até quando posso cancelar sem pagar multa?",
+        "expectContains": ["24"]
+      }
+    ],
+    "successCriteria": "The assistant correctly stated the cancellation policy for Massagem Relaxante: free cancellation up to 24 hours before the appointment, with a R$50,00 fee after that — matching the configured policy exactly, not a made-up or generic one."
+  },
+  {
+    "name": "faq_priority_over_services",
+    "description": "A generic company question with a real registered FAQ answer must go through list_faqs, not be improvised or answered via the services catalog.",
+    "service": { "name": "Corte de Cabelo", "durationMinutes": 40, "priceCents": 5000, "is24h": true },
+    "faqs": [{ "question": "Vocês têm estacionamento?", "answer": "Sim, temos estacionamento gratuito para clientes." }],
+    "turns": [
+      {
+        "message": "Vocês tem estacionamento?",
+        "expectContains": ["estacionamento"]
+      }
+    ],
+    "successCriteria": "The assistant answered using the real registered FAQ content (free parking available for customers) rather than deflecting, improvising an unrelated answer, or listing services instead."
+  }
+]

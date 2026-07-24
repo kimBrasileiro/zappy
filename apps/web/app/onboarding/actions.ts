@@ -8,6 +8,7 @@ import { generateUniqueSlug } from '../../lib/slug';
 import { createDefaultFaqs } from '../../lib/default-faqs';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../lib/stripe/client';
 import { TERMS_VERSION } from '../../lib/legal';
+import { notifyNewSignup } from '../../lib/notifications';
 
 export interface OnboardingState {
   error?: string;
@@ -48,6 +49,7 @@ export async function completeOnboarding(
   });
 
   await createDefaultFaqs(company.id);
+  await notifyNewSignup({ companyName, adminEmail: session.user.email, plan: company.plan });
 
   // No Stripe key configured — same behavior as before this feature existed,
   // which is also what keeps local dev working without a Stripe account.

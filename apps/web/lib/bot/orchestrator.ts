@@ -10,7 +10,8 @@ import {
   checkOrigin,
   checkTicketContext,
   detectHallucination,
-  isHumanHandling,
+  isEscalated,
+  isHumanActivelyHandling,
   resolveLanguage,
 } from './guardrails';
 import {
@@ -116,12 +117,12 @@ export async function* orchestrate(
   const history = await loadHistory(ticket.id);
   await appendMessage(ticket.id, company.id, 'customer', input.message);
 
-  // G11 — a human is already handling this ticket (escalated or an agent
-  // already replied): the message above is saved for the Inbox thread, and
-  // the bot never generates a real answer (no LLM call, no talking over the
-  // human) — but it does send this one canned line so the customer isn't
-  // left staring at nothing.
-  if (isHumanHandling(ticket)) {
+  // G11 — only once an agent has actually replied (in_progress) does the bot
+  // go fully silent, so it never talks over a human. Merely being flagged
+  // for a human (waiting_human, nobody's picked it up yet) does NOT stop the
+  // bot — it keeps answering normally below, so the customer still gets
+  // help while the ticket sits in the queue.
+  if (isHumanActivelyHandling(ticket)) {
     yield STILL_ESCALATED_MESSAGE;
     await appendMessage(ticket.id, company.id, 'bot', STILL_ESCALATED_MESSAGE);
     return { quickReplies: [], escalated: true };
@@ -180,7 +181,11 @@ export async function* orchestrate(
   let slotButtons: string[] = [];
   let faqButtons: string[] = [];
   let serviceButtons: string[] = [];
-  let escalated = false;
+  // Starts true if the ticket was already flagged before this turn (e.g.
+  // escalate_human ran on an earlier message and nobody's picked it up yet)
+  // — the bot keeps answering in that state (see G11 above), but the
+  // escalated flag returned to the caller still needs to reflect it.
+  let escalated = isEscalated(ticket);
 
   for (;;) {
     let toolCalls: ToolCall[] | null = null;

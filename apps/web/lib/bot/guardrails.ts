@@ -83,13 +83,26 @@ export function resolveLanguage(company: Pick<Company, 'config'>): string {
   return config?.language ?? 'pt-BR';
 }
 
-// G11 — once a human is handling the ticket (escalate_human moved it to
-// waiting_human, or a dashboard agent reply moved it to in_progress), the bot
-// goes silent: the customer's message is still recorded so the lojista sees
-// it in the Inbox thread, but no LLM call happens, so the bot and the human
-// never answer over each other. Bot access resumes only if the ticket is
-// resolved/closed and a new one is opened.
-export function isHumanHandling(ticket: Pick<Ticket, 'status'>): boolean {
+// G11 — the bot only ever goes fully silent once an actual human has
+// stepped in (a dashboard agent sent a reply, moving the ticket to
+// in_progress) — never merely because escalate_human was called
+// (waiting_human). Before an agent actually joins, the customer would
+// otherwise be stuck with no help at all for however long the queue takes;
+// the bot keeps answering FAQs/bookings/etc. normally in the meantime, it
+// just also keeps the ticket flagged for a human (see isEscalated below).
+// Bot access resumes only if the ticket is resolved/closed and a new one is
+// opened.
+export function isHumanActivelyHandling(ticket: Pick<Ticket, 'status'>): boolean {
+  return ticket.status === 'in_progress';
+}
+
+// Display-only: true as soon as escalate_human has been called, even before
+// anyone's picked it up — drives the widget's "aguardando atendente" banner
+// and the escalated flag returned to both channels. Deliberately broader
+// than isHumanActivelyHandling above; those two questions ("should the UI
+// show escalated" vs. "should the bot stop talking") are answered
+// differently on purpose.
+export function isEscalated(ticket: Pick<Ticket, 'status'>): boolean {
   return ticket.status === 'waiting_human' || ticket.status === 'in_progress';
 }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@zappy/db';
-import { checkOrigin, isHumanHandling } from '../../../../lib/bot/guardrails';
+import { checkOrigin, isEscalated } from '../../../../lib/bot/guardrails';
 
 // Lets the widget pick up agent replies sent from the dashboard without the
 // customer having to send another message first — the only kind of message
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
       // api/chat/route.ts's `escalated` field) after a page reload, when
       // there's no in-flight streamed response to carry it — polling is
       // already happening for agent messages, this just rides along.
-      escalated: isHumanHandling(ticket),
+      escalated: isEscalated(ticket),
     },
     { headers: CORS_HEADERS },
   );

@@ -21,10 +21,17 @@ export default function LoginPage() {
   const [pending, setPending] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
+  // Remembered across the failed attempt specifically so "Reenviar email" has
+  // something to resend to — better-auth doesn't require re-typing the email
+  // just to trigger this.
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setUnverifiedEmail(null);
+    setResendState('idle');
     setPending(true);
 
     const formData = new FormData(e.currentTarget);
@@ -35,11 +42,23 @@ export default function LoginPage() {
     setPending(false);
 
     if (signInError) {
-      setError(signInError.message ?? 'Email ou senha inválidos.');
+      if (signInError.code === 'EMAIL_NOT_VERIFIED') {
+        setError('Você precisa confirmar seu email antes de entrar — verifica sua caixa de entrada.');
+        setUnverifiedEmail(email);
+      } else {
+        setError(signInError.message ?? 'Email ou senha inválidos.');
+      }
       return;
     }
     router.push('/dashboard');
     router.refresh();
+  }
+
+  async function handleResendVerification() {
+    if (!unverifiedEmail) return;
+    setResendState('sending');
+    await authClient.sendVerificationEmail({ email: unverifiedEmail, callbackURL: '/dashboard' });
+    setResendState('sent');
   }
 
   async function handleGoogle() {
@@ -64,6 +83,20 @@ export default function LoginPage() {
         <h1 style={s.title}>Entrar</h1>
 
         {error && <div style={s.error}>{error}</div>}
+        {unverifiedEmail && (
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={resendState !== 'idle'}
+            style={{ ...s.googleButton, marginBottom: 12 }}
+          >
+            {resendState === 'sent'
+              ? 'Email reenviado — confira sua caixa de entrada'
+              : resendState === 'sending'
+                ? 'Reenviando...'
+                : 'Reenviar email de confirmação'}
+          </button>
+        )}
 
         <label style={s.label}>
           Email

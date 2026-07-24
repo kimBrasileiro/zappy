@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
 import { prisma } from '@zappy/db';
+import { sendEmail } from './email/resend';
 
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
@@ -9,15 +10,34 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
-    // No RESEND_API_KEY configured yet — email verification/reset would have
-    // nowhere to send to. Revisit once transactional email is wired up.
-    requireEmailVerification: false,
+    // Proves the address is real/reachable before the dashboard is usable —
+    // sign-up itself still succeeds either way (see (auth)/signup/actions.ts,
+    // which checks the response for a session rather than assuming one).
+    // Only affects the email/password flow: Google sign-in already comes
+    // with emailVerified=true from the OAuth provider itself, so
+    // onboarding/actions.ts is unaffected.
+    requireEmailVerification: true,
     // Defense in depth — the real character-class/blocklist checks live in
     // signup/actions.ts#validatePassword (better-auth itself has no concept
     // of "must contain a digit"), but this is the actual floor Better Auth
     // enforces regardless of what calls it, so it can't drift out of sync
     // with that check.
     minPasswordLength: 10,
+  },
+
+  emailVerification: {
+    sendOnSignUp: true,
+    // Clicking the emailed link logs the user straight in instead of
+    // dumping them on /login to type their password again right after
+    // typing it at signup.
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail(
+        user.email,
+        'Confirme seu email — Zappy',
+        `<p>Falta só confirmar seu email pra acessar o dashboard da Zappy.</p><p><a href="${url}">Confirmar email</a></p><p>Se você não criou essa conta, pode ignorar este email.</p>`,
+      );
+    },
   },
 
   socialProviders: {

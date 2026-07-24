@@ -21,6 +21,20 @@ function SubmitButton() {
 export default function SignUpPage() {
   const [state, formAction] = useFormState(signUp, initialState);
 
+  if (state?.needsVerification) {
+    return (
+      <main style={s.main}>
+        <div style={s.card}>
+          <h1 style={s.title}>Confirme seu email</h1>
+          <p style={s.subtitle}>
+            Sua conta foi criada. Mandamos um link de confirmação pro seu email — clica nele pra
+            acessar o dashboard.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   if (state?.clientSecret) {
     return (
       <main style={s.main}>

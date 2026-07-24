@@ -32,6 +32,15 @@ export async function findOrCreateCustomerByPhone(companyId: string, phone: stri
   return prisma.customer.create({ data: { companyId, phone } });
 }
 
+// An "open" ticket left untouched for 4h+ is treated as abandoned, not a
+// still-ongoing conversation — applies to both channels (whichever `channel`
+// the caller passes). Most relevant for one that got escalated
+// (waiting_human/in_progress) and never resolved: without this, a customer
+// messaging again days later would land straight in that stale escalated
+// state (or stuck behind isHumanActivelyHandling) instead of getting a
+// fresh bot conversation.
+const STALE_TICKET_MS = 4 * 60 * 60_000;
+
 export async function findOrCreateOpenTicket(companyId: string, customerId: string, channel: string) {
   const existing = await prisma.ticket.findFirst({
     where: {
@@ -42,7 +51,15 @@ export async function findOrCreateOpenTicket(companyId: string, customerId: stri
     },
     orderBy: { createdAt: 'desc' },
   });
-  if (existing) return existing;
+
+  if (existing) {
+    const isStale = Date.now() - existing.updatedAt.getTime() > STALE_TICKET_MS;
+    if (!isStale) return existing;
+    await prisma.ticket.update({
+      where: { id: existing.id },
+      data: { status: 'resolved', resolvedAt: new Date() },
+    });
+  }
 
   return prisma.ticket.create({
     data: { companyId, customerId, channel, status: 'bot_active' },
@@ -194,13 +211,21 @@ export async function resolveWhatsAppRoute(fromWaPhoneNumber: string, rawText: s
 
 // Called by the escalate_human tool when the customer asks for a real
 // person. waiting_human (rather than in_progress) distinguishes "the bot
-// handed this off" from "an agent already replied" for the Inbox view.
+// handed this off" from "an agent already replied" for the Inbox view. The
+// bot keeps answering normally after this (see orchestrator.ts's G11), so
+// escalate_human can legitimately fire again on a later message in the same
+// still-open ticket — the owner-email notification is scoped to the actual
+// transition into escalated, not every call, so it doesn't re-notify on
+// every subsequent request for a human.
 export async function escalateToHuman(ticketId: string) {
+  const before = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { status: true } });
+  const wasAlreadyEscalated = before?.status === 'waiting_human' || before?.status === 'in_progress';
+
   const ticket = await prisma.ticket.update({
     where: { id: ticketId },
     data: { status: 'waiting_human' },
   });
-  await notifyEscalation(ticket.companyId);
+  if (!wasAlreadyEscalated) await notifyEscalation(ticket.companyId);
 }
 
 export async function loadHistory(ticketId: string): Promise<ChatMessage[]> {

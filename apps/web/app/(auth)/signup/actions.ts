@@ -9,6 +9,7 @@ import { createDefaultFaqs } from '../../../lib/default-faqs';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../../lib/stripe/client';
 import { TERMS_VERSION } from '../../../lib/legal';
 import { validatePassword } from '../../../lib/password';
+import { notifyNewSignup } from '../../../lib/notifications';
 
 export interface SignUpState {
   error?: string;
@@ -17,6 +18,11 @@ export interface SignUpState {
   // switches to <PaymentStep> (payment-step.tsx) to collect it via this
   // SetupIntent, rather than the server redirecting straight to /dashboard.
   clientSecret?: string;
+  // Account + company were created, but better-auth (requireEmailVerification
+  // in lib/auth.ts) didn't issue a session — no dashboard access until the
+  // customer clicks the link in the confirmation email. The client shows a
+  // "check your email" message instead of redirecting.
+  needsVerification?: boolean;
 }
 
 export async function signUp(_prevState: SignUpState, formData: FormData): Promise<SignUpState> {
@@ -46,8 +52,9 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     data: { name: companyName, slug, plan: stripeEnabled ? plan : 'starter', status: 'active' },
   });
 
+  let signUpResult: Awaited<ReturnType<typeof auth.api.signUpEmail>>;
   try {
-    await auth.api.signUpEmail({
+    signUpResult = await auth.api.signUpEmail({
       body: { email, password, name, companyId: company.id, role: 'admin' },
       headers: await headers(),
     });
@@ -64,6 +71,16 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     where: { email },
     data: { termsAcceptedAt: new Date(), termsVersion: TERMS_VERSION },
   });
+  await notifyNewSignup({ companyName, adminEmail: email, plan: company.plan });
+
+  // requireEmailVerification (lib/auth.ts) means signUpEmail didn't issue a
+  // session — no token in the response. The account exists and is fully set
+  // up, but there's nothing to redirect INTO yet (requireSession would just
+  // bounce to /login with no explanation), so this stops here instead and
+  // lets the client show a "check your email" message.
+  if (!signUpResult.token) {
+    return { needsVerification: true };
+  }
 
   // No Stripe key configured — same behavior as before this feature existed,
   // which is also what keeps local dev working without a Stripe account.

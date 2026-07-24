@@ -47,6 +47,19 @@ export async function notifyBookingCreated(params: {
   await sendWhatsAppMessage(toWhatsAppPhone(params.customerPhone), confirmationText);
 }
 
+// Fires once per new company signup (both the email/password flow in
+// (auth)/signup/actions.ts and the Google OAuth flow in
+// onboarding/actions.ts create a Company the same way) — gives the platform
+// operator a running signal of new customers without checking the admin
+// panel proactively.
+export async function notifyNewSignup(params: { companyName: string; adminEmail: string; plan: string }): Promise<void> {
+  await sendEmail(
+    SUPER_ADMIN_EMAIL,
+    `[Zappy] Novo cadastro — ${params.companyName}`,
+    `<p>Nova empresa cadastrada: <strong>${params.companyName}</strong> (plano ${params.plan}), admin ${params.adminEmail}.</p>`,
+  );
+}
+
 export async function notifyEscalation(companyId: string): Promise<void> {
   const company = await getActiveAdminEmails(companyId);
   if (!company?.emails.length) return;

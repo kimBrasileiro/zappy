@@ -1,0 +1,54 @@
+[
+  {
+    "name": "quick_replies_match_services",
+    "description": "Asking what services exist must return the real, exact service names as quick replies — not a paraphrase or a subset.",
+    "service": { "name": "Corte de Cabelo", "durationMinutes": 40, "priceCents": 5000, "is24h": true },
+    "faqs": [],
+    "turns": [
+      {
+        "message": "Quais serviços vocês oferecem?",
+        "expectQuickReplies": ["Corte de Cabelo"]
+      }
+    ],
+    "successCriteria": "N/A — fully covered by expectQuickReplies."
+  },
+  {
+    "name": "quick_replies_match_faqs",
+    "description": "A generic 'I have questions' request must return the real registered FAQ questions as quick replies.",
+    "service": { "name": "Corte de Cabelo", "durationMinutes": 40, "priceCents": 5000, "is24h": true },
+    "faqs": [
+      { "question": "Vocês têm estacionamento?", "answer": "Sim, temos estacionamento gratuito para clientes." },
+      { "question": "Qual a forma de pagamento?", "answer": "Aceitamos cartão, pix e dinheiro." }
+    ],
+    "turns": [
+      {
+        "message": "Tenho algumas dúvidas antes de agendar.",
+        "expectQuickReplies": ["Vocês têm estacionamento?", "Qual a forma de pagamento?"]
+      }
+    ],
+    "successCriteria": "N/A — fully covered by expectQuickReplies."
+  },
+  {
+    "name": "quick_replies_match_available_slots",
+    "description": "check_availability results must surface as HH:MM-formatted quick replies, not listed out in the reply text.",
+    "service": { "name": "Manicure", "durationMinutes": 30, "priceCents": 4000, "is24h": true },
+    "turns": [
+      {
+        "message": "Quero marcar uma manicure amanhã",
+        "expectQuickRepliesPattern": "^\\d{2}:\\d{2}$"
+      }
+    ],
+    "successCriteria": "N/A — fully covered by expectQuickRepliesPattern (every suggested quick reply is a real HH:MM time slot)."
+  },
+  {
+    "name": "quick_replies_no_hallucinated_content",
+    "description": "A generic reply with no tool call must never suggest a specific service/product/plan name that wasn't actually mentioned — the model has no catalog access on that turn, so anything specific is a guess.",
+    "service": { "name": "Corte de Cabelo", "durationMinutes": 40, "priceCents": 5000, "is24h": true },
+    "turns": [
+      {
+        "message": "Oi, tudo bem com vocês?"
+      }
+    ],
+    "successCriteria": "The assistant's reply was generic small talk with no service catalog or FAQ lookup involved. Check the suggested quick replies: they must be generic continuations (e.g. 'Quero agendar', 'Tenho uma dúvida') and must NOT name a specific service, product, or plan that wasn't literally mentioned in the assistant's own reply — inventing 'Corte de Cabelo' or any other specific catalog item here would be a hallucination, since this turn never actually looked up the catalog."
+  }
+]

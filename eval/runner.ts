@@ -26,6 +26,22 @@ interface ScenarioTurn {
   expectContains?: string[];
   expectNotContains?: string[];
   expectTicketStatus?: string;
+  // Exact set match (order-independent, case-sensitive — these come
+  // straight from DB values in the tool-driven cases, so exact is the
+  // right bar) against the quickReplies this turn returned.
+  expectQuickReplies?: string[];
+  // Subset check instead, for cases where an exact set isn't meaningful
+  // (e.g. slot times that shift with "now").
+  expectQuickRepliesInclude?: string[];
+  // Only real cadastrado content should ever appear as quick replies — set
+  // this to services/FAQs that exist for a DIFFERENT scenario/company (or
+  // were never registered) to catch the model inventing options that
+  // aren't actually bookable/askable.
+  expectQuickRepliesExclude?: string[];
+  // Every quick reply must match this regex (source string, no flags) —
+  // for cases like time slots where the exact values shift with "now" but
+  // the shape ("HH:MM") is still a hard requirement.
+  expectQuickRepliesPattern?: string;
 }
 
 interface Scenario {
@@ -224,6 +240,9 @@ async function runScenario(scenario: Scenario): Promise<{ name: string; passed: 
         message: turn.message,
       });
       transcriptLines.push(`Assistente: ${result.text}`);
+      if (result.quickReplies.length) {
+        transcriptLines.push(`(quick replies sugeridos: ${result.quickReplies.join(' | ')})`);
+      }
       const lower = result.text.toLowerCase();
 
       for (const needle of turn.expectContains ?? []) {
@@ -235,6 +254,32 @@ async function runScenario(scenario: Scenario): Promise<{ name: string; passed: 
         const ok = !lower.includes(needle.toLowerCase());
         if (!ok) allPassed = false;
         details.push(`${ok ? '✓' : '✗'} turn ${i + 1}: does not contain "${needle}"`);
+      }
+
+      if (turn.expectQuickReplies) {
+        const actual = [...result.quickReplies].sort();
+        const expected = [...turn.expectQuickReplies].sort();
+        const ok = actual.length === expected.length && actual.every((v, idx) => v === expected[idx]);
+        if (!ok) allPassed = false;
+        details.push(`${ok ? '✓' : '✗'} turn ${i + 1}: quickReplies = [${actual.join(', ')}] (expected [${expected.join(', ')}])`);
+      }
+      for (const needle of turn.expectQuickRepliesInclude ?? []) {
+        const ok = result.quickReplies.includes(needle);
+        if (!ok) allPassed = false;
+        details.push(`${ok ? '✓' : '✗'} turn ${i + 1}: quickReplies include "${needle}" (actual: [${result.quickReplies.join(', ')}])`);
+      }
+      for (const needle of turn.expectQuickRepliesExclude ?? []) {
+        const ok = !result.quickReplies.includes(needle);
+        if (!ok) allPassed = false;
+        details.push(`${ok ? '✓' : '✗'} turn ${i + 1}: quickReplies exclude "${needle}" (actual: [${result.quickReplies.join(', ')}])`);
+      }
+      if (turn.expectQuickRepliesPattern) {
+        const re = new RegExp(turn.expectQuickRepliesPattern);
+        const ok = result.quickReplies.length > 0 && result.quickReplies.every((q) => re.test(q));
+        if (!ok) allPassed = false;
+        details.push(
+          `${ok ? '✓' : '✗'} turn ${i + 1}: quickReplies all match /${turn.expectQuickRepliesPattern}/ (actual: [${result.quickReplies.join(', ')}])`,
+        );
       }
 
       if (turn.expectTicketStatus) {

@@ -80,6 +80,13 @@ export async function POST(request: Request) {
     await sendWhatsAppMessage(inbound.fromWaPhoneNumber, NEEDS_CODE_MESSAGE);
     return NextResponse.json({ ok: true });
   }
+  if (route.needsConfirmation) {
+    await sendWhatsAppMessage(
+      inbound.fromWaPhoneNumber,
+      `Olá! Você gostaria de agendar serviços ou suporte com a ${route.company.name}? Me conta o que precisa que eu já te ajudo — se for outra empresa, é só me dizer o nome dela.`,
+    );
+    return NextResponse.json({ ok: true });
+  }
 
   try {
     const reply = await collectReply({

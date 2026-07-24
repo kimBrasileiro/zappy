@@ -68,7 +68,13 @@ export async function findOrCreateOpenTicket(companyId: string, customerId: stri
 
 export type WhatsAppRouteResult =
   | { needsCode: true }
-  | { needsCode: false; company: Company; customer: Customer; message: string };
+  // A returning number sent a bare "oi"/"olá" with no real request, and the
+  // last conversation with it (if any) has gone stale — see isBareGreeting/
+  // hasActiveConversation below. Nothing is created yet (no ticket, no
+  // message); the caller sends a plain confirmation text and waits for the
+  // customer's actual reply before this turns into a real conversation.
+  | { needsCode: false; needsConfirmation: true; company: Company }
+  | { needsCode: false; needsConfirmation?: false; company: Company; customer: Customer; message: string };
 
 // Case- and accent-insensitive substring match — same reasoning as
 // lib/bot/services.ts's copy (kept separate rather than shared: this module
@@ -80,6 +86,36 @@ function normalizeForMatch(value: string): string {
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
     .trim();
+}
+
+// A message that's ONLY a greeting, nothing else — "Olá", "oi!", "bom dia"
+// — as opposed to "Olá, quero agendar..." (that has real content, goes
+// straight to the existing company like any other message). Deliberately a
+// small fixed list rather than a loose heuristic: the only thing this gates
+// is whether to ask "ainda é com a <empresa>?" before resuming, so a false
+// negative just means that confirmation gets skipped (harmless — same as
+// today's behavior) rather than firing on real requests by mistake.
+const GREETING_WORDS = new Set(['oi', 'ola', 'opa', 'eai', 'e ai', 'bom dia', 'boa tarde', 'boa noite']);
+
+function isBareGreeting(text: string): boolean {
+  const normalized = normalizeForMatch(text).replace(/[!?.,;:]+$/g, '').trim();
+  return GREETING_WORDS.has(normalized);
+}
+
+// Whether this phone number is already mid-conversation with `company` —
+// i.e. findOrCreateOpenTicket (below) would hand back an existing ticket
+// rather than starting a fresh one. Read-only twin of that function's own
+// staleness check, kept in sync with the same STALE_TICKET_MS: a route that
+// exists but hasn't been used in 4h+ is exactly the case where a bare
+// greeting should confirm which company it's for, not silently resume one
+// the customer may not even remember reaching out to.
+async function hasActiveConversation(companyId: string, customerId: string, channel: string): Promise<boolean> {
+  const existing = await prisma.ticket.findFirst({
+    where: { companyId, customerId, channel, status: { notIn: ['resolved', 'closed'] } },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!existing) return false;
+  return Date.now() - existing.updatedAt.getTime() <= STALE_TICKET_MS;
 }
 
 // The whole platform shares ONE WhatsApp Business number, so a raw inbound
@@ -102,7 +138,12 @@ function normalizeForMatch(value: string): string {
 //      customer away from company A just because they mentioned company B in
 //      passing conversation.
 //   3. An existing route for this phone number — most messages, once a
-//      conversation is established.
+//      conversation is established. Exception: a bare "oi"/"olá" with
+//      nothing else, when there's no still-active conversation to resume
+//      (see isBareGreeting/hasActiveConversation) — a returning number could
+//      mean any company at that point, so this asks for confirmation
+//      instead of silently picking up wherever the last (possibly
+//      days-old) conversation left off.
 //   4. The company's name mentioned in the free text itself (e.g. "Oi,
 //      queria falar com a Zappy") — a best-effort fallback for a cold first
 //      contact who didn't come through a link/QR code and won't know to
@@ -191,6 +232,9 @@ export async function resolveWhatsAppRoute(fromWaPhoneNumber: string, rawText: s
       prisma.customer.findUnique({ where: { id: route.customerId } }),
     ]);
     if (existingCompany && existingCustomer) {
+      if (isBareGreeting(rawText) && !(await hasActiveConversation(existingCompany.id, existingCustomer.id, 'whatsapp'))) {
+        return { needsCode: false, needsConfirmation: true, company: existingCompany };
+      }
       return { needsCode: false, company: existingCompany, customer: existingCustomer, message: rawText };
     }
   }

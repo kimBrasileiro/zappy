@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { ReplyForm } from './reply-form';
 import { resolveTicket } from './actions';

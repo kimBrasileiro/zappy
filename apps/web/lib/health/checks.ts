@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { PRIMARY_GEMINI_MODEL, FALLBACK_GEMINI_MODEL } from '../ai/gemini';
 import { isStripeConfigured } from '../stripe/client';
 

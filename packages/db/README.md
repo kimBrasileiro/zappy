@@ -1,4 +1,4 @@
-# @zappy/db
+# @zappigo/db
 
 Prisma schema (multi-file, `prisma/schema/*.prisma`) + migrations for the multi-tenant support platform.
 

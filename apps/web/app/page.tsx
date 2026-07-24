@@ -1,5 +1,5 @@
 import Script from 'next/script';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { CopySnippet } from './copy-snippet';
 import { MarketingHome } from './marketing-home';
 
@@ -12,7 +12,7 @@ export default async function HomePage({
 }: {
   searchParams: { company?: string };
 }) {
-  // No ?company= at all → this is the Zappy institutional site itself, not
+  // No ?company= at all → this is the Zappigo institutional site itself, not
   // a customer-preview page. Test any company's widget by slug instead:
   // /?company=sua-loja-teste.
   const companySlug = searchParams.company?.trim();
@@ -65,7 +65,7 @@ export default async function HomePage({
           }}
           dangerouslySetInnerHTML={{ __html: CHAT_ICON.replace('width="24"', 'width="17"').replace('height="24"', 'height="17"') }}
         />
-        <span style={{ fontWeight: 700, fontSize: 15 }}>Zappy</span>
+        <span style={{ fontWeight: 700, fontSize: 15 }}>Zappigo</span>
         <span style={{ color: '#999', fontSize: 13 }}>· atendimento via IA para o seu negócio</span>
       </header>
 

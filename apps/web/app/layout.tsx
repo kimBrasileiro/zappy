@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const metadataBase = appUrl ? new URL(appUrl) : undefined;
 
-const TITLE = 'Zappy — Sistema de Agendamento e Suporte via WhatsApp com IA';
+const TITLE = 'Zappigo — Sistema de Agendamento e Suporte via WhatsApp com IA';
 const DESCRIPTION =
   'Agendamento automático e suporte via WhatsApp e chat, com um assistente de IA que responde o FAQ da sua empresa e marca horários sozinho — com handoff pra atendimento humano quando precisar.';
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase,
   title: {
     default: TITLE,
-    template: '%s · Zappy',
+    template: '%s · Zappigo',
   },
   description: DESCRIPTION,
   keywords: [
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: '/',
-    siteName: 'Zappy',
+    siteName: 'Zappigo',
     locale: 'pt_BR',
     type: 'website',
   },

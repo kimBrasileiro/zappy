@@ -26,7 +26,7 @@ export interface WidgetConfig {
   // E.164, e.g. "+5511999999999" — the platform's shared WhatsApp number.
   // Omitted entirely (no data-whatsapp attribute) hides the button.
   whatsappNumber?: string;
-  // Overrides the generic default (see quick-replies.ts) — e.g. the Zappy
+  // Overrides the generic default (see quick-replies.ts) — e.g. the Zappigo
   // institutional site itself uses sales-flavored chips instead of the
   // generic "agendar um horário" ones meant for a service business.
   quickReplies?: string[];
@@ -98,7 +98,7 @@ export class ChatWidget {
         <input class="input" type="text" placeholder="Digite sua mensagem..." aria-label="Mensagem" />
         <button class="send" aria-label="Enviar">${ICON_SEND}</button>
       </div>
-      <div class="footer">Powered by Zappy</div>
+      <div class="footer">Powered by Zappigo</div>
     `;
     this.panelEl = panel;
     this.escalatedBannerEl = panel.querySelector('.escalated-banner')!;

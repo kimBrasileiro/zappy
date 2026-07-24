@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { createTemplate, deleteTemplate, toggleTemplateActive } from './actions';
 import { TemplateForm } from './template-form';

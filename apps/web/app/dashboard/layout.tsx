@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 import { SignOutButton } from './sign-out-button';
 import { CompanySwitcher } from './company-switcher';
@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       <nav className="dash-nav">
         <div className="dash-nav-brand">
           <span className="dash-nav-logo" dangerouslySetInnerHTML={{ __html: ICON_CHAT }} />
-          Zappy
+          Zappigo
         </div>
         {isSuperAdmin && <CompanySwitcher companies={companies} currentCompanyId={companyId} />}
         {isImpersonating && (

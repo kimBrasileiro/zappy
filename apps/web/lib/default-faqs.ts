@@ -1,4 +1,4 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 
 // Seeded once at company creation (signup/actions.ts, onboarding/actions.ts)
 // so a brand-new company's FAQ isn't empty before they've had a chance to

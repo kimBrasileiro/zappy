@@ -24,7 +24,7 @@ async function main() {
     },
   });
 
-  // Zappy's own dogfooding account (company + its Demo service + FAQs) is
+  // Zappigo's own dogfooding account (company + its Demo service + FAQs) is
   // seeded by migrations/20260722010000_seed_zappy_company instead of here
   // — that institutional chat needs to work on every environment that ran
   // migrations (staging/production included), not only wherever someone

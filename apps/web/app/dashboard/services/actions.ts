@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { prisma, Prisma } from '@zappy/db';
+import { prisma, Prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import type { BusinessHours } from './service-form';
 

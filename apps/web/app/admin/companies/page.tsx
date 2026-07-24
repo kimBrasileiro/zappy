@@ -1,4 +1,4 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 
 export default async function AdminCompaniesPage() {
   const companies = await prisma.company.findMany({

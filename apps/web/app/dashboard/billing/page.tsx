@@ -1,4 +1,4 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { getStripe, isStripeConfigured } from '../../../lib/stripe/client';
 import { PLANS, FREE_TIER_MODE } from '../../../lib/stripe/plans';
@@ -46,7 +46,7 @@ export default async function BillingPage() {
                 Período de lançamento — grátis
               </span>
               <p style={{ color: '#555', fontSize: 13.5, margin: 0, lineHeight: 1.6 }}>
-                Enquanto estivermos em lançamento, sua conta usa a Zappy sem custo, com o número
+                Sua conta usa a Zappigo sem custo, com o número
                 de WhatsApp compartilhado da plataforma — sem cartão, sem cobrança. Se isso mudar
                 no futuro, avisamos com bastante antecedência antes de qualquer cobrança começar.
               </p>

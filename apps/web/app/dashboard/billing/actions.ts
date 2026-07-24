@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { getStripe, isPlanKey, priceIdForPlan } from '../../../lib/stripe/client';
 import { PLANS, planRank } from '../../../lib/stripe/plans';

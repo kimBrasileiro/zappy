@@ -1,4 +1,4 @@
-import { prisma, type Prisma } from '@zappy/db';
+import { prisma, type Prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
 import { RefreshButton } from '../refresh-button';

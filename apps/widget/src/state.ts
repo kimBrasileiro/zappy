@@ -1,7 +1,7 @@
-import type { MessageSenderType } from '@zappy/types';
+import type { MessageSenderType } from '@zappigo/types';
 
 // Local shape only — reuses MessageDTO's sender/content vocabulary from
-// @zappy/types so swapping this for real ticket-backed messages later is a
+// @zappigo/types so swapping this for real ticket-backed messages later is a
 // rename, not a redesign. No ticketId yet: no ticket exists until the real
 // backend creates one on first message.
 export interface WidgetMessage {
@@ -31,7 +31,7 @@ export interface WidgetState {
 }
 
 function storageKey(companyId: string): string {
-  return `zappy:${companyId}:conversation`;
+  return `zappigo:${companyId}:conversation`;
 }
 
 function createFreshState(): WidgetState {

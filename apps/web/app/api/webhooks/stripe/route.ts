@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { getStripe, isBillingActive } from '../../../../lib/stripe/client';
 import { sendEmail } from '../../../../lib/email/resend';
 
@@ -43,8 +43,8 @@ async function notifyTrialEnding(subscription: Stripe.Subscription): Promise<voi
 
   await sendEmail(
     company.users.map((u) => u.email),
-    'Seu trial da Zappy termina em 3 dias',
-    '<p>Seu trial gratuito da Zappy termina em 3 dias. Se você já cadastrou um cartão, a cobrança acontece automaticamente e nenhuma ação é necessária.</p>',
+    'Seu trial da Zappigo termina em 3 dias',
+    '<p>Seu trial gratuito da Zappigo termina em 3 dias. Se você já cadastrou um cartão, a cobrança acontece automaticamente e nenhuma ação é necessária.</p>',
   );
 }
 

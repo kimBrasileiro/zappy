@@ -8,7 +8,7 @@ const RESEND_API_URL = 'https://api.resend.com/emails';
 // instead of thrown.
 export async function sendEmail(to: string | string[], subject: string, html: string): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL ?? 'Zappy <onboarding@resend.dev>';
+  const from = process.env.RESEND_FROM_EMAIL ?? 'Zappigo <onboarding@resend.dev>';
 
   if (!apiKey) {
     const recipients = Array.isArray(to) ? to.join(', ') : to;

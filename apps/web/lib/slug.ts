@@ -1,4 +1,4 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 
 const ACCENT_MARKS = /[̀-ͯ]/g;
 

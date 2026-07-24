@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { sendEmail } from '../../../lib/email/resend';
 import { SUPER_ADMIN_EMAIL } from '../../../lib/admin-auth';
@@ -34,7 +34,7 @@ export async function sendSupportMessage(
 
   await sendEmail(
     SUPER_ADMIN_EMAIL,
-    `[Zappy] ${CATEGORY_LABELS[category] ?? 'Contato'} — ${company?.name ?? companyId}`,
+    `[Zappigo] ${CATEGORY_LABELS[category] ?? 'Contato'} — ${company?.name ?? companyId}`,
     `<p><strong>Empresa:</strong> ${company?.name ?? '—'} (${company?.slug ?? companyId})</p>` +
       `<p><strong>De:</strong> ${user?.name ?? '—'} (${user?.email ?? '—'})</p>` +
       `<p><strong>Categoria:</strong> ${CATEGORY_LABELS[category] ?? category}</p>` +

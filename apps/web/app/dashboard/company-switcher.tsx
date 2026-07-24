@@ -27,7 +27,7 @@ export function CompanySwitcher({
       >
         {companies.map((c) => (
           <option key={c.id} value={c.id}>
-            {c.name} {c.slug === 'zappy' ? '(Zappy)' : ''}
+            {c.name} {c.slug === 'zappigo' ? '(Zappigo)' : ''}
           </option>
         ))}
       </select>

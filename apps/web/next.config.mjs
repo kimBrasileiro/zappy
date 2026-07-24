@@ -14,7 +14,7 @@ loadEnv({ path: path.resolve(__dirname, '../../.env.local') });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  transpilePackages: ['@zappy/db', '@zappy/types'],
+  transpilePackages: ['@zappigo/db', '@zappigo/types'],
 };
 
 export default nextConfig;

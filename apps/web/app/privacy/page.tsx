@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Política de Privacidade" lastUpdated="22 de julho de 2026">
       <p style={p}>
-        A Zappy, operada por <strong>[RAZÃO SOCIAL]</strong>, CNPJ{' '}
+        A Zappigo, operada por <strong>[RAZÃO SOCIAL]</strong>, CNPJ{' '}
         <strong>[00.000.000/0000-00]</strong>, é controladora dos dados pessoais tratados conforme
         descrito nesta Política, em conformidade com a Lei Geral de Proteção de Dados (LGPD, Lei
         13.709/2018).
@@ -22,14 +22,14 @@ export default function PrivacyPage() {
       <h2 style={h2}>1. Quais dados coletamos</h2>
       <p style={p}>
         <strong>Da empresa Contratante e seus usuários:</strong> nome, e-mail, senha (armazenada de
-        forma criptografada) e dados de pagamento — processados diretamente pelo Stripe, a Zappy
+        forma criptografada) e dados de pagamento — processados diretamente pelo Stripe, a Zappigo
         nunca armazena número de cartão.
       </p>
       <p style={p}>
         <strong>Dos clientes finais da Contratante</strong> (pessoas que conversam com o
         assistente): nome, telefone, e-mail (quando informado), histórico de conversas e dados de
         agendamento. Esses dados são coletados em nome da Contratante, que é a controladora perante
-        os próprios clientes dela — a Zappy atua como operadora nesse contexto específico.
+        os próprios clientes dela — a Zappigo atua como operadora nesse contexto específico.
       </p>
 
       <h2 style={h2}>2. Base legal e finalidade do tratamento</h2>

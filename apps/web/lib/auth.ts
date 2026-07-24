@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { sendEmail } from './email/resend';
 
 export const auth = betterAuth({
@@ -34,8 +34,8 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail(
         user.email,
-        'Confirme seu email — Zappy',
-        `<p>Falta só confirmar seu email pra acessar o dashboard da Zappy.</p><p><a href="${url}">Confirmar email</a></p><p>Se você não criou essa conta, pode ignorar este email.</p>`,
+        'Confirme seu email — Zappigo',
+        `<p>Falta só confirmar seu email pra acessar o dashboard da Zappigo.</p><p><a href="${url}">Confirmar email</a></p><p>Se você não criou essa conta, pode ignorar este email.</p>`,
       );
     },
   },

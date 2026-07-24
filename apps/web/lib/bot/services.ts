@@ -1,5 +1,5 @@
-import { prisma } from '@zappy/db';
-import type { Service } from '@zappy/db';
+import { prisma } from '@zappigo/db';
+import type { Service } from '@zappigo/db';
 import { checkBookingRateLimit } from './rate-limit';
 import { notifyBookingCreated } from '../notifications';
 
@@ -460,7 +460,7 @@ export async function createBooking(
       });
     } catch (err) {
       // instanceof Prisma.PrismaClientKnownRequestError is unreliable here:
-      // Next.js transpiles @zappy/db separately from how the Prisma engine's
+      // Next.js transpiles @zappigo/db separately from how the Prisma engine's
       // own runtime resolves @prisma/client, so the thrown error and the
       // imported class can end up as different module instances. Checking
       // the error code directly sidesteps that entirely.

@@ -4,7 +4,7 @@ import { OrchestratorBlockedError, orchestrate } from '../../../../lib/bot/orche
 import { parseInboundMessage, sendWhatsAppMessage, verifyWebhookSignature } from '../../../../lib/whatsapp/client';
 
 const NEEDS_CODE_MESSAGE =
-  'Oi! Esse número atende várias empresas — me diga o nome da empresa que você quer falar (ex: "quero falar com a Zappy") que eu já te conecto.';
+  'Oi! Esse número atende várias empresas — me diga o nome da empresa que você quer falar (ex: "quero falar com a Zappigo") que eu já te conecto.';
 
 // Meta re-delivers a webhook event if it doesn't get a fast 200, or on any
 // transient error on its side — dedup by message id (wamid) so a retry never

@@ -1,4 +1,4 @@
-import type { Company, Ticket } from '@zappy/db';
+import type { Company, Ticket } from '@zappigo/db';
 import { normalizeDomain } from '../domains';
 
 export interface GuardrailResult {
@@ -111,7 +111,7 @@ export function isEscalated(ticket: Pick<Ticket, 'status'>): boolean {
 // alone doesn't prove the caller is that company's own site. An empty
 // allowedDomains means the company hasn't locked it down yet (a fresh signup
 // can still test the widget anywhere) — once they add at least one domain in
-// the dashboard, only that domain (plus the Zappy app's own demo/preview
+// the dashboard, only that domain (plus the Zappigo app's own demo/preview
 // page) may talk to the API as this company. WhatsApp has no Origin header
 // and isn't affected — see orchestrator.ts, only checked for site_chat.
 export function checkOrigin(company: Pick<Company, 'allowedDomains'>, origin: string | null): GuardrailResult {

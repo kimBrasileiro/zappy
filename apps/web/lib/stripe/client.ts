@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { PLANS, FREE_TIER_MODE } from './plans';
 import { notifyBillingEvent } from '../notifications';
 

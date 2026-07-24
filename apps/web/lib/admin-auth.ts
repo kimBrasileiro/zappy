@@ -22,7 +22,7 @@ export function isSuperAdminEmail(email: string | null | undefined): boolean {
 // Cookie holding the company id a super admin is currently impersonating in
 // /dashboard. HttpOnly — only ever read/written server-side (auth-server.ts,
 // impersonate-actions.ts), never by client JS.
-export const IMPERSONATE_COOKIE = 'zappy_impersonate_company';
+export const IMPERSONATE_COOKIE = 'zappigo_impersonate_company';
 
 export interface RequireSuperAdminResult {
   userId: string;

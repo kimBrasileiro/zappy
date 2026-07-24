@@ -25,8 +25,8 @@
       "cache": false,
       "persistent": true
     },
-    "@zappy/web#dev": {
-      "dependsOn": ["@zappy/widget#build"],
+    "@zappigo/web#dev": {
+      "dependsOn": ["@zappigo/widget#build"],
       "cache": false,
       "persistent": true
     }

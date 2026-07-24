@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { auth } from '../../../lib/auth';
 import { generateUniqueSlug } from '../../../lib/slug';
 import { createDefaultFaqs } from '../../../lib/default-faqs';

@@ -1,4 +1,4 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { CopySnippet } from '../../copy-snippet';
 import { DomainsForm } from './domains-form';
@@ -50,7 +50,7 @@ export default async function InstalacaoPage() {
           </>
         ) : (
           <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
-            O número compartilhado de WhatsApp da Zappy ainda não foi configurado nesta
+            O número compartilhado de WhatsApp da Zappigo ainda não foi configurado nesta
             instância — assim que estiver, o link aparece aqui automaticamente.
           </p>
         )}

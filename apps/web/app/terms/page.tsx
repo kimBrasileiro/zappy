@@ -13,7 +13,7 @@ export default function TermsPage() {
   return (
     <LegalPage title="Termos de Uso" lastUpdated="22 de julho de 2026">
       <p style={p}>
-        Estes Termos de Uso (&quot;Termos&quot;) regem o uso da plataforma Zappy (&quot;Zappy&quot;,
+        Estes Termos de Uso (&quot;Termos&quot;) regem o uso da plataforma Zappigo (&quot;Zappigo&quot;,
         &quot;nós&quot;), operada por <strong>[RAZÃO SOCIAL DA EMPRESA]</strong>, CNPJ{' '}
         <strong>[00.000.000/0000-00]</strong>, por você (&quot;Contratante&quot;) ao criar uma conta e
         usar nossos serviços de atendimento automatizado via inteligência artificial, incluindo
@@ -22,14 +22,14 @@ export default function TermsPage() {
 
       <h2 style={h2}>1. Descrição do serviço</h2>
       <p style={p}>
-        A Zappy é uma plataforma multi-tenant que permite à Contratante configurar um assistente
+        A Zappigo é uma plataforma multi-tenant que permite à Contratante configurar um assistente
         virtual de IA para responder dúvidas de clientes finais, agendar horários e escalar
         conversas para atendimento humano, integrável via widget de chat no site e/ou WhatsApp.
       </p>
 
       <h2 style={h2}>2. Cadastro e conta</h2>
       <p style={p}>
-        Para usar a Zappy, você deve fornecer informações verdadeiras, completas e atualizadas, e é
+        Para usar a Zappigo, você deve fornecer informações verdadeiras, completas e atualizadas, e é
         responsável por manter a confidencialidade da sua senha e por todas as atividades
         realizadas na sua conta. Você declara ter capacidade legal para contratar em nome da
         empresa que está cadastrando.
@@ -37,11 +37,11 @@ export default function TermsPage() {
 
       <h2 style={h2}>3. Planos, preços e pagamento</h2>
       <p style={p}>
-        A Zappy oferece planos pagos com cobrança mensal recorrente, processados pelo Stripe. Novas
+        A Zappigo oferece planos pagos com cobrança mensal recorrente, processados pelo Stripe. Novas
         contas têm direito a um período de teste gratuito de 7 dias; ao final do trial, o plano
         escolhido é cobrado automaticamente no cartão cadastrado, salvo cancelamento anterior ao
         término do período. Os preços vigentes estão em{' '}
-        <strong>[zappy.com.br/#precos]</strong> e podem ser reajustados mediante aviso prévio de
+        <strong>[zappigo.com.br/#precos]</strong> e podem ser reajustados mediante aviso prévio de
         pelo menos 30 dias, aplicável a partir do próximo ciclo de cobrança. O não pagamento de uma
         fatura pode resultar na suspensão do acesso até a regularização.
       </p>
@@ -56,25 +56,25 @@ export default function TermsPage() {
       </p>
 
       <h2 style={h2}>5. Uso aceitável</h2>
-      <p style={p}>Você concorda em não usar a Zappy para:</p>
+      <p style={p}>Você concorda em não usar a Zappigo para:</p>
       <ul style={{ margin: '0 0 12px', paddingLeft: 22 }}>
         <li>enviar spam ou conteúdo ilegal, discriminatório ou que viole direitos de terceiros;</li>
         <li>tentar acessar dados de outras empresas cadastradas na plataforma;</li>
-        <li>usar o número de WhatsApp compartilhado da Zappy para fins diferentes do atendimento aos seus próprios clientes;</li>
+        <li>usar o número de WhatsApp compartilhado da Zappigo para fins diferentes do atendimento aos seus próprios clientes;</li>
         <li>sobrecarregar ou tentar comprometer a infraestrutura da plataforma.</li>
       </ul>
 
       <h2 style={h2}>6. Propriedade intelectual</h2>
       <p style={p}>
-        A Zappy e todo o seu software, marca e conteúdo são de propriedade da{' '}
+        A Zappigo e todo o seu software, marca e conteúdo são de propriedade da{' '}
         <strong>[RAZÃO SOCIAL]</strong>. O conteúdo que você cadastra (serviços, FAQs, dados de
-        clientes) permanece de sua propriedade; você concede à Zappy uma licença limitada para
+        clientes) permanece de sua propriedade; você concede à Zappigo uma licença limitada para
         processá-lo exclusivamente para prestar o serviço contratado.
       </p>
 
       <h2 style={h2}>7. Dados e privacidade</h2>
       <p style={p}>
-        O tratamento de dados pessoais pela Zappy — seus e dos seus clientes finais — segue nossa{' '}
+        O tratamento de dados pessoais pela Zappigo — seus e dos seus clientes finais — segue nossa{' '}
         <a href="/privacy" style={{ color: '#2563eb' }}>
           Política de Privacidade
         </a>
@@ -83,7 +83,7 @@ export default function TermsPage() {
 
       <h2 style={h2}>8. Limitação de responsabilidade</h2>
       <p style={p}>
-        A Zappy é fornecida &quot;como está&quot;. Fazemos esforços razoáveis para manter o serviço
+        A Zappigo é fornecida &quot;como está&quot;. Fazemos esforços razoáveis para manter o serviço
         disponível e preciso, mas não garantimos operação ininterrupta ou livre de erros. Na máxima
         extensão permitida em lei, nossa responsabilidade por danos decorrentes do uso da
         plataforma fica limitada ao valor pago pela Contratante nos 12 meses anteriores ao evento,

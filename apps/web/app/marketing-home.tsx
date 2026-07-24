@@ -1,5 +1,4 @@
 import Script from 'next/script';
-import { CopySnippet } from './copy-snippet';
 import { FREE_TIER_MODE } from '../lib/stripe/plans';
 
 const BRAND_COLOR = '#2563eb';
@@ -7,10 +6,10 @@ const BRAND_COLOR = '#2563eb';
 // Overrides the widget's generic defaults (apps/widget/src/quick-replies.ts
 // assumes a service business booking appointments) — same 3 flows
 // (FAQ/booking/escalação), reworded for a SaaS sales chat.
-const ZAPPY_QUICK_REPLIES = [
+const ZAPPIGO_QUICK_REPLIES = [
   'Quais planos e preços vocês têm?',
   'Quero agendar uma demo',
-  'Como funciona a Zappy?',
+  'Como funciona a Zappigo?',
   'Falar com o time comercial',
 ].join('|');
 
@@ -22,43 +21,17 @@ const ICON_QUESTION = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3
 const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICON_LINK = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 15l6-6M10 6l.7-.7a4 4 0 0 1 5.66 5.66l-.7.7M14 18l-.7.7a4 4 0 0 1-5.66-5.66l.7-.7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICON_SLIDERS = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h10M4 12h6M4 18h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="6" r="2" stroke="currentColor" stroke-width="2"/><circle cx="13" cy="12" r="2" stroke="currentColor" stroke-width="2"/><circle cx="19" cy="18" r="2" stroke="currentColor" stroke-width="2"/></svg>`;
+const ICON_TARGET = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>`;
+const ICON_EYE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>`;
 
 const FEATURES = [
-  {
-    icon: ICON_CHAT,
-    title: 'Chat no seu site',
-    body: 'Uma linha de script e seu site ganha um assistente que conversa em português, direto no Shadow DOM — não interfere no seu CSS ou JS.',
-  },
-  {
-    icon: ICON_WHATSAPP,
-    title: 'WhatsApp nativo',
-    body: 'Todo plano já inclui um número de WhatsApp compartilhado da Zappy — o mesmo bot que atende no site atende por lá também.',
-  },
-  {
-    icon: ICON_CALENDAR,
-    title: 'Agendamento automático',
-    body: 'Cadastre seus serviços com duração e preço; o bot confirma horários de verdade com o cliente, respeitando o funcionamento da sua empresa.',
-  },
-  {
-    icon: ICON_HEADSET,
-    title: 'Handoff pra humano',
-    body: 'Quando o bot não sabe responder, a conversa cai direto no Inbox do seu dashboard — sem o cliente precisar pedir duas vezes.',
-  },
-  {
-    icon: ICON_QUESTION,
-    title: 'FAQ automático',
-    body: 'Cadastre as perguntas que você já responde todo dia. O bot mostra como botões clicáveis, sem inventar respostas.',
-  },
-  {
-    icon: ICON_LINK,
-    title: 'Conecta com seus sistemas',
-    body: 'Já usa um sistema de agendamento ou CRM? A gente conecta a Zappy com o que você já tem, sem precisar trocar de ferramenta.',
-  },
-  {
-    icon: ICON_SLIDERS,
-    title: 'WhatsApp com número próprio',
-    body: 'Quer um número de WhatsApp exclusivo da sua empresa? Nossa equipe de tecnologia cuida do onboarding personalizado, do início ao fim.',
-  },
+  { icon: ICON_WHATSAPP, title: 'WhatsApp incluso', body: 'Já vem com número compartilhado da Zappigo.' },
+  { icon: ICON_CHAT, title: 'Chat no site 24h', body: 'Um assistente que responde a qualquer hora.' },
+  { icon: ICON_CALENDAR, title: 'Agendamento automático', body: 'O bot marca horários direto com o cliente.' },
+  { icon: ICON_QUESTION, title: 'FAQ automático', body: 'Respostas prontas pro que você mais responde.' },
+  { icon: ICON_HEADSET, title: 'Handoff pra humano', body: 'Quando o bot não sabe, alguém do time assume.' },
+  // { icon: ICON_LINK, title: 'Conecta com seus sistemas', body: 'Já usa agenda ou CRM? A gente integra.' },
+  // { icon: ICON_SLIDERS, title: 'WhatsApp próprio', body: 'Quer número exclusivo? Cuidamos do onboarding.' },
 ];
 
 const PRICING = [
@@ -70,7 +43,7 @@ const PRICING = [
     items: [
       'Dashboard de agendamentos, conversas e FAQ',
       'Widget de chat no seu site',
-      'Número de WhatsApp compartilhado da Zappy',
+      'Número de WhatsApp compartilhado da Zappigo',
       'Handoff pra atendimento humano',
     ],
     cta: { label: 'Começar agora', href: '/signup' },
@@ -102,21 +75,33 @@ const PRICING = [
 ];
 
 const STEPS = [
-  { title: 'Cadastre sua empresa', body: 'Leva menos de dois minutos — sem burocracia.' },
-  { title: 'Configure serviços e FAQ', body: 'Cadastre o que você vende e as perguntas que já responde todo dia.' },
-  { title: 'Cole o script no seu site', body: 'Uma linha de código e o chat (e o WhatsApp) já estão no ar.' },
+  { title: 'Cadastre sua empresa', body: 'Leva menos de dois minutos, sem burocracia e sem precisar de time técnico.' },
+  {
+    title: 'Configure atendimentos e perguntas frequentes',
+    body: 'Cadastre os serviços que você oferece e as dúvidas que os clientes já te fazem todo dia.',
+  },
+  {
+    title: 'Comece a atender no site e no WhatsApp',
+    body: 'Ative o chat no seu site e use o número de WhatsApp já incluso — pronto pra conversar com seus clientes.',
+  },
 ];
 
-// Mirrors packages/db/prisma/schema/migrations/20260722010000_seed_zappy_company
-// (the Zappy company's own cadastrado FAQ, used by the live chat below) —
+const TRUST_ITEMS = [
+  'Grátis, sem cartão de crédito',
+  'No ar em minutos, sem precisar de time técnico',
+  'WhatsApp já incluso, sem número separado pra comprar',
+];
+
+// Mirrors packages/db/prisma/schema/migrations/20260722010000_seed_zappigo_company
+// (the Zappigo company's own cadastrado FAQ, used by the live chat below) —
 // kept as separate static copy here on purpose, same reasoning as PRICING
 // above: this is crawlable page content for search engines, not something
 // that should depend on a database round-trip on every page load.
 const FAQ_ITEMS = [
   {
-    question: 'O que é a Zappy?',
+    question: 'O que é a Zappigo?',
     answer:
-      'A Zappy é uma plataforma de atendimento via IA que conversa com seus clientes no seu site e no WhatsApp, tira dúvidas, responde o FAQ da sua empresa e agenda horários automaticamente — com um humano do seu time podendo assumir a conversa a qualquer momento.',
+      'A Zappigo é uma plataforma de atendimento via IA que conversa com seus clientes no seu site e no WhatsApp, tira dúvidas, responde o FAQ da sua empresa e agenda horários automaticamente — com um humano do seu time podendo assumir a conversa a qualquer momento.',
   },
   {
     question: 'Quanto custa?',
@@ -124,8 +109,8 @@ const FAQ_ITEMS = [
     // moment that flips back to false; the paid-tier copy is preserved in
     // git history rather than deleted.
     answer: FREE_TIER_MODE
-      ? 'Nada! Estamos no período de lançamento e a Zappy está gratuita pra todo mundo, incluindo o widget de chat pro seu site e um número de WhatsApp compartilhado. Sem cartão, sem pegadinha — quando isso mudar no futuro, avisamos com bastante antecedência.'
-      : 'O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappy. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar.',
+      ? 'Nada! Estamos no período de lançamento e a Zappigo está gratuita pra todo mundo, incluindo o widget de chat pro seu site e um número de WhatsApp compartilhado. Sem cartão, sem pegadinha.'
+      : 'O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappigo. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar.',
   },
   {
     question: 'Como funciona o agendamento automático?',
@@ -135,7 +120,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como funciona o suporte via WhatsApp?',
     answer:
-      'Toda empresa que assina a Zappy já sai com acesso a um número de WhatsApp compartilhado — o mesmo bot que atende no seu site também atende por lá, identificando automaticamente qual empresa o cliente quer falar.',
+      'Toda empresa que assina a Zappigo já sai com acesso a um número de WhatsApp compartilhado — o mesmo bot que atende no seu site também atende por lá, identificando automaticamente qual empresa o cliente quer falar.',
   },
   {
     question: 'E se o bot não souber responder?',
@@ -190,7 +175,7 @@ function jsonLd(data: unknown): string {
 const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'Zappy',
+  name: 'Zappigo',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
@@ -218,16 +203,6 @@ const FAQ_JSON_LD = jsonLd({
 
 export async function MarketingHome() {
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
-  const installSnippet = [
-    `<script src="https://cdn.seudominio.com/widget.js"`,
-    `        data-company="sua-empresa"`,
-    `        data-company-name="Sua Empresa"`,
-    `        data-color="${BRAND_COLOR}"`,
-    whatsappNumber ? `        data-whatsapp="${whatsappNumber}"` : null,
-    `        async></script>`,
-  ]
-    .filter(Boolean)
-    .join('\n');
 
   return (
     <main
@@ -270,7 +245,7 @@ export async function MarketingHome() {
               __html: ICON_CHAT.replace('width="24"', 'width="17"').replace('height="24"', 'height="17"'),
             }}
           />
-          <span style={{ fontWeight: 700, fontSize: 16 }}>Zappy</span>
+          <span style={{ fontWeight: 700, fontSize: 16 }}>Zappigo</span>
         </div>
         <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
           <a href="#recursos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
@@ -279,8 +254,8 @@ export async function MarketingHome() {
           <a href="#precos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
             Preços
           </a>
-          <a href="#instalacao" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-            Como instalar
+          <a href="#como-funciona" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
+            Como funciona
           </a>
           <a href="#faq" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
             FAQ
@@ -318,15 +293,38 @@ export async function MarketingHome() {
           Agendamento automático e suporte via WhatsApp com IA para o seu negócio
         </h1>
         <p style={{ fontSize: 16.5, color: '#555', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
-          A Zappy conversa com seus clientes o dia todo no site e no WhatsApp, responde o FAQ da
+          A Zappigo conversa com seus clientes o dia todo no site e no WhatsApp, responde o FAQ da
           sua empresa e marca horários de verdade sem ninguém do seu time digitar nada. Quando ela
           não souber algo, um humano assume a conversa, sem enrolação.
         </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 36 }}>
           <Button href="/signup">Começar agora</Button>
           <Button href="#assistente" variant="secondary">
             Conversar com o assistente
           </Button>
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '10px 28px',
+            justifyContent: 'center',
+            maxWidth: 720,
+            margin: '0 auto',
+          }}
+        >
+          {TRUST_ITEMS.map((item) => (
+            <span
+              key={item}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#555' }}
+            >
+              <span
+                style={{ color: BRAND_COLOR, flexShrink: 0, width: 15, height: 15 }}
+                dangerouslySetInnerHTML={{ __html: ICON_CHECK }}
+              />
+              {item}
+            </span>
+          ))}
         </div>
       </section>
 
@@ -336,8 +334,8 @@ export async function MarketingHome() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 24,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+            gap: 20,
           }}
         >
           {FEATURES.map((f) => (
@@ -347,16 +345,17 @@ export async function MarketingHome() {
                 background: '#fff',
                 border: '1px solid rgba(0,0,0,0.06)',
                 borderRadius: 16,
-                padding: 24,
+                padding: '28px 20px',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                textAlign: 'center',
               }}
             >
               <span
                 style={{
                   display: 'inline-flex',
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
                   background: '#eef2ff',
                   color: BRAND_COLOR,
                   alignItems: 'center',
@@ -364,11 +363,11 @@ export async function MarketingHome() {
                   marginBottom: 14,
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: f.icon.replace('width="24"', 'width="19"').replace('height="24"', 'height="19"'),
+                  __html: f.icon.replace('width="24"', 'width="26"').replace('height="24"', 'height="26"'),
                 }}
               />
-              <h3 style={{ fontSize: 16, margin: '0 0 8px' }}>{f.title}</h3>
-              <p style={{ fontSize: 13.5, color: '#666', lineHeight: 1.6, margin: 0 }}>{f.body}</p>
+              <h3 style={{ fontSize: 15, margin: '0 0 6px' }}>{f.title}</h3>
+              <p style={{ fontSize: 12.5, color: '#666', lineHeight: 1.5, margin: 0 }}>{f.body}</p>
             </div>
           ))}
         </div>
@@ -378,11 +377,11 @@ export async function MarketingHome() {
       <section id="precos" style={{ padding: '80px 24px', background: '#f8f9fb' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>
-            {FREE_TIER_MODE ? 'Grátis por enquanto' : 'Planos'}
+            {FREE_TIER_MODE ? 'Lançamento ' : 'Planos'}
           </h2>
           <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 48 }}>
             {FREE_TIER_MODE
-              ? 'Estamos em lançamento — use a Zappy sem custo, sem cartão, com o WhatsApp compartilhado da plataforma.'
+              ? 'Estamos em lançamento — use a Zappigo sem custo, sem cartão, com o WhatsApp compartilhado da plataforma.'
               : 'Comece com o plano básico e fale com a gente se precisar de algo sob medida.'}
           </p>
 
@@ -413,7 +412,7 @@ export async function MarketingHome() {
               >
                 Lançamento
               </span>
-              <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>Zappy Grátis</h3>
+              <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>Zappigo Grátis</h3>
               <div style={{ marginBottom: 20 }}>
                 <span style={{ fontSize: 30, fontWeight: 700 }}>R$ 0</span>
                 <span style={{ fontSize: 13.5, color: '#888' }}> /mês</span>
@@ -422,7 +421,7 @@ export async function MarketingHome() {
                 {[
                   'Dashboard de agendamentos, conversas e FAQ',
                   'Widget de chat no seu site',
-                  'Número de WhatsApp compartilhado da Zappy',
+                  'Número de WhatsApp compartilhado da Zappigo',
                   'Handoff pra atendimento humano',
                 ].map((item) => (
                   <li key={item} style={{ display: 'flex', gap: 8, fontSize: 13.5, color: '#444', marginBottom: 10 }}>
@@ -505,15 +504,17 @@ export async function MarketingHome() {
         </div>
       </section>
 
-      {/* Install */}
-      <section id="instalacao" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 48 }}>Como funciona</h2>
+      {/* Como funciona */}
+      <section id="como-funciona" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+        <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>Como funciona</h2>
+        <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 48 }}>
+          Sem instalação complicada, sem depender de time técnico.
+        </p>
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
             gap: 28,
-            marginBottom: 40,
           }}
         >
           {STEPS.map((step, i) => (
@@ -540,11 +541,79 @@ export async function MarketingHome() {
             </div>
           ))}
         </div>
-        <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <p style={{ fontSize: 12.5, color: '#888', textAlign: 'center', marginBottom: 10 }}>
-            Depois de cadastrar sua empresa, seu script fica pronto em <code>/dashboard/instalacao</code> — este aqui é só um exemplo:
-          </p>
-          <CopySnippet snippet={installSnippet} />
+      </section>
+
+      {/* Missão & Visão */}
+      <section style={{ padding: '80px 24px' }}>
+        <div
+          style={{
+            maxWidth: 900,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: 24,
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid rgba(0,0,0,0.06)',
+              borderRadius: 16,
+              padding: 32,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-flex',
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: '#eef2ff',
+                color: BRAND_COLOR,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 16,
+              }}
+              dangerouslySetInnerHTML={{
+                __html: ICON_TARGET.replace('width="24"', 'width="19"').replace('height="24"', 'height="19"'),
+              }}
+            />
+            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>Nossa missão</h3>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>
+              Disponibilizar atendimento via inteligência artificial para qualquer negócio em todo o Brasil.
+            </p>
+          </div>
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid rgba(0,0,0,0.06)',
+              borderRadius: 16,
+              padding: 32,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-flex',
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: '#eef2ff',
+                color: BRAND_COLOR,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 16,
+              }}
+              dangerouslySetInnerHTML={{
+                __html: ICON_EYE.replace('width="24"', 'width="19"').replace('height="24"', 'height="19"'),
+              }}
+            />
+            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>Nossa visão</h3>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>
+              Ser uma referência em tecnologia e serviços para empresas.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -600,7 +669,7 @@ export async function MarketingHome() {
         />
         <h2 style={{ fontSize: 26, margin: '0 0 12px' }}>Fale com o nosso assistente agora</h2>
         <p style={{ fontSize: 14.5, opacity: 0.9, maxWidth: 480, margin: '0 auto' }}>
-          Clique no botão de chat no canto inferior direito — ele responde dúvidas sobre a Zappy e
+          Clique no botão de chat no canto inferior direito — ele responde dúvidas sobre a Zappigo e
           já agenda uma demonstração com o nosso time, no próprio site ou pelo WhatsApp.
         </p>
       </section>
@@ -614,7 +683,7 @@ export async function MarketingHome() {
           borderTop: '1px solid rgba(0,0,0,0.06)',
         }}
       >
-        © {new Date().getFullYear()} Zappy · <a href="/login" style={{ color: '#999' }}>Entrar</a> ·{' '}
+        © {new Date().getFullYear()} Zappigo · <a href="/login" style={{ color: '#999' }}>Entrar</a> ·{' '}
         <a href="/signup" style={{ color: '#999' }}>Criar conta</a> ·{' '}
         <a href="/terms" style={{ color: '#999' }}>Termos de Uso</a> ·{' '}
         <a href="/privacy" style={{ color: '#999' }}>Privacidade</a>
@@ -623,11 +692,11 @@ export async function MarketingHome() {
       <Script
         src="/widget.js"
         strategy="afterInteractive"
-        data-company="zappy"
-        data-company-name="Zappy"
+        data-company="zappigo"
+        data-company-name="Zappigo"
         data-color={BRAND_COLOR}
         data-whatsapp={whatsappNumber}
-        data-quick-replies={ZAPPY_QUICK_REPLIES}
+        data-quick-replies={ZAPPIGO_QUICK_REPLIES}
       />
     </main>
   );

@@ -1,8 +1,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import OpenAI from 'openai';
-import { prisma } from '@zappy/db';
-import { orchestrate, OrchestratorBlockedError } from '@zappy/web/lib/bot/orchestrator';
+import { prisma } from '@zappigo/db';
+import { orchestrate, OrchestratorBlockedError } from '@zappigo/web/lib/bot/orchestrator';
 
 interface SeedBooking {
   scheduledAtOffsetHours: number;

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 import { RefreshButton } from './refresh-button';
 import { CopySnippet } from '../copy-snippet';
@@ -110,7 +110,7 @@ export default async function DashboardHomePage() {
           </>
         ) : (
           <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
-            O número compartilhado de WhatsApp da Zappy ainda não foi configurado nesta
+            O número compartilhado de WhatsApp da Zappigo ainda não foi configurado nesta
             instância — assim que estiver, o link aparece aqui automaticamente. Veja mais em{' '}
             <Link href="/dashboard/instalacao">Instalação</Link>.
           </p>

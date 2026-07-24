@@ -1,4 +1,4 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { FALLBACK_GEMINI_MODEL, PRIMARY_GEMINI_MODEL, streamGeminiCompletion, suggestQuickReplies } from '../ai/gemini';
 import type { ChatMessage, ToolCall } from '../ai/types';
 import { scrubForLog } from '../pii/scrubber';
@@ -159,8 +159,8 @@ export async function* orchestrate(
     'Não existe uma tool separada para "editar" um agendamento existente — se o cliente já tem um horário marcado e quer mudar de data/hora (reagendar), trate exatamente como um agendamento novo: chame check_availability pra nova data e depois create_booking normalmente. O sistema cancela o agendamento antigo automaticamente. Se o resultado de create_booking vier com "rescheduledFrom" preenchido, isso significa que um agendamento anterior desse mesmo cliente pra esse mesmo serviço foi cancelado automaticamente — avise o cliente que o horário antigo foi cancelado e o novo está confirmado (ou reservado, se requiresManualConfirmation vier true), nunca dê a entender que agora ele tem dois agendamentos.',
     'Se list_services trouxer "cancellationPolicy" pra um serviço, use esse texto exato pra responder perguntas do cliente sobre cancelamento/multa desse serviço — não invente prazos ou valores diferentes. Se não vier "cancellationPolicy", esse serviço não tem restrição: pode cancelar a qualquer momento sem multa.',
     'Alguns serviços têm mais de uma pessoa que atende (list_services retorna "staffOptions" nesses casos). Se houver staffOptions, pergunte ao cliente se ele tem preferência de profissional antes ou depois de checar disponibilidade — se ele já disser um nome, passe staffName em check_availability/create_booking; se disser "tanto faz" ou não tiver preferência, não passe staffName e deixe o sistema alocar automaticamente (o retorno de create_booking traz "staffName" com quem foi escolhido — sempre informe isso ao cliente). Se o cliente pedir um profissional específico e create_booking retornar erro "slot_unavailable" ou "staff_absent", NUNCA troque de profissional por conta própria — informe que esse horário/dia não está disponível com essa pessoa e, se a mensagem de erro mencionar outro profissional livre, pergunte se o cliente aceita trocar; só chame create_booking de novo com outro staffName se o cliente concordar.',
-    // Per-company refinement on top of everything above — e.g. the "zappy"
-    // company itself (seeded in migrations/*_seed_zappy_company) uses this
+    // Per-company refinement on top of everything above — e.g. the "zappigo"
+    // company itself (seeded in migrations/*_seed_zappigo_company) uses this
     // to override the FAQ x Serviços rule: its only cadastrado Service is a
     // free demo call, not a priced product, so pricing questions there
     // should go through list_faqs (the real R$ plans) instead of

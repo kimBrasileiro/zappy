@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <div className="dash-shell">
       <nav className="dash-nav">
-        <div className="dash-nav-brand">Zappy · Admin</div>
+        <div className="dash-nav-brand">Zappigo · Admin</div>
         <Link className="dash-nav-link" href="/admin/companies">
           Empresas
         </Link>

@@ -1,6 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { auth } from './auth';
 import { IMPERSONATE_COOKIE, isSuperAdminEmail } from './admin-auth';
 

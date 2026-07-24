@@ -1,5 +1,5 @@
-import { prisma } from '@zappy/db';
-import type { Company, Customer } from '@zappy/db';
+import { prisma } from '@zappigo/db';
+import type { Company, Customer } from '@zappigo/db';
 import type { ChatMessage } from '../ai/types';
 import { toLocalPhone } from '../whatsapp/client';
 import { notifyEscalation } from '../notifications';
@@ -145,7 +145,7 @@ async function hasActiveConversation(companyId: string, customerId: string, chan
 //      instead of silently picking up wherever the last (possibly
 //      days-old) conversation left off.
 //   4. The company's name mentioned in the free text itself (e.g. "Oi,
-//      queria falar com a Zappy") — a best-effort fallback for a cold first
+//      queria falar com a Zappigo") — a best-effort fallback for a cold first
 //      contact who didn't come through a link/QR code and won't know to
 //      type a code or use the exact phrase above. Only trusted when exactly
 //      one active company's name appears, and only as a first-contact

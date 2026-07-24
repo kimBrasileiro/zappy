@@ -24,7 +24,7 @@ export function LegalPage({
       }}
     >
       <Link href="/" style={{ color: BRAND_COLOR, fontSize: 13.5, textDecoration: 'none' }}>
-        ← Voltar pra Zappy
+        ← Voltar pra Zappigo
       </Link>
 
       <h1 style={{ fontSize: 30, margin: '20px 0 4px' }}>{title}</h1>

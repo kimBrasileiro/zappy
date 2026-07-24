@@ -1,9 +1,9 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { sendEmail } from './email/resend';
 import { sendWhatsAppMessage, toWhatsAppPhone } from './whatsapp/client';
 import { SUPER_ADMIN_EMAIL } from './admin-auth';
 
-// "Cliente" here is Zappy's own customer — the company that signed up, not
+// "Cliente" here is Zappigo's own customer — the company that signed up, not
 // the end consumer chatting with its bot. Both notifyBookingCreated and
 // notifyEscalation tell the business something needs their attention;
 // there's nothing actionable in either for the end consumer.
@@ -55,7 +55,7 @@ export async function notifyBookingCreated(params: {
 export async function notifyNewSignup(params: { companyName: string; adminEmail: string; plan: string }): Promise<void> {
   await sendEmail(
     SUPER_ADMIN_EMAIL,
-    `[Zappy] Novo cadastro — ${params.companyName}`,
+    `[Zappigo] Novo cadastro — ${params.companyName}`,
     `<p>Nova empresa cadastrada: <strong>${params.companyName}</strong> (plano ${params.plan}), admin ${params.adminEmail}.</p>`,
   );
 }
@@ -97,14 +97,14 @@ export async function notifyBillingEvent(params: {
   if (company.emails.length) {
     await sendEmail(
       company.emails,
-      `${copy.customer} — Zappy`,
+      `${copy.customer} — Zappigo`,
       `<p>${copy.customer}: plano <strong>${params.planLabel}</strong>.</p><p>Veja os detalhes em <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/dashboard/billing">Assinatura</a>.</p>`,
     );
   }
 
   await sendEmail(
     SUPER_ADMIN_EMAIL,
-    `[Zappy] ${copy.admin} — ${company.companyName}`,
+    `[Zappigo] ${copy.admin} — ${company.companyName}`,
     `<p><strong>${company.companyName}</strong>: ${copy.admin.toLowerCase()}, plano <strong>${params.planLabel}</strong>.</p>`,
   );
 }

@@ -1,4 +1,4 @@
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 
 export async function listFaqs(companyId: string) {
   const faqs = await prisma.faq.findMany({

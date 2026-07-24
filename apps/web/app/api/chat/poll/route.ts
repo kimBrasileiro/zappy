@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@zappy/db';
+import { prisma } from '@zappigo/db';
 import { checkOrigin, isEscalated } from '../../../../lib/bot/guardrails';
 
 // Lets the widget pick up agent replies sent from the dashboard without the

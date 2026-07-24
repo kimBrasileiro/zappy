@@ -14,7 +14,11 @@ const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai
 // Falling back to a genuinely different provider is a real follow-up once
 // there's a second provider's API key configured — there isn't one yet.
 export const PRIMARY_GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
-export const FALLBACK_GEMINI_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-2.0-flash';
+// Confirmed reachable with this project's API key/access tier — several
+// other plausible-looking model names (gemini-1.5-flash, gemini-2.5-pro,
+// gemini-2.0-flash-001) 404 on this same key, so don't swap this default
+// without actually testing the replacement against a real key first.
+export const FALLBACK_GEMINI_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-2.5-flash-lite';
 
 let client: OpenAI | null = null;
 

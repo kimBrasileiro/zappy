@@ -47,6 +47,22 @@ export async function notifyBookingCreated(params: {
   await sendWhatsAppMessage(toWhatsAppPhone(params.customerPhone), confirmationText);
 }
 
+export async function notifyBookingCancelled(params: {
+  companyId: string;
+  serviceName: string;
+  scheduledAt: Date;
+}): Promise<void> {
+  const company = await getActiveAdminEmails(params.companyId);
+  if (!company?.emails.length) return;
+
+  const when = params.scheduledAt.toLocaleString('pt-BR');
+  await sendEmail(
+    company.emails,
+    `Agendamento cancelado — ${params.serviceName}`,
+    `<p>O agendamento de <strong>${params.serviceName}</strong> para ${when} foi cancelado.</p>`,
+  );
+}
+
 // Fires once per new company signup (both the email/password flow in
 // (auth)/signup/actions.ts and the Google OAuth flow in
 // onboarding/actions.ts create a Company the same way) — gives the platform

@@ -1,7 +1,7 @@
 import { prisma } from '@zappigo/db';
 import type { Service } from '@zappigo/db';
 import { checkBookingRateLimit } from './rate-limit';
-import { notifyBookingCreated } from '../notifications';
+import { notifyBookingCancelled, notifyBookingCreated } from '../notifications';
 
 // Brazilian phone with DDD: 10 digits (landline, e.g. 11 3456-7890) or 11
 // (mobile, e.g. 11 98765-4321) once punctuation/spaces are stripped. Not a
@@ -549,4 +549,97 @@ export async function createBooking(
         'Esse horário acabou de ser reservado por outro cliente nesse exato instante — chame check_availability de novo pra oferecer outros horários livres.',
     };
   }
+}
+
+// Rescheduling has no separate tool (see createBooking's rescheduledFrom
+// logic above) — this pair is only for a cancellation the customer does NOT
+// want replaced with a new time.
+export async function listBookings(companyId: string, customerId: string | null) {
+  if (!customerId) {
+    return {
+      bookings: [],
+      message: 'Ainda não tenho o telefone confirmado do cliente — peça o telefone completo com DDD antes de buscar agendamentos.',
+    };
+  }
+
+  const bookings = await prisma.booking.findMany({
+    where: { companyId, customerId, status: 'confirmed', scheduledAt: { gt: new Date() } },
+    include: { service: true },
+    orderBy: { scheduledAt: 'asc' },
+  });
+
+  if (bookings.length === 0) {
+    return { bookings: [], message: 'Esse cliente não tem nenhum agendamento futuro confirmado.' };
+  }
+
+  return {
+    bookings: bookings.map((b) => ({
+      serviceName: b.service.name,
+      scheduledAt: b.scheduledAt.toISOString(),
+      ...(b.staffName ? { staffName: b.staffName } : {}),
+    })),
+  };
+}
+
+export async function cancelBooking(
+  companyId: string,
+  customerId: string | null,
+  args: { serviceName: string; scheduledAt: string },
+) {
+  if (!customerId) {
+    return {
+      error: 'missing_customer',
+      message: 'Ainda não tenho o telefone confirmado do cliente — peça o telefone completo com DDD antes de cancelar.',
+    };
+  }
+
+  // Same "no explicit offset means the caller meant the UTC time
+  // list_bookings just returned" defensive parse as createBooking above.
+  const hasExplicitOffset = /[zZ]|[+-]\d{2}:?\d{2}$/.test(args.scheduledAt.trim());
+  const scheduledAt = new Date(hasExplicitOffset ? args.scheduledAt : `${args.scheduledAt}Z`);
+  if (Number.isNaN(scheduledAt.getTime())) {
+    return {
+      error: 'invalid_datetime',
+      message: 'A data/hora informada não é válida. Use o formato ISO 8601 exato retornado por list_bookings.',
+    };
+  }
+
+  const service = await resolveService(companyId, args.serviceName);
+  if (!service) {
+    return {
+      error: 'service_not_found',
+      message: `Não encontrei nenhum serviço ativo chamado "${args.serviceName}". Chame list_bookings de novo pra ver os agendamentos exatos.`,
+    };
+  }
+
+  const booking = await prisma.booking.findFirst({
+    where: { companyId, customerId, serviceId: service.id, status: 'confirmed', scheduledAt },
+  });
+  if (!booking) {
+    return {
+      error: 'booking_not_found',
+      message: 'Não encontrei esse agendamento confirmado pra esse cliente — chame list_bookings de novo e use exatamente o serviceName e scheduledAt retornados.',
+    };
+  }
+
+  await prisma.booking.update({ where: { id: booking.id }, data: { status: 'cancelled' } });
+  await notifyBookingCancelled({ companyId, serviceName: service.name, scheduledAt: booking.scheduledAt });
+
+  const hoursUntil = (scheduledAt.getTime() - Date.now()) / 3_600_000;
+  const withinFeeWindow = service.cancellationNoticeHours > 0 && hoursUntil < service.cancellationNoticeHours;
+
+  return {
+    success: true,
+    serviceName: service.name,
+    scheduledAt: booking.scheduledAt.toISOString(),
+    // Purely informational — there's no in-chat payment collection, so the
+    // bot can only tell the customer a fee may apply per the company's
+    // policy, never actually charge it.
+    ...(withinFeeWindow && service.cancellationFeeCents > 0
+      ? {
+          feeMayApply: true,
+          feeMessage: `Esse cancelamento está dentro do prazo de multa (menos de ${service.cancellationNoticeHours}h de antecedência) — pode haver cobrança de ${(service.cancellationFeeCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}, conforme a política da empresa.`,
+        }
+      : {}),
+  };
 }

@@ -1,5 +1,5 @@
 import type { ToolCall, ToolDefinition } from '../ai/types';
-import { checkAvailability, createBooking, listServices } from './services';
+import { cancelBooking, checkAvailability, createBooking, listBookings, listServices } from './services';
 import { listFaqs } from './faqs';
 import { escalateToHuman } from './conversation';
 
@@ -63,6 +63,25 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'list_bookings',
+    description:
+      'Lista os agendamentos futuros confirmados desse cliente (identificado pelo telefone da conversa). Chame antes de cancel_booking pra confirmar com o cliente qual agendamento cancelar — nunca cancele sem o cliente confirmar explicitamente qual, mesmo se só existir um.',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'cancel_booking',
+    description:
+      'Cancela um agendamento confirmado do cliente, sem criar um novo. Só chame depois que o cliente confirmar explicitamente qual agendamento cancelar (use list_bookings primeiro) — nunca invente serviceName ou scheduledAt, use exatamente os valores retornados por list_bookings. Para REAGENDAR pra outro horário (não cancelar de vez), NÃO chame essa tool — chame create_booking direto com o novo horário, que já substitui o agendamento antigo automaticamente.',
+    parameters: {
+      type: 'object',
+      properties: {
+        serviceName: { type: 'string', description: 'Nome exato do serviço, igual ao retornado por list_bookings' },
+        scheduledAt: { type: 'string', description: 'Data e hora ISO 8601 exata, igual à retornada por list_bookings' },
+      },
+      required: ['serviceName', 'scheduledAt'],
+    },
+  },
+  {
     name: 'escalate_human',
     description:
       'Encaminha a conversa para um atendente humano. Chame IMEDIATAMENTE quando o cliente pedir explicitamente para falar com um atendente, uma pessoa real, ou suporte humano, ou quando você não souber resolver algo com certeza mesmo depois de checar list_faqs/list_services. Depois de chamar, diga ao cliente que um atendente vai responder em breve — o bot para de responder nessa conversa até um humano assumir ou resolver.',
@@ -111,6 +130,15 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
           customerName: String(args.customerName ?? ''),
           customerPhone: String(args.customerPhone ?? ''),
           staffName: args.staffName ? String(args.staffName) : undefined,
+        }),
+      );
+    case 'list_bookings':
+      return JSON.stringify(await listBookings(ctx.companyId, ctx.customerId));
+    case 'cancel_booking':
+      return JSON.stringify(
+        await cancelBooking(ctx.companyId, ctx.customerId, {
+          serviceName: String(args.serviceName ?? ''),
+          scheduledAt: String(args.scheduledAt ?? ''),
         }),
       );
     case 'escalate_human':

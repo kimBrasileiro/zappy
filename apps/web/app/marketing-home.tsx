@@ -210,7 +210,16 @@ export async function MarketingHome() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: SOFTWARE_APPLICATION_JSON_LD }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: FAQ_JSON_LD }} />
 
+      <style>{`
+        @media (max-width: 720px) {
+          .marketing-nav-links { display: none; }
+          .marketing-header { padding: 14px 16px !important; gap: 8px !important; }
+          .marketing-header-buttons { gap: 8px !important; }
+          .marketing-header-buttons a { padding: 9px 14px !important; font-size: 13px !important; }
+        }
+      `}</style>
       <header
+        className="marketing-header"
         style={{
           position: 'sticky',
           top: 0,
@@ -225,7 +234,7 @@ export async function MarketingHome() {
           borderBottom: '1px solid rgba(0,0,0,0.06)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <span
             style={{
               width: 30,
@@ -236,6 +245,7 @@ export async function MarketingHome() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
             dangerouslySetInnerHTML={{
               __html: ICON_CHAT.replace('width="24"', 'width="17"').replace('height="24"', 'height="17"'),
@@ -244,22 +254,26 @@ export async function MarketingHome() {
           <span style={{ fontWeight: 700, fontSize: 16 }}>Zappigo</span>
         </div>
         <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-          <a href="#recursos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-            Recursos
-          </a>
-          <a href="#precos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-            Preços
-          </a>
-          <a href="#como-funciona" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-            Como funciona
-          </a>
-          <a href="#faq" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-            FAQ
-          </a>
-          <Button href="/login" variant="secondary">
-            Entrar
-          </Button>
-          <Button href="/signup">Começar agora</Button>
+          <div className="marketing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+            <a href="#recursos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
+              Recursos
+            </a>
+            <a href="#precos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
+              Preços
+            </a>
+            <a href="#como-funciona" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
+              Como funciona
+            </a>
+            <a href="#faq" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
+              FAQ
+            </a>
+          </div>
+          <div className="marketing-header-buttons" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <Button href="/login" variant="secondary">
+              Entrar
+            </Button>
+            <Button href="/signup">Começar agora</Button>
+          </div>
         </nav>
       </header>
 

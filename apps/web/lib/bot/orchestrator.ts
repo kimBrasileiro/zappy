@@ -181,6 +181,7 @@ export async function* orchestrate(
   let slotButtons: string[] = [];
   let faqButtons: string[] = [];
   let serviceButtons: string[] = [];
+  let bookingButtons: string[] = [];
   // Starts true if the ticket was already flagged before this turn (e.g.
   // escalate_human ran on an earlier message and nobody's picked it up yet)
   // — the bot keeps answering in that state (see G11 above), but the
@@ -289,6 +290,28 @@ export async function* orchestrate(
       }
     }
 
+    if (toolCall.name === 'list_bookings') {
+      // One button per upcoming confirmed booking — the label is just a
+      // human-readable summary (not machine-parseable), because the exact
+      // serviceName/scheduledAt cancel_booking needs are already sitting in
+      // this same tool result inside conversation history; the model reads
+      // those, not the button label itself.
+      try {
+        const parsed = JSON.parse(toolResultContent) as { bookings?: { serviceName: string; scheduledAt: string }[] };
+        bookingButtons = (parsed.bookings ?? []).map(
+          (b) =>
+            `${b.serviceName} — ${new Date(b.scheduledAt).toLocaleString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}`,
+        );
+      } catch {
+        bookingButtons = [];
+      }
+    }
+
     currentMessages = [
       ...currentMessages,
       { role: 'assistant', content: null, toolCalls: [toolCall] },
@@ -319,6 +342,11 @@ export async function* orchestrate(
     // then check_availability) means the customer already has a concrete
     // service+date and is now down to picking a time.
     quickReplies = slotButtons;
+  } else if (bookingButtons.length > 0) {
+    // The customer's real upcoming bookings to choose from before
+    // cancel_booking — same reasoning as slotButtons, offered instead of
+    // (not merged with) the generic guess.
+    quickReplies = bookingButtons;
   } else if (serviceButtons.length > 0) {
     // Real service names to pick from — replaces the old weaker "just
     // prepend a generic Quero agendar chip" approach with actual clickable

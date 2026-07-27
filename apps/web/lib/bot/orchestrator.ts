@@ -1,4 +1,4 @@
-import { prisma } from '@zappigo/db';
+import { Prisma, prisma } from '@zappigo/db';
 import { FALLBACK_GEMINI_MODEL, PRIMARY_GEMINI_MODEL, streamGeminiCompletion, suggestQuickReplies } from '../ai/gemini';
 import type { ChatMessage, ToolCall } from '../ai/types';
 import { scrubForLog } from '../pii/scrubber';
@@ -22,6 +22,8 @@ import {
   loadHistory,
 } from './conversation';
 import { BUSINESS_TOOLS, executeBusinessTool } from './tool-definitions';
+import type { TicketMetadata } from './ticket-metadata';
+import { normalizeTimePhrases } from './time-normalizer';
 
 export class OrchestratorBlockedError extends Error {
   constructor(public reason: string) {
@@ -157,6 +159,15 @@ export async function* orchestrate(
     return { quickReplies: [], escalated: true };
   }
 
+  // Deterministic replacement for "hope the model restated the resolved
+  // service/date in its own prose and rereads it later" — tool call/result
+  // content never survives to the next turn's loadHistory() (see above), so
+  // this is the only thing that reliably does. Written back below whenever
+  // check_availability resolves a real service+date, and cleared on a
+  // successful create_booking.
+  let ticketMetadata: TicketMetadata = (ticket.metadata as TicketMetadata | null) ?? {};
+  const bookingDraft = ticketMetadata.bookingDraft;
+
   const language = resolveLanguage(company);
   const config = company.config as { botName?: string; extraInstructions?: string } | null;
   const botName = config?.botName ?? 'Assistente';
@@ -178,13 +189,18 @@ export async function* orchestrate(
     'Se a mensagem do cliente já é (ou é muito parecida com) uma das perguntas retornadas por list_faqs — por exemplo, se ele clicou em um dos botões de pergunta — responda diretamente com a resposta exata dessa pergunta específica, sem listar as outras de novo.',
     'Nunca diga que um agendamento foi confirmado sem antes ter chamado create_booking e recebido sucesso — nunca invente horários, preços ou confirmações.',
     'As tools de agendamento identificam o serviço pelo nome exato (igual ao que list_services retornou), nunca por um id. Se não tiver certeza do nome exato do serviço mencionado pelo cliente, chame list_services de novo para confirmar antes de checar disponibilidade ou criar o agendamento.',
-    'Use o histórico da conversa pra saber qual serviço já está em jogo — se o cliente já perguntou sobre um serviço específico (ou só existe um serviço cadastrado) e depois disser algo genérico como "quero agendar" sem repetir o nome, assuma que é esse mesmo serviço e prossiga direto (chame check_availability), em vez de perguntar de novo qual serviço ele quer. Só pergunte de novo se houver mais de um serviço relevante na conversa e não estiver claro qual deles. IMPORTANTE: toda vez que você mencionar ou assumir um serviço — inclusive quando só existe um cadastrado e você o assumiu automaticamente sem o cliente repetir o nome — inclua o NOME EXATO desse serviço na sua própria frase de resposta (ex: "Em que dia você quer agendar a Tosa?", nunca só "Em que dia você quer agendar?"). Isso é obrigatório porque as mensagens de ferramentas (tool calls) NÃO ficam salvas no histórico entre uma mensagem e outra do cliente — sua própria frase em texto é a ÚNICA coisa que sobrevive pra você lembrar depois qual serviço estava em jogo; sem isso você corre o risco de inventar um nome de serviço que nunca existiu na próxima mensagem.',
+    'Use o histórico da conversa pra saber qual serviço já está em jogo — se o cliente já perguntou sobre um serviço específico (ou só existe um serviço cadastrado) e depois disser algo genérico como "quero agendar" sem repetir o nome, assuma que é esse mesmo serviço e prossiga direto (chame check_availability), em vez de perguntar de novo qual serviço ele quer. Só pergunte de novo se houver mais de um serviço relevante na conversa e não estiver claro qual deles.',
     'Quando o cliente mencionar uma data relativa ou parcial (ex: "dia 9", "amanhã", "sexta-feira", "essa semana"), calcule você mesmo a data exata no formato YYYY-MM-DD usando a data de hoje acima como referência — nunca peça pro cliente reescrever a data nesse formato. Se o cliente disser só o dia do mês (ex: "dia 9") e esse dia já passou no mês atual, assuma o próximo mês; se ainda não passou, assuma o mês atual.',
-    'Interprete expressões informais de horário exatamente como trataria um clique num botão de horário — "15h", "às 15h", "3 da tarde", "meio-dia" etc. todas contam como um horário válido (15h = 15:00, meio-dia = 12:00). Combine esse horário com a data já estabelecida (da sua própria mensagem anterior, igual à regra do parágrafo seguinte) e prossiga normalmente — NUNCA pergunte a data de novo, nem reinicie a conversa do zero, só porque o cliente digitou o horário num formato diferente de "HH:MM". Se depois de montado o horário não corresponder a nenhum horário realmente livre, chame check_availability de novo pra essa mesma data e ofereça os horários reais retornados, sem perder o serviço nem a data já estabelecidos.',
-    'Quando check_availability retornar horários (morningSlots/afternoonSlots), NÃO liste os horários no texto da sua resposta — eles já aparecem automaticamente como botões pro cliente clicar. Confirme brevemente MENCIONANDO A DATA exata que você acabou de checar (formato dia/mês, ex: "Encontrei horários pro dia 15/08:") e pergunte qual ele prefere — essa menção da data é obrigatória, porque as mensagens de ferramentas (tool calls) NÃO ficam salvas entre uma mensagem e outra do cliente: sua PRÓPRIA frase em texto é a única forma de lembrar depois qual data estava em jogo.',
-    'Quando o cliente responder só com um horário curto (ex: "09:00"), é um horário que veio dos botões do check_availability anterior — NUNCA pergunte a data de novo nesse caso: releia sua própria mensagem anterior (a que confirmou "Encontrei horários pro dia X") pra saber qual data combina com esse horário, e monte você mesmo o horário completo em ISO 8601 juntando essa data com o horário clicado (ex: data 2026-08-15 + horário "09:00" = "2026-08-15T09:00:00"). Nome completo e telefone com DDD do cliente são OBRIGATÓRIOS para criar o agendamento — se ainda não tiver os dois, peça-os agora antes de chamar create_booking (não invente, não assuma). Assim que tiver horário, data (da sua própria mensagem anterior), nome E telefone, chame create_booking IMEDIATAMENTE com esse horário montado, sem pedir mais nenhuma confirmação.',
+    'Expressões informais de horário como "3 da tarde" ou "de manhã cedo" também contam como um horário válido, do mesmo jeito que um clique num botão de horário — combine com a data já estabelecida (veja o contexto de agendamento abaixo, se houver) e prossiga normalmente. Se o horário montado não corresponder a nenhum horário realmente livre, chame check_availability de novo pra essa mesma data e ofereça os horários reais retornados, sem perder o serviço nem a data já estabelecidos.',
+    'Quando check_availability retornar horários (morningSlots/afternoonSlots), NÃO liste os horários no texto da sua resposta — eles já aparecem automaticamente como botões pro cliente clicar. Confirme brevemente e pergunte qual ele prefere.',
+    'Quando o cliente responder só com um horário curto (ex: "09:00"), é um horário que veio dos botões do check_availability anterior — combine com a data do contexto de agendamento abaixo (se houver) pra montar o horário completo em ISO 8601 (ex: data 2026-08-15 + horário "09:00" = "2026-08-15T09:00:00"). Nome completo e telefone com DDD do cliente são OBRIGATÓRIOS para criar o agendamento — se ainda não tiver os dois, peça-os agora antes de chamar create_booking (não invente, não assuma). Assim que tiver horário, data, nome E telefone, chame create_booking IMEDIATAMENTE com esse horário montado, sem pedir mais nenhuma confirmação.',
     'Ao perguntar em QUE DIA o cliente quer agendar (antes de chamar check_availability), prefira relativos fáceis de responder — "hoje", "amanhã", "essa semana", "semana que vem" — e nunca sugira algo vago tipo "mês que vem" ou uma data solta sem contexto: o cliente deve conseguir responder com uma palavra curta que você já sabe resolver pro formato YYYY-MM-DD.',
-    'Se em algum momento você ficar em dúvida sobre o que uma mensagem curta do cliente significa (um horário, um "sim", um número solto), NUNCA reinicie a conversa do zero perguntando de novo qual serviço ele quer — releia suas PRÓPRIAS mensagens anteriores (não as do cliente) pra recuperar o serviço e a data já estabelecidos, e peça esclarecimento só sobre a parte específica que ficou confusa. Isso vale mesmo depois de um desvio no meio da conversa (ex: "não há horários livres nesse dia, quer tentar outra data?") — o serviço continua sendo o mesmo até o cliente pedir outro explicitamente.',
+    'Se em algum momento você ficar em dúvida sobre o que uma mensagem curta do cliente significa (um "sim", um número solto que não seja um horário), NUNCA reinicie a conversa do zero perguntando de novo qual serviço ele quer — peça esclarecimento só sobre a parte específica que ficou confusa, mantendo o contexto de agendamento abaixo (se houver).',
+    ...(bookingDraft
+      ? [
+          `Contexto de agendamento já estabelecido nesta conversa: serviço "${bookingDraft.serviceName}", data ${bookingDraft.date}. Continue a partir daqui — só troque se o cliente pedir outro serviço ou outra data explicitamente.`,
+        ]
+      : []),
     'Quando o cliente pedir para ver serviços, horários disponíveis ou quiser agendar, chame a tool correspondente IMEDIATAMENTE nesta mesma resposta — nunca diga "vou verificar" ou peça confirmação antes de chamar a tool, apenas chame.',
     'Ao confirmar um agendamento, nunca exiba o bookingId interno pro cliente — mencione só o serviço, data, hora e preço.',
     'O resultado de create_booking pode vir com "requiresManualConfirmation": true. Se vier true, NÃO diga que o agendamento está confirmado — diga que o horário foi reservado e que alguém do time vai entrar em contato pelo telefone informado pelo cliente para confirmar o agendamento e os detalhes do serviço. Se vier false (ou ausente), confirme normalmente que o agendamento está confirmado.',
@@ -200,10 +216,13 @@ export async function* orchestrate(
     ...(config?.extraInstructions ? [config.extraInstructions] : []),
   ].join(' ');
 
+  // Only the copy the model sees is normalized — what's persisted via
+  // appendMessage above stays the customer's literal text, so the dashboard
+  // Inbox shows what they actually typed.
   let currentMessages: ChatMessage[] = [
     { role: 'system', content: systemPrompt },
     ...history,
-    { role: 'user', content: input.message },
+    { role: 'user', content: normalizeTimePhrases(input.message) },
   ];
 
   let full = '';
@@ -285,12 +304,43 @@ export async function* orchestrate(
       // labels the customer actually clicks.
       try {
         const parsed = JSON.parse(toolResultContent) as {
+          serviceName?: string;
+          date?: string;
           morningSlots?: { time: string }[];
           afternoonSlots?: { time: string }[];
         };
         slotButtons = [...(parsed.morningSlots ?? []), ...(parsed.afternoonSlots ?? [])].map((s) => s.time);
+        // Persisted even on a zero-slots/closed/staff-absent result — every
+        // one of checkAvailability's return branches now carries
+        // serviceName+date (services.ts), and a mid-flow "not available,
+        // try another date" detour is exactly when a fallback draft matters
+        // most for the next turn.
+        if (parsed.serviceName && parsed.date) {
+          ticketMetadata = { ...ticketMetadata, bookingDraft: { serviceName: parsed.serviceName, date: parsed.date } };
+          await prisma.ticket.update({
+            where: { id: ticket.id },
+            data: { metadata: ticketMetadata as unknown as Prisma.InputJsonValue },
+          });
+        }
       } catch {
         slotButtons = [];
+      }
+    }
+
+    if (toolCall.name === 'create_booking') {
+      try {
+        const parsed = JSON.parse(toolResultContent) as { success?: boolean };
+        if (parsed.success && ticketMetadata.bookingDraft) {
+          ticketMetadata = { ...ticketMetadata };
+          delete ticketMetadata.bookingDraft;
+          await prisma.ticket.update({
+            where: { id: ticket.id },
+            data: { metadata: ticketMetadata as unknown as Prisma.InputJsonValue },
+          });
+        }
+      } catch {
+        // Non-JSON or unexpected shape — leave the draft as-is rather than
+        // risk clearing it on a call that didn't actually succeed.
       }
     }
 

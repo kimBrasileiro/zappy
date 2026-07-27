@@ -1,0 +1,27 @@
+[
+  {
+    "name": "service_auto_assumed_must_be_named",
+    "description": "Single-service company, customer asks to book without naming a service — the bot must name the assumed service in its own reply (not just silently assume it), since that's the only thing that survives to the next turn.",
+    "service": { "name": "Corte de Cabelo", "durationMinutes": 40, "priceCents": 5000, "is24h": true },
+    "turns": [
+      { "message": "Oi, quero agendar um horário", "expectContains": ["Corte de Cabelo"] }
+    ],
+    "successCriteria": "N/A — fully covered by expectContains."
+  },
+  {
+    "name": "informal_time_after_date_no_reset",
+    "description": "Regression test for a real WhatsApp bug: after the customer picks a date, replying with an informal time like '15h' (not an exact HH:MM button tap) must NOT reset the conversation back to asking which service or which date.",
+    "service": { "name": "Corte de Cabelo", "durationMinutes": 40, "priceCents": 5000, "is24h": true },
+    "turns": [
+      { "message": "Oi, quero agendar um horário" },
+      { "message": "Amanhã" },
+      {
+        "message": "15h. Meu nome é Bruno Lima, telefone 11998887777.",
+        "expectContains": ["confirmad"],
+        "expectNotContains": ["qual serviço", "que dia", "qual dia", "que data", "qual data"]
+      }
+    ],
+    "expectBookingCount": 1,
+    "successCriteria": "The assistant retained the service (Corte de Cabelo) and the date (tomorrow) established in earlier turns, correctly interpreted '15h' as 15:00, and booked it — at no point re-asking which service or which date the customer wants, and never inventing a service name that was never registered."
+  }
+]

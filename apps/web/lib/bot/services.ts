@@ -177,6 +177,8 @@ export async function checkAvailability(
     const dayHours = hours[DAY_KEYS[dayStart.getUTCDay()]!];
     if (!dayHours) {
       return {
+        serviceName: service.name,
+        date,
         slots: [],
         reason: 'closed_that_day',
         message: `A empresa não abre no dia ${date} (fechado nesse dia da semana). Sugira ao cliente escolher outra data.`,
@@ -204,6 +206,8 @@ export async function checkAvailability(
     if (requestedStaff) {
       if (absentStaff.has(requestedStaff)) {
         return {
+          serviceName: service.name,
+          date,
           slots: [],
           reason: 'staff_absent',
           message: `${requestedStaff} não está disponível no dia ${date}. Pergunte se o cliente quer outro profissional da equipe (${service.staffNames.join(', ')}) ou outra data.`,
@@ -214,6 +218,8 @@ export async function checkAvailability(
       eligibleStaff = service.staffNames.filter((n) => !absentStaff.has(n));
       if (eligibleStaff.length === 0) {
         return {
+          serviceName: service.name,
+          date,
           slots: [],
           reason: 'all_staff_absent',
           message: `Nenhum profissional está disponível no dia ${date}. Sugira ao cliente escolher outra data.`,

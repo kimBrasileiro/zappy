@@ -386,3 +386,68 @@
 .dash-refresh-spin {
   animation: dash-spin 0.6s linear;
 }
+
+.dash-calendar {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.dash-calendar .rbc-toolbar {
+  margin-bottom: 16px;
+  font-family: inherit;
+}
+.dash-calendar .rbc-toolbar button {
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  color: #333;
+  font-size: 13px;
+  padding: 7px 14px;
+  background: #fff;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.dash-calendar .rbc-toolbar button:hover {
+  background: #f8f9fb;
+}
+.dash-calendar .rbc-toolbar button.rbc-active,
+.dash-calendar .rbc-toolbar button.rbc-active:hover {
+  background: var(--dash-brand);
+  border-color: var(--dash-brand);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+.dash-calendar .rbc-toolbar-label {
+  font-weight: 700;
+  font-size: 15px;
+}
+.dash-calendar .rbc-today {
+  background: #eef2ff;
+}
+.dash-calendar .rbc-event {
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.dash-calendar .rbc-off-range-bg {
+  background: #fafbfc;
+}
+.dash-calendar .rbc-month-view,
+.dash-calendar .rbc-time-view {
+  border-radius: 10px;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.dash-calendar-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 17, 21, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.dash-calendar-popover {
+  max-width: 360px;
+  width: 90%;
+  margin: 0;
+}

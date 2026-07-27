@@ -23,5 +23,14 @@
     ],
     "expectBookingCount": 1,
     "successCriteria": "The assistant retained the service (Corte de Cabelo) and the date (tomorrow) established in earlier turns, correctly interpreted '15h' as 15:00, and booked it — at no point re-asking which service or which date the customer wants, and never inventing a service name that was never registered."
+  },
+  {
+    "name": "no_contact_info_before_date_and_time",
+    "description": "Regression test for a real WhatsApp bug: a terse, generic confirmation ('Sim') on a single-service company with no date or time established yet must NOT jump straight to asking for name/phone — that's only appropriate once a specific date AND time are already settled.",
+    "service": { "name": "Tosa", "durationMinutes": 40, "priceCents": 7000, "is24h": true },
+    "turns": [
+      { "message": "Sim", "expectNotContains": ["nome completo", "telefone com"] }
+    ],
+    "successCriteria": "N/A — fully covered by expectNotContains."
   }
 ]

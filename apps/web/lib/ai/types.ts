@@ -20,4 +20,9 @@ export interface ToolDefinition {
   parameters: Record<string, unknown>; // JSON Schema object
 }
 
-export type StreamResult = { toolCalls: ToolCall[] } | { toolCalls: null };
+export interface UsageInfo {
+  promptTokens: number;
+  completionTokens: number;
+}
+
+export type StreamResult = { toolCalls: ToolCall[] | null; usage: UsageInfo | null };

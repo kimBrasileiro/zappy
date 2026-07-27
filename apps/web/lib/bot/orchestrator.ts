@@ -1,12 +1,19 @@
 import { Prisma, prisma } from '@zappigo/db';
-import { FALLBACK_GEMINI_MODEL, PRIMARY_GEMINI_MODEL, streamGeminiCompletion, suggestQuickReplies } from '../ai/gemini';
-import type { ChatMessage, ToolCall } from '../ai/types';
+import {
+  estimateCostUsd,
+  FALLBACK_GEMINI_MODEL,
+  PRIMARY_GEMINI_MODEL,
+  streamGeminiCompletion,
+  suggestQuickReplies,
+} from '../ai/gemini';
+import type { ChatMessage, ToolCall, UsageInfo } from '../ai/types';
 import { scrubForLog } from '../pii/scrubber';
 import { checkRateLimit } from './rate-limit';
 import {
   assertNoCrossTenantLeak,
   checkCompanyActive,
   checkMaliciousContent,
+  checkMessageQuota,
   checkOrigin,
   checkTicketContext,
   detectHallucination,
@@ -16,6 +23,7 @@ import {
 } from './guardrails';
 import {
   appendMessage,
+  escalateToHuman,
   findOrCreateCustomer,
   findOrCreateCustomerByPhone,
   findOrCreateOpenTicket,
@@ -25,6 +33,7 @@ import { BUSINESS_TOOLS, executeBusinessTool } from './tool-definitions';
 import type { TicketMetadata } from './ticket-metadata';
 import { normalizeTimePhrases } from './time-normalizer';
 import { toBrazilWallClock } from '../timezone';
+import { currentMonthStart, getMonthlyMessageLimit } from './quota';
 
 export class OrchestratorBlockedError extends Error {
   constructor(public reason: string) {
@@ -87,6 +96,12 @@ const STILL_ESCALATED_MESSAGE =
 // for, always available at the very start of a conversation.
 const NEW_CONTEXT_QUICK_REPLIES = ['Agendar um serviço', 'Cancelar um agendamento', 'Tenho uma dúvida'];
 
+// G4b — see guardrails.ts#checkMessageQuota and lib/bot/quota.ts for the
+// actual limit. Deliberately reads as "we're busy," never "you hit a limit"
+// or anything cost-related — see quota.ts's comment on why.
+const QUOTA_EXCEEDED_MESSAGE =
+  'No momento estamos com um volume alto de conversas automáticas — encaminhei você para um atendente humano, que vai te responder assim que possível.';
+
 // G9 — at most two business-tool rounds, then a forced final-answer round.
 // Started at 1 (round 1: tool, round 2: text only) per the original spec's
 // anti-loop rule; raised to 2 after finding a real hallucination it caused:
@@ -134,6 +149,25 @@ export async function* orchestrate(
 
   const history = await loadHistory(ticket.id);
   await appendMessage(ticket.id, company.id, 'customer', input.message);
+
+  // G4b — see guardrails.ts#checkMessageQuota. Checked against THIS month's
+  // real customer-message count (already persisted above, nothing new to
+  // keep in sync) so it survives restarts/multiple instances, unlike the
+  // in-memory rate limiter above. Deliberately after appendMessage (this
+  // customer message itself always gets logged, quota or not — the Inbox
+  // should never silently miss what someone actually sent) but before
+  // isNewContext, so a company that's already over quota doesn't burn
+  // suggestQuickReplies/LLM calls on a greeting either.
+  const monthlyMessageCount = await prisma.message.count({
+    where: { companyId: company.id, senderType: 'customer', createdAt: { gte: currentMonthStart() } },
+  });
+  const g4b = checkMessageQuota(monthlyMessageCount, getMonthlyMessageLimit(company));
+  if (!g4b.allowed) {
+    await escalateToHuman(ticket.id);
+    yield QUOTA_EXCEEDED_MESSAGE;
+    await appendMessage(ticket.id, company.id, 'bot', QUOTA_EXCEEDED_MESSAGE);
+    return { quickReplies: [], escalated: true };
+  }
 
   // Fresh/switched company context — reply with a fixed greeting instead of
   // running this turn through the LLM at all, so the customer finds out,
@@ -243,6 +277,14 @@ export async function* orchestrate(
   // — the bot keeps answering in that state (see G11 above), but the
   // escalated flag returned to the caller still needs to reflect it.
   let escalated = isEscalated(ticket);
+  // Summed across every round AND every retry attempt this turn (a forced
+  // fallback-model retry is still real spend, not a do-over) — persisted on
+  // the final 'bot' message below so the admin usage dashboard can attribute
+  // real Gemini cost per company/month straight from the messages table,
+  // with no separate ledger to keep in sync.
+  let totalPromptTokens = 0;
+  let totalCompletionTokens = 0;
+  let totalCostUsd = 0;
 
   for (;;) {
     let toolCalls: ToolCall[] | null = null;
@@ -270,6 +312,12 @@ export async function* orchestrate(
           const next = await gen.next();
           if (next.done) {
             toolCalls = next.value.toolCalls;
+            const usage: UsageInfo | null = next.value.usage;
+            if (usage) {
+              totalPromptTokens += usage.promptTokens;
+              totalCompletionTokens += usage.completionTokens;
+              totalCostUsd += estimateCostUsd(model, usage);
+            }
             break;
           }
           attemptGotAnything = true;
@@ -444,7 +492,11 @@ export async function* orchestrate(
     quickReplies = faqButtons;
   }
 
-  await appendMessage(ticket.id, company.id, 'bot', full);
+  await appendMessage(ticket.id, company.id, 'bot', full, {
+    tokens: { prompt: totalPromptTokens, completion: totalCompletionTokens },
+    costUsd: totalCostUsd,
+    toolRounds: toolRoundsUsed,
+  });
 
   return { quickReplies, escalated };
 }

@@ -1,4 +1,4 @@
-import { prisma } from '@zappigo/db';
+import { Prisma, prisma } from '@zappigo/db';
 import type { Company, Customer } from '@zappigo/db';
 import type { ChatMessage } from '../ai/types';
 import { toLocalPhone } from '../whatsapp/client';
@@ -290,8 +290,19 @@ export async function appendMessage(
   companyId: string,
   senderType: 'customer' | 'bot',
   content: string,
+  // Populated by orchestrator.ts on 'bot' messages only (tokens/costUsd per
+  // turn) — feeds the admin usage dashboard's per-company spend totals. See
+  // Message.metadata's schema comment; this is the first real writer of it.
+  metadata?: Record<string, unknown>,
 ) {
   return prisma.message.create({
-    data: { ticketId, companyId, senderType, content, contentType: 'text' },
+    data: {
+      ticketId,
+      companyId,
+      senderType,
+      content,
+      contentType: 'text',
+      ...(metadata ? { metadata: metadata as unknown as Prisma.InputJsonValue } : {}),
+    },
   });
 }

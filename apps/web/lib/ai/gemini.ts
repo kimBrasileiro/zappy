@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
-import type { ChatMessage, StreamResult, ToolDefinition } from './types';
+import type { ChatMessage, StreamResult, ToolDefinition, UsageInfo } from './types';
 
 // Gemini via its OpenAI-compatible endpoint — lets this adapter (and the
 // FailoverManager built in a later phase) treat Gemini identically to any
@@ -19,6 +19,24 @@ export const PRIMARY_GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flas
 // gemini-2.0-flash-001) 404 on this same key, so don't swap this default
 // without actually testing the replacement against a real key first.
 export const FALLBACK_GEMINI_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-2.5-flash-lite';
+
+// Google AI Studio list pricing (matches the generativelanguage.googleapis.com
+// endpoint used above), USD per token — confirmed against a real metered call
+// during the free-tier cost-control rollout (see orchestrator.ts's quota
+// guardrail). Used only to estimate spend for the admin usage dashboard, not
+// for any billing-critical path — if a model is missing here (a new one
+// added without updating this table), estimateCostUsd falls back to the
+// primary model's pricing rather than throwing, since an approximate number
+// beats no number on that dashboard.
+const GEMINI_PRICING_USD_PER_TOKEN: Record<string, { input: number; output: number }> = {
+  'gemini-2.5-flash': { input: 0.15 / 1_000_000, output: 1.25 / 1_000_000 },
+  'gemini-2.5-flash-lite': { input: 0.1 / 1_000_000, output: 0.4 / 1_000_000 },
+};
+
+export function estimateCostUsd(model: string, usage: UsageInfo): number {
+  const pricing = GEMINI_PRICING_USD_PER_TOKEN[model] ?? GEMINI_PRICING_USD_PER_TOKEN[PRIMARY_GEMINI_MODEL]!;
+  return usage.promptTokens * pricing.input + usage.completionTokens * pricing.output;
+}
 
 let client: OpenAI | null = null;
 
@@ -80,6 +98,12 @@ export async function* streamGeminiCompletion(
     tools: tools?.length ? toOpenAiTools(tools) : undefined,
     tool_choice: tools?.length ? 'auto' : undefined,
     stream: true,
+    // Confirmed supported on Gemini's OpenAI-compat endpoint: adds a final
+    // chunk carrying real prompt/completion token counts (captured below),
+    // the only source of ground-truth usage data — needed for the admin
+    // per-company spend dashboard, since Gemini's own API gives no other way
+    // to attribute cost to a specific call after the fact.
+    stream_options: { include_usage: true },
     // Gemini 2.5 models think by default, and thinking tokens count against
     // the (small, default) max_tokens budget — occasionally leaving nothing
     // for the actual visible reply (empty content, finish_reason "stop", no
@@ -95,6 +119,7 @@ export async function* streamGeminiCompletion(
   const toolCallsByIndex = new Map<number, { id: string; name: string; arguments: string }>();
   let sawAnyContent = false;
   let lastFinishReason: string | null | undefined;
+  let usage: UsageInfo | null = null;
 
   for await (const chunk of stream) {
     const delta = chunk.choices[0]?.delta;
@@ -113,6 +138,12 @@ export async function* streamGeminiCompletion(
         toolCallsByIndex.set(tc.index, acc);
       }
     }
+
+    // Arrives on its own final chunk (empty choices array) once the stream
+    // is otherwise done, per stream_options.include_usage above.
+    if (chunk.usage) {
+      usage = { promptTokens: chunk.usage.prompt_tokens, completionTokens: chunk.usage.completion_tokens };
+    }
   }
 
   // Diagnostic for the empty-completion issue reasoning_effort: 'none' above
@@ -124,8 +155,8 @@ export async function* streamGeminiCompletion(
     console.log(`[gemini] empty stream (model=${model}) — finish_reason=${lastFinishReason}`);
   }
 
-  if (toolCallsByIndex.size === 0) return { toolCalls: null };
-  return { toolCalls: [...toolCallsByIndex.values()] };
+  if (toolCallsByIndex.size === 0) return { toolCalls: null, usage };
+  return { toolCalls: [...toolCallsByIndex.values()], usage };
 }
 
 const QUICK_REPLY_SYSTEM_PROMPT =

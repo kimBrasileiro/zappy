@@ -16,6 +16,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <Link className="dash-nav-link" href="/admin/users">
           Usuários
         </Link>
+        <Link className="dash-nav-link" href="/admin/usage">
+          Gastos de IA
+        </Link>
         <Link className="dash-nav-link" href="/admin/health">
           Status dos serviços
         </Link>

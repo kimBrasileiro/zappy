@@ -27,11 +27,28 @@ export function checkMaliciousContent(text: string): GuardrailResult {
   return { allowed: true };
 }
 
-// G4 — real check on company.status. Quota isn't implemented yet (no usage
-// counters exist), so quota enforcement is a documented gap, not a check.
+// G4 — real check on company.status.
 export function checkCompanyActive(company: Pick<Company, 'status'>): GuardrailResult {
   if (company.status !== 'active') {
     return { allowed: false, reason: 'company_inactive' };
+  }
+  return { allowed: true };
+}
+
+// G4b — monthly per-company message quota, the "quota enforcement" gap
+// this file used to flag on checkCompanyActive above. The per-minute rate
+// limit in rate-limit.ts only guards against short bursts; it does nothing
+// against hours/days of sustained use at that same per-minute rate, which
+// is the actual cost-risk scenario on a free-tier product (one abused —
+// or one unexpectedly popular — company's shared WhatsApp number running
+// up real Gemini spend with no ceiling). A pure sync check on purpose,
+// like every other guardrail here: the caller (orchestrator.ts) queries
+// this month's real customer-message count directly from the messages
+// table — already persisted, nothing new to keep in sync, and it survives
+// restarts/multiple instances unlike an in-memory counter would.
+export function checkMessageQuota(monthlyMessageCount: number, limit: number): GuardrailResult {
+  if (monthlyMessageCount >= limit) {
+    return { allowed: false, reason: 'monthly_quota_exceeded' };
   }
   return { allowed: true };
 }

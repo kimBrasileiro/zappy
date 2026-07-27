@@ -1,10 +1,17 @@
 import { prisma } from '@zappigo/db';
-import { currentMonthStart, getMonthlyMessageLimit } from '../../../lib/bot/quota';
+import { currentMonthStart, DEFAULT_MONTHLY_MESSAGE_LIMIT, getMonthlyMessageLimit } from '../../../lib/bot/quota';
 
 interface UsageMetadata {
   costUsd?: number;
   tokens?: { prompt?: number; completion?: number };
 }
+
+// Used only when there isn't enough real usage yet this month to compute a
+// live average (a brand-new deploy, or a quiet month) — measured against a
+// real Gemini 2.5 Flash call using this bot's actual system prompt/tools
+// (round-trip tool-call + final-answer turn), not a guess. Once real
+// customer-message volume exists, the page always prefers the live number.
+const FALLBACK_AVG_COST_PER_MESSAGE_USD = 0.0012;
 
 function quotaBadge(usedPct: number) {
   if (usedPct >= 100) return { className: 'dash-badge dash-badge-canceled', label: 'Limite atingido' };
@@ -56,6 +63,18 @@ export default async function AdminUsagePage() {
 
   const totalCostUsd = rows.reduce((sum, r) => sum + r.costUsd, 0);
   const totalMessages = rows.reduce((sum, r) => sum + r.messages, 0);
+  const activeCompanyCount = companies.filter((c) => c.status === 'active').length;
+
+  // "Se mantivermos o plano grátis, quanto gastamos por empresa, em média?"
+  // Two different questions, both worth showing: what we're ACTUALLY
+  // averaging today (real spend so far ÷ active companies — low until real
+  // usage builds up), vs. the WORST CASE per company the quota guardrail
+  // itself bounds things to (real/fallback $-per-message × the monthly
+  // message limit) — the number that matters for "can we afford this at
+  // scale" even before there's a full month of real data to average.
+  const avgCostPerMessageUsd = totalMessages > 0 ? totalCostUsd / totalMessages : FALLBACK_AVG_COST_PER_MESSAGE_USD;
+  const avgSpendPerActiveCompanyUsd = activeCompanyCount > 0 ? totalCostUsd / activeCompanyCount : 0;
+  const maxSpendPerCompanyUsd = avgCostPerMessageUsd * DEFAULT_MONTHLY_MESSAGE_LIMIT;
 
   return (
     <>
@@ -76,10 +95,27 @@ export default async function AdminUsagePage() {
           <span className="dash-stat-label">Mensagens de clientes (mês)</span>
         </div>
         <div className="dash-stat-tile">
-          <span className="dash-stat-value">{companies.filter((c) => c.status === 'active').length}</span>
+          <span className="dash-stat-value">{activeCompanyCount}</span>
           <span className="dash-stat-label">Empresas ativas</span>
         </div>
       </div>
+
+      <div className="dash-section-title">Projeção por empresa (mantendo o plano grátis)</div>
+      <div className="dash-stat-grid">
+        <div className="dash-stat-tile">
+          <span className="dash-stat-value">US$ {avgSpendPerActiveCompanyUsd.toFixed(2)}</span>
+          <span className="dash-stat-label">Gasto médio real por empresa (mês)</span>
+        </div>
+        <div className="dash-stat-tile">
+          <span className="dash-stat-value">US$ {maxSpendPerCompanyUsd.toFixed(2)}</span>
+          <span className="dash-stat-label">Teto de gasto por empresa (no limite de {DEFAULT_MONTHLY_MESSAGE_LIMIT} msgs/mês)</span>
+        </div>
+      </div>
+      <p className="dash-subtitle" style={{ marginTop: '-0.5rem' }}>
+        Teto calculado a partir do custo médio real por mensagem deste mês
+        {totalMessages === 0 && ' (ainda sem mensagens este mês — usando uma estimativa medida em teste real)'}; é o pior
+        caso já limitado pelo teto de mensagens acima, não uma projeção sem controle.
+      </p>
 
       <table className="dash-table">
         <thead>

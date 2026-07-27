@@ -58,6 +58,11 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
           description:
             'Opcional. Só existe pra serviços com mais de uma pessoa na equipe (staffOptions em list_services). Se o cliente escolheu um profissional específico, passe o nome exato — se der conflito, a tool rejeita em vez de trocar de profissional sozinha. Se o cliente disse "tanto faz", NÃO preencha: a tool aloca automaticamente quem estiver livre e informa quem foi escolhido no retorno.',
         },
+        confirmReplaceExisting: {
+          type: 'boolean',
+          description:
+            'Deixe de fora (ou false) na primeira tentativa, sempre. Só passe true depois que a tool retornar erro "existing_booking_conflict" (o cliente já tem outro agendamento confirmado desse mesmo serviço) E o cliente já tiver confirmado explicitamente que quer reagendar aquele agendamento pro novo horário — nunca passe true adivinhando a resposta do cliente.',
+        },
       },
       required: ['serviceName', 'scheduledAt', 'customerName', 'customerPhone'],
     },
@@ -130,6 +135,7 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
           customerName: String(args.customerName ?? ''),
           customerPhone: String(args.customerPhone ?? ''),
           staffName: args.staffName ? String(args.staffName) : undefined,
+          confirmReplaceExisting: args.confirmReplaceExisting === true,
         }),
       );
     case 'list_bookings':

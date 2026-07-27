@@ -24,6 +24,7 @@ import {
 import { BUSINESS_TOOLS, executeBusinessTool } from './tool-definitions';
 import type { TicketMetadata } from './ticket-metadata';
 import { normalizeTimePhrases } from './time-normalizer';
+import { toBrazilWallClock } from '../timezone';
 
 export class OrchestratorBlockedError extends Error {
   constructor(public reason: string) {
@@ -171,12 +172,15 @@ export async function* orchestrate(
   const language = resolveLanguage(company);
   const config = company.config as { botName?: string; extraInstructions?: string } | null;
   const botName = config?.botName ?? 'Assistente';
-  // UTC "today", consistent with services.ts treating businessHours/slots as
-  // UTC throughout (see checkAvailability) — real per-company timezone
-  // support is a follow-up, not done here.
+  // Brazil-local "today" (see lib/timezone.ts) — consistent with
+  // services.ts treating businessHours/slots as America/Sao_Paulo
+  // wall-clock. Matters near UTC midnight (21:00-23:59 Brazil time): raw
+  // UTC would already say "tomorrow" for several real hours of the
+  // business's actual today.
   const today = new Date();
-  const todayIso = today.toISOString().slice(0, 10);
-  const todayWeekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: 'UTC' }).format(today);
+  const todayBrazil = toBrazilWallClock(today);
+  const todayIso = `${todayBrazil.year}-${String(todayBrazil.month0 + 1).padStart(2, '0')}-${String(todayBrazil.day).padStart(2, '0')}`;
+  const todayWeekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' }).format(today);
   const systemPrompt = [
     `Você é ${botName}, o assistente de suporte da empresa ${company.name}.`,
     `Responda sempre em ${language}, de forma clara, direta e simpática.`,
@@ -205,7 +209,7 @@ export async function* orchestrate(
     'Quando o cliente pedir para ver serviços, horários disponíveis ou quiser agendar, chame a tool correspondente IMEDIATAMENTE nesta mesma resposta — nunca diga "vou verificar" ou peça confirmação antes de chamar a tool, apenas chame.',
     'Ao confirmar um agendamento, nunca exiba o bookingId interno pro cliente — mencione só o serviço, data, hora e preço.',
     'O resultado de create_booking pode vir com "requiresManualConfirmation": true. Se vier true, NÃO diga que o agendamento está confirmado — diga que o horário foi reservado e que alguém do time vai entrar em contato pelo telefone informado pelo cliente para confirmar o agendamento e os detalhes do serviço. Se vier false (ou ausente), confirme normalmente que o agendamento está confirmado.',
-    'Não existe uma tool separada para "editar" um agendamento existente — se o cliente já tem um horário marcado e quer mudar de data/hora (reagendar), trate exatamente como um agendamento novo: chame check_availability pra nova data e depois create_booking normalmente. O sistema cancela o agendamento antigo automaticamente. Se o resultado de create_booking vier com "rescheduledFrom" preenchido, isso significa que um agendamento anterior desse mesmo cliente pra esse mesmo serviço foi cancelado automaticamente — avise o cliente que o horário antigo foi cancelado e o novo está confirmado (ou reservado, se requiresManualConfirmation vier true), nunca dê a entender que agora ele tem dois agendamentos.',
+    'Não existe uma tool separada para "editar" um agendamento existente — se o cliente já tem um horário marcado e quer mudar de data/hora (reagendar), trate como um agendamento novo: chame check_availability pra nova data e depois create_booking normalmente. IMPORTANTE: create_booking NUNCA cancela um agendamento existente sozinho. Se o cliente já tem um agendamento confirmado pra esse mesmo serviço, create_booking retorna erro "existing_booking_conflict" (com os dados do agendamento existente) em vez de criar o novo — nesse caso, NUNCA chame create_booking de novo automaticamente: primeiro lembre o cliente do agendamento que ele já tem e pergunte explicitamente se ele quer reagendar aquele agendamento pro novo horário (chame create_booking de novo com confirmReplaceExisting: true SÓ depois que ele confirmar isso) ou se prefere manter o antigo como está. Exceção: se a própria mensagem do cliente que motivou essa tentativa já deixou claro que a intenção é reagendar/remarcar um horário existente (ex: "preciso remarcar minha consulta"), essa frase já conta como a confirmação — pode chamar create_booking de novo com confirmReplaceExisting: true direto, sem perguntar de novo. Se o resultado de create_booking vier com "rescheduledFrom" preenchido, isso confirma que o agendamento antigo foi cancelado e o novo está confirmado (ou reservado, se requiresManualConfirmation vier true) — avise o cliente disso, nunca dê a entender que agora ele tem dois agendamentos.',
     'Se list_services trouxer "cancellationPolicy" pra um serviço, use esse texto exato pra responder perguntas do cliente sobre cancelamento/multa desse serviço — não invente prazos ou valores diferentes. Se não vier "cancellationPolicy", esse serviço não tem restrição: pode cancelar a qualquer momento sem multa.',
     'Alguns serviços têm mais de uma pessoa que atende (list_services retorna "staffOptions" nesses casos). Se houver staffOptions, pergunte ao cliente se ele tem preferência de profissional antes ou depois de checar disponibilidade — se ele já disser um nome, passe staffName em check_availability/create_booking; se disser "tanto faz" ou não tiver preferência, não passe staffName e deixe o sistema alocar automaticamente (o retorno de create_booking traz "staffName" com quem foi escolhido — sempre informe isso ao cliente). Se o cliente pedir um profissional específico e create_booking retornar erro "slot_unavailable" ou "staff_absent", NUNCA troque de profissional por conta própria — informe que esse horário/dia não está disponível com essa pessoa e, se a mensagem de erro mencionar outro profissional livre, pergunte se o cliente aceita trocar; só chame create_booking de novo com outro staffName se o cliente concordar.',
     // Per-company refinement on top of everything above — e.g. the "zappigo"

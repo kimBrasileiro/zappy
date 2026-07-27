@@ -32,5 +32,17 @@
       { "message": "Sim", "expectNotContains": ["nome completo", "telefone com"] }
     ],
     "successCriteria": "N/A — fully covered by expectNotContains."
+  },
+  {
+    "name": "existing_booking_needs_confirmation_not_silent_replace",
+    "description": "Regression test for a real WhatsApp bug: a customer who already has a confirmed booking and generically books the SAME service again (without saying 'reagendar'/'remarcar') must NOT have their old booking silently cancelled and replaced — the bot must surface the existing appointment and ask before touching it.",
+    "service": { "name": "Tosa", "durationMinutes": 40, "priceCents": 7000, "is24h": true },
+    "seedBooking": { "scheduledAtOffsetHours": 48, "customerPhone": "11966665555", "sameCustomer": true },
+    "turns": [
+      { "message": "Quero marcar uma Tosa pro dia depois de amanhã de manhã" },
+      { "message": "09:00. Nome: Fernanda Reis, telefone 11966665555." }
+    ],
+    "expectBookingCount": 1,
+    "successCriteria": "The customer already has a confirmed Tosa booking (seeded, 48h from now). They then generically ask to book Tosa again for a similar time, without ever saying they want to reschedule. The assistant must NOT silently create a second booking or replace the existing one — it should mention the customer's existing appointment and ask whether they want to reschedule it to the new time or keep the old one as-is, without assuming an answer. Exactly one confirmed booking should exist at the end (the original seeded one, unchanged)."
   }
 ]

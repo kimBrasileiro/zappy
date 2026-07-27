@@ -2,6 +2,7 @@ import { prisma } from '@zappigo/db';
 import type { Service } from '@zappigo/db';
 import { checkBookingRateLimit } from './rate-limit';
 import { notifyBookingCancelled, notifyBookingCreated } from '../notifications';
+import { brazilWallClockToUtc, toBrazilWallClock } from '../timezone';
 
 // Brazilian phone with DDD: 10 digits (landline, e.g. 11 3456-7890) or 11
 // (mobile, e.g. 11 98765-4321) once punctuation/spaces are stripped. Not a
@@ -154,24 +155,25 @@ export async function checkAvailability(
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) return { error: 'service_not_found', message: 'Empresa não encontrada.' };
 
-  // Built with Date.UTC throughout — never the local Date constructor/setHours
-  // — so business hours mean the same wall-clock time regardless of which
-  // timezone the server process happens to run in (this dev machine reports
-  // Europe/London; production is typically UTC; a customer-facing barbershop
-  // is realistically America/Sao_Paulo — none of those should change the
-  // result). This treats company.config.businessHours as UTC for now; real
-  // per-company local timezone support is a follow-up (needs a timezone
-  // library + a dashboard field, not done here).
+  // Business hours ("09:00"-"18:00" etc.) are interpreted as America/Sao_Paulo
+  // wall-clock (brazilWallClockToUtc), not raw UTC — no real per-company
+  // timezone support exists yet (see lib/timezone.ts), but treating a
+  // Brazilian business's own configured hours as if they were UTC meant the
+  // shop effectively closed 3 hours earlier than anyone configuring "18:00"
+  // actually intended. `dayStart` stays plain UTC midnight of this same
+  // Y/M/D — it's only used below as the DATE (not datetime) key for
+  // StaffAbsence.date, a @db.Date column with no time-of-day component to
+  // shift in the first place.
   const [year, month, day] = date.split('-').map(Number);
   const dayStart = new Date(Date.UTC(year!, month! - 1, day!));
 
   // is24h bypasses both the day-of-week closed check and the open/close
-  // window entirely — every day is open, 00:00 through 23:59.
+  // window entirely — every day is open, 00:00 through 23:59 (Brazil-local).
   let openTime: Date;
   let closeTime: Date;
   if (service.is24h) {
-    openTime = dayStart;
-    closeTime = new Date(Date.UTC(year!, month! - 1, day!, 23, 59));
+    openTime = brazilWallClockToUtc(year!, month! - 1, day!, 0, 0);
+    closeTime = brazilWallClockToUtc(year!, month! - 1, day!, 23, 59);
   } else {
     const hours = getBusinessHours(company, service);
     const dayHours = hours[DAY_KEYS[dayStart.getUTCDay()]!];
@@ -186,13 +188,14 @@ export async function checkAvailability(
     }
     const [openH, openM] = dayHours[0].split(':').map(Number);
     const [closeH, closeM] = dayHours[1].split(':').map(Number);
-    openTime = new Date(Date.UTC(year!, month! - 1, day!, openH!, openM));
-    closeTime = new Date(Date.UTC(year!, month! - 1, day!, closeH!, closeM));
+    openTime = brazilWallClockToUtc(year!, month! - 1, day!, openH!, openM);
+    closeTime = brazilWallClockToUtc(year!, month! - 1, day!, closeH!, closeM);
   }
 
-  const dayEnd = new Date(Date.UTC(year!, month! - 1, day!, 23, 59, 59, 999));
+  const brazilDayStart = brazilWallClockToUtc(year!, month! - 1, day!, 0, 0);
+  const brazilDayEnd = brazilWallClockToUtc(year!, month! - 1, day!, 23, 59, 59, 999);
   const existing = await prisma.booking.findMany({
-    where: { serviceId: service.id, status: 'confirmed', scheduledAt: { gte: dayStart, lte: dayEnd } },
+    where: { serviceId: service.id, status: 'confirmed', scheduledAt: { gte: brazilDayStart, lte: brazilDayEnd } },
   });
 
   // Eligible staff for this date: the full roster minus anyone marked absent
@@ -243,10 +246,9 @@ export async function checkAvailability(
   // entered as something off-grid (e.g. "09:05") — every candidate start
   // time this loop considers is a round mark, full stop.
   const firstGridStart = Math.ceil(openTime.getTime() / gridMs) * gridMs;
-  // Bucketed into manhã/tarde (UTC noon cutoff, same "businessHours are UTC
-  // for now" simplification as the rest of this function) and capped at 3
-  // each — the orchestrator turns these directly into quick-reply buttons,
-  // so the customer picks a time instead of typing one back.
+  // Bucketed into manhã/tarde by Brazil-local noon, capped at 3 each — the
+  // orchestrator turns these directly into quick-reply buttons, so the
+  // customer picks a time instead of typing one back.
   const morningSlots: { time: string; iso: string; staffAvailable?: string[] }[] = [];
   const afternoonSlots: { time: string; iso: string; staffAvailable?: string[] }[] = [];
   for (
@@ -276,12 +278,13 @@ export async function checkAvailability(
     }
 
     const d = new Date(t);
+    const wallClock = toBrazilWallClock(d);
     const entry = {
-      time: `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`,
+      time: `${String(wallClock.hour).padStart(2, '0')}:${String(wallClock.minute).padStart(2, '0')}`,
       iso: d.toISOString(),
       ...(staffAvailable ? { staffAvailable } : {}),
     };
-    if (d.getUTCHours() < 12) {
+    if (wallClock.hour < 12) {
       if (morningSlots.length < 3) morningSlots.push(entry);
     } else if (afternoonSlots.length < 3) {
       afternoonSlots.push(entry);
@@ -305,7 +308,14 @@ export async function createBooking(
   companyId: string,
   ticketId: string,
   customerId: string | null,
-  args: { serviceName: string; scheduledAt: string; customerName: string; customerPhone: string; staffName?: string },
+  args: {
+    serviceName: string;
+    scheduledAt: string;
+    customerName: string;
+    customerPhone: string;
+    staffName?: string;
+    confirmReplaceExisting?: boolean;
+  },
 ) {
   const service = await resolveService(companyId, args.serviceName);
   if (!service) {
@@ -345,17 +355,16 @@ export async function createBooking(
     };
   }
 
-  // The model is supposed to echo back an exact slot from check_availability
-  // (always UTC, "Z"-suffixed), but in practice it sometimes reconstructs the
-  // string itself and drops the suffix — e.g. "2026-08-15T10:00:00" instead
-  // of "2026-08-15T10:00:00.000Z". A naive datetime string with no
-  // timezone designator is parsed by JS Date as LOCAL server time, which
-  // would silently shift the booking by whatever the server's offset from
-  // UTC happens to be. Since business hours are UTC-anchored throughout this
-  // module (see checkAvailability), force the same interpretation here:
-  // append "Z" whenever the string has no explicit offset.
+  // The model constructs a naive datetime string by combining the Brazil-
+  // local date and the Brazil-local "HH:MM" it showed the customer (see the
+  // orchestrator's system prompt) — never a raw UTC instant. A naive string
+  // with no timezone designator is parsed by JS Date as LOCAL SERVER time,
+  // which would silently shift the booking by whatever offset the server
+  // process happens to run in. Force the intended interpretation instead:
+  // append "-03:00" (America/Sao_Paulo, see lib/timezone.ts) whenever the
+  // string has no explicit offset already.
   const hasExplicitOffset = /[zZ]|[+-]\d{2}:?\d{2}$/.test(args.scheduledAt.trim());
-  const normalizedScheduledAt = hasExplicitOffset ? args.scheduledAt : `${args.scheduledAt}Z`;
+  const normalizedScheduledAt = hasExplicitOffset ? args.scheduledAt : `${args.scheduledAt}-03:00`;
 
   const scheduledAt = new Date(normalizedScheduledAt);
   if (Number.isNaN(scheduledAt.getTime())) {
@@ -384,7 +393,12 @@ export async function createBooking(
   let assignedStaff: string | null = null;
 
   if (hasStaffConcept(service)) {
-    const dayStart = new Date(Date.UTC(scheduledAt.getUTCFullYear(), scheduledAt.getUTCMonth(), scheduledAt.getUTCDate()));
+    // StaffAbsence.date is a plain @db.Date keyed by Brazil-local calendar
+    // day — extracting it via getUTCFullYear/etc. straight off scheduledAt
+    // (a real UTC instant) would misfire for a booking within 3h of UTC
+    // midnight, e.g. 22:00 Brazil-local is already the next UTC day.
+    const brazilDate = toBrazilWallClock(scheduledAt);
+    const dayStart = new Date(Date.UTC(brazilDate.year, brazilDate.month0, brazilDate.day));
     const absences = await prisma.staffAbsence.findMany({ where: { serviceId: service.id, date: dayStart } });
     const absentStaff = new Set(absences.map((a) => a.staffName));
 
@@ -479,12 +493,12 @@ export async function createBooking(
     }
   }
 
-  // No separate "reschedule" tool — the model always calls create_booking,
-  // so this is what makes rescheduling actually replace the old appointment
-  // instead of leaving both confirmed. Scoped to this same customer+service
-  // and still in the future (a past "confirmed" booking already happened —
-  // see dashboard/bookings' attended/no-show marking — cancelling it here
-  // would misrepresent history, not fix a double-booking).
+  // No separate "reschedule" tool — the model always calls create_booking —
+  // but it must never SILENTLY replace an existing appointment; the
+  // customer has to actually say they want that. Scoped to this same
+  // customer+service and still in the future (a past "confirmed" booking
+  // already happened — see dashboard/bookings' attended/no-show marking —
+  // cancelling it here would misrepresent history, not fix a double-booking).
   let rescheduledFrom: string | null = null;
   if (effectiveCustomerId) {
     const previous = await prisma.booking.findMany({
@@ -496,6 +510,13 @@ export async function createBooking(
         scheduledAt: { gt: new Date() },
       },
     });
+    if (previous.length > 0 && !args.confirmReplaceExisting) {
+      return {
+        error: 'existing_booking_conflict',
+        existingBooking: { serviceName: service.name, scheduledAt: previous[0]!.scheduledAt.toISOString() },
+        message: `Esse cliente já tem um agendamento CONFIRMADO de ${service.name} para ${previous[0]!.scheduledAt.toISOString()} — NÃO crie o novo agendamento ainda. Lembre o cliente desse agendamento existente e pergunte explicitamente: ele quer REAGENDAR esse agendamento pro novo horário (nesse caso, chame create_booking de novo com os mesmos dados E confirmReplaceExisting: true, só depois que ele confirmar), ou prefere MANTER o agendamento antigo como está (nesse caso não chame create_booking de novo agora)? Nunca assuma a resposta.`,
+      };
+    }
     if (previous.length > 0) {
       await prisma.booking.updateMany({
         where: { id: { in: previous.map((b) => b.id) } },
@@ -599,10 +620,11 @@ export async function cancelBooking(
     };
   }
 
-  // Same "no explicit offset means the caller meant the UTC time
-  // list_bookings just returned" defensive parse as createBooking above.
+  // list_bookings always returns an explicit "Z"-suffixed instant (via
+  // toISOString()), so this fallback only matters if the model retypes the
+  // string itself — same Brazil-local defensive parse as createBooking above.
   const hasExplicitOffset = /[zZ]|[+-]\d{2}:?\d{2}$/.test(args.scheduledAt.trim());
-  const scheduledAt = new Date(hasExplicitOffset ? args.scheduledAt : `${args.scheduledAt}Z`);
+  const scheduledAt = new Date(hasExplicitOffset ? args.scheduledAt : `${args.scheduledAt}-03:00`);
   if (Number.isNaN(scheduledAt.getTime())) {
     return {
       error: 'invalid_datetime',

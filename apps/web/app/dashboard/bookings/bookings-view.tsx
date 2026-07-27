@@ -25,13 +25,14 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// Business hours/availability are computed treating scheduledAt as UTC (see
-// checkAvailability in lib/bot/services.ts) — displaying it in the browser's
-// local timezone here would show a different hour than what was actually
-// offered to and confirmed by the customer. Must stay UTC until real
+// Business hours/availability are computed treating scheduledAt as
+// America/Sao_Paulo wall-clock (see lib/timezone.ts and checkAvailability
+// in lib/bot/services.ts) — displaying it in the viewer's own browser
+// timezone here would show a different hour than what was actually offered
+// to and confirmed by the customer. Must stay Brazil-local until real
 // per-company timezone support exists.
 function formatScheduledAt(date: Date): string {
-  return date.toLocaleString('pt-BR', { timeZone: 'UTC' });
+  return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 }
 
 export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRelations[]; emptyLabel: string }) {

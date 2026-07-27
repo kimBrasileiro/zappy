@@ -2,6 +2,7 @@ import { prisma, type Prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { RefreshButton } from '../refresh-button';
 import { BookingsView } from './bookings-view';
+import { brazilWallClockToUtc } from '../../../lib/timezone';
 
 export default async function BookingsPage({
   searchParams,
@@ -22,13 +23,13 @@ export default async function BookingsPage({
   }
 
   if (date) {
-    // scheduledAt is UTC-anchored (see BookingsView's formatScheduledAt) —
-    // the date filter matches that same convention, not the server or
-    // browser's local timezone.
+    // scheduledAt is Brazil-local wall-clock anchored (see lib/timezone.ts
+    // and BookingsView's formatScheduledAt) — the date filter matches that
+    // same convention, not the server or browser's local timezone.
     const [year, month, day] = date.split('-').map(Number);
     if (year && month && day) {
-      const dayStart = new Date(Date.UTC(year, month - 1, day));
-      const dayEnd = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      const dayStart = brazilWallClockToUtc(year, month - 1, day, 0, 0);
+      const dayEnd = brazilWallClockToUtc(year, month - 1, day, 23, 59, 59, 999);
       where.scheduledAt = { gte: dayStart, lte: dayEnd };
     }
   }

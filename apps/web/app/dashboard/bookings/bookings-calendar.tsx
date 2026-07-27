@@ -6,6 +6,7 @@ import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Booking, Customer, Service } from '@zappigo/db';
 import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
+import { toBrazilWallClock } from '../../../lib/timezone';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 type BookingWithRelations = Booking & { service: Service; customer: Customer | null };
@@ -51,16 +52,17 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// scheduledAt is stored and always treated as a UTC wall-clock time
-// throughout this codebase (see formatScheduledAt in page.tsx and
-// checkAvailability in lib/bot/services.ts) — no real per-company timezone
-// support exists yet. react-big-calendar renders whatever LOCAL time a
-// Date reports, so feeding it scheduledAt directly would silently shift
-// every event by the viewer's browser offset. This builds a Date that
-// encodes the same Y/M/D/H/M as the UTC value but as local-time fields, so
-// e.g. 09:00 always displays as 09:00 regardless of who's viewing it.
+// scheduledAt is stored and always treated as America/Sao_Paulo wall-clock
+// time throughout this codebase (see lib/timezone.ts and checkAvailability
+// in lib/bot/services.ts) — no real per-company timezone support exists
+// yet. react-big-calendar renders whatever LOCAL time a Date reports, so
+// feeding it scheduledAt directly would silently shift every event by the
+// viewer's browser offset. This builds a Date that encodes the same
+// Brazil-local Y/M/D/H/M as local-time fields, so e.g. 09:00 always
+// displays as 09:00 regardless of who's viewing it.
 function toWallClockLocalDate(d: Date): Date {
-  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes());
+  const brazil = toBrazilWallClock(d);
+  return new Date(brazil.year, brazil.month0, brazil.day, brazil.hour, brazil.minute);
 }
 
 type BookingEvent = Event & { resource: BookingWithRelations };

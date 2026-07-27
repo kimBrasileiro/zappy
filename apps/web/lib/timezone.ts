@@ -1,0 +1,41 @@
+// No real per-company timezone support exists yet (see services.ts) — this
+// is a deliberately simple, honest stand-in: every company is assumed to
+// run on America/Sao_Paulo (UTC-3). Brazil has observed no DST since 2019,
+// so a fixed offset is correct today, not just a rough approximation.
+export const BRAZIL_UTC_OFFSET_HOURS = 3;
+
+// Constructs the real UTC instant for a given Brazil-local wall-clock
+// Y/M/D/H/M — the inverse of toBrazilWallClock below. Use this anywhere a
+// business-hours string ("09:00"), a customer-resolved date/time, or a
+// day boundary needs to become a real Date.
+export function brazilWallClockToUtc(
+  year: number,
+  month0: number,
+  day: number,
+  hour: number,
+  minute = 0,
+  second = 0,
+  ms = 0,
+): Date {
+  return new Date(Date.UTC(year, month0, day, hour + BRAZIL_UTC_OFFSET_HOURS, minute, second, ms));
+}
+
+// Reads Brazil-local wall-clock parts out of a real UTC Date — the inverse
+// of brazilWallClockToUtc. Use this anywhere a stored instant needs to be
+// bucketed or reconstructed by its Brazil-local day/hour.
+export function toBrazilWallClock(date: Date): {
+  year: number;
+  month0: number;
+  day: number;
+  hour: number;
+  minute: number;
+} {
+  const shifted = new Date(date.getTime() + BRAZIL_UTC_OFFSET_HOURS * 3_600_000);
+  return {
+    year: shifted.getUTCFullYear(),
+    month0: shifted.getUTCMonth(),
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+  };
+}

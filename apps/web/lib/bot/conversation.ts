@@ -264,7 +264,7 @@ export async function escalateToHuman(ticketId: string) {
     where: { id: ticketId },
     data: { status: 'waiting_human' },
   });
-  if (!wasAlreadyEscalated) await notifyEscalation(ticket.companyId);
+  if (!wasAlreadyEscalated) await notifyEscalation(ticket.companyId, ticket.id);
 }
 
 export async function loadHistory(ticketId: string): Promise<ChatMessage[]> {

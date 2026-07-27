@@ -76,15 +76,56 @@ export async function notifyNewSignup(params: { companyName: string; adminEmail:
   );
 }
 
-export async function notifyEscalation(companyId: string): Promise<void> {
+// Message.content is the customer's own free text — never trust it as safe
+// HTML just because it's being dropped into an email instead of the chat
+// widget (which already escapes it the same way on its own side).
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+const ESCALATION_EXCERPT_LIMIT = 6;
+const SENDER_LABELS: Record<string, string> = { bot: 'Assistente', agent: 'Atendente', system: 'Sistema' };
+
+// Lets whoever opens the email see what the conversation is actually about
+// before they even click through — same reasoning as notifyBookingCreated
+// including the service/time inline rather than just "you have a booking,
+// go check the dashboard."
+export async function notifyEscalation(companyId: string, ticketId: string): Promise<void> {
   const company = await getActiveAdminEmails(companyId);
   if (!company?.emails.length) return;
+
+  const [ticket, recentMessages] = await Promise.all([
+    prisma.ticket.findUnique({ where: { id: ticketId }, include: { customer: true } }),
+    prisma.message.findMany({
+      where: { ticketId, isInternal: false },
+      orderBy: { createdAt: 'desc' },
+      take: ESCALATION_EXCERPT_LIMIT,
+    }),
+  ]);
+
+  const customerLabel = ticket?.customer?.name || ticket?.customer?.phone || 'O cliente';
+  const excerptHtml = recentMessages
+    .reverse()
+    .map((m) => {
+      const label = m.senderType === 'customer' ? customerLabel : (SENDER_LABELS[m.senderType] ?? m.senderType);
+      return `<p style="margin:0 0 10px;"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(m.content)}</p>`;
+    })
+    .join('');
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   await sendEmail(
     company.emails,
     `Conversa precisa de atenção — ${company.companyName}`,
-    `<p>Uma conversa foi encaminhada para atendimento humano.</p><p><a href="${appUrl}/dashboard/inbox">Abrir Inbox</a></p>`,
+    `<p>${escapeHtml(customerLabel)} precisa de atendimento humano. Últimas mensagens da conversa:</p>` +
+      (excerptHtml
+        ? `<div style="background:#f8f9fb;border-radius:8px;padding:14px 18px;margin:14px 0;">${excerptHtml}</div>`
+        : '') +
+      `<p><a href="${appUrl}/dashboard/conversations/${ticketId}">Abrir conversa</a></p>`,
   );
 }
 

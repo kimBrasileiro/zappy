@@ -25,7 +25,7 @@ resource "google_cloud_run_v2_job" "migrate" {
         image = var.migration_image
         # apps/web/Dockerfile's `build` stage command reference (see the
         # comment above its `runner` stage).
-        command = ["pnpm", "--filter", "@zappy/db", "db:migrate:prod"]
+        command = ["pnpm", "--filter", "@zappigo/db", "db:migrate:prod"]
 
         resources {
           limits = {

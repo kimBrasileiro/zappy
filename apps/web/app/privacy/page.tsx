@@ -11,12 +11,12 @@ const p = { margin: '0 0 12px' };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Política de Privacidade" lastUpdated="22 de julho de 2026">
+    <LegalPage title="Política de Privacidade" lastUpdated="27 de julho de 2026">
       <p style={p}>
-        A Zappigo, operada por <strong>[RAZÃO SOCIAL]</strong>, CNPJ{' '}
-        <strong>[00.000.000/0000-00]</strong>, é controladora dos dados pessoais tratados conforme
-        descrito nesta Política, em conformidade com a Lei Geral de Proteção de Dados (LGPD, Lei
-        13.709/2018).
+        A Zappigo, operada por <strong>KIM BRASILEIRO LEAL LTDA</strong>, CNPJ{' '}
+        <strong>63.020.695/0001-93</strong>, com sede em São Paulo/SP, é controladora dos dados
+        pessoais tratados conforme descrito nesta Política, em conformidade com a Lei Geral de
+        Proteção de Dados (LGPD, Lei 13.709/2018).
       </p>
 
       <h2 style={h2}>1. Quais dados coletamos</h2>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
         Nos termos do Art. 18 da LGPD, você (ou o cliente final da Contratante) pode solicitar
         confirmação da existência de tratamento, acesso, correção, anonimização, portabilidade,
         eliminação de dados, informação sobre compartilhamento e revogação de consentimento.
-        Solicitações podem ser feitas em <strong>[email do encarregado de dados]</strong>.
+        Solicitações podem ser feitas em <strong>kim@wisell.ai</strong>.
       </p>
 
       <h2 style={h2}>6. Segurança</h2>
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
       <h2 style={h2}>9. Encarregado de Dados (DPO)</h2>
       <p style={p}>
         Para exercer seus direitos ou tirar dúvidas sobre o tratamento de dados:{' '}
-        <strong>[nome / e-mail do encarregado]</strong>.
+        <strong>Wisell — kim@wisell.ai</strong>.
       </p>
     </LegalPage>
   );

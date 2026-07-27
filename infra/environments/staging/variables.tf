@@ -85,7 +85,7 @@ variable "db_disk_size_gb" {
 }
 
 variable "db_deletion_protection" {
-  description = "False by default on staging — it's meant to be disposable (`terraform destroy` when you want a clean slate)."
+  description = "True — staging is currently doubling as production while Zappigo is free (see zappigo.com.br domain mapping), so its data isn't disposable anymore. Flip back to false only if this environment goes back to being a throwaway test DB."
   type        = bool
-  default     = false
+  default     = true
 }

@@ -212,7 +212,7 @@ export async function MarketingHome() {
 
       <style>{`
         @media (max-width: 720px) {
-          .marketing-nav-links { display: none; }
+          .marketing-nav-links { display: none !important; }
           .marketing-header { padding: 14px 16px !important; gap: 8px !important; }
           .marketing-header-buttons { gap: 8px !important; }
           .marketing-header-buttons a { padding: 9px 14px !important; font-size: 13px !important; }

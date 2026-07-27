@@ -30,7 +30,11 @@ export function toBrazilWallClock(date: Date): {
   hour: number;
   minute: number;
 } {
-  const shifted = new Date(date.getTime() + BRAZIL_UTC_OFFSET_HOURS * 3_600_000);
+  // Brazil is UTC-3 (behind UTC), so converting a UTC instant TO Brazil-local
+  // wall-clock means going backward — subtract, not add (brazilWallClockToUtc
+  // above correctly adds, since that direction, Brazil-local to UTC, moves
+  // forward).
+  const shifted = new Date(date.getTime() - BRAZIL_UTC_OFFSET_HOURS * 3_600_000);
   return {
     year: shifted.getUTCFullYear(),
     month0: shifted.getUTCMonth(),

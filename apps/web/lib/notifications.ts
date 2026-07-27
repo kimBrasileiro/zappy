@@ -129,6 +129,30 @@ export async function notifyEscalation(companyId: string, ticketId: string): Pro
   );
 }
 
+// Fires once per company/month, exactly when the running monthly customer-
+// message count (orchestrator.ts) crosses the halfway point of that
+// company's quota (see lib/bot/quota.ts) — a plain equality check against
+// the count itself, not a separate "already warned" flag to keep in sync,
+// since the count only ever increases by 1 per customer turn within the
+// month. Lets the platform operator see a company approaching its cap (and
+// the human-escalation that follows once it's hit) before the customer ever
+// notices anything, instead of finding out after the fact in Admin → Gastos
+// de IA.
+export async function notifyQuotaWarning(params: {
+  companyName: string;
+  messageCount: number;
+  limit: number;
+}): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  await sendEmail(
+    SUPER_ADMIN_EMAIL,
+    `[Zappigo] ${params.companyName} atingiu 50% do limite mensal de IA`,
+    `<p><strong>${escapeHtml(params.companyName)}</strong> já usou <strong>${params.messageCount}</strong> de <strong>${params.limit}</strong> mensagens automáticas este mês.</p>` +
+      `<p>Ao atingir o limite, novas mensagens dessa empresa são encaminhadas direto pra atendimento humano em vez de continuar consumindo IA.</p>` +
+      `<p><a href="${appUrl}/admin/usage">Ver gastos de IA</a></p>`,
+  );
+}
+
 const BILLING_EVENT_COPY = {
   subscription_created: { customer: 'Assinatura criada', admin: 'Nova assinatura' },
   plan_changed: { customer: 'Seu plano foi alterado', admin: 'Plano alterado' },

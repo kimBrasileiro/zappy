@@ -8,6 +8,7 @@ import {
 } from '../ai/gemini';
 import type { ChatMessage, ToolCall, UsageInfo } from '../ai/types';
 import { scrubForLog } from '../pii/scrubber';
+import { notifyQuotaWarning } from '../notifications';
 import { checkRateLimit } from './rate-limit';
 import {
   assertNoCrossTenantLeak,
@@ -161,7 +162,15 @@ export async function* orchestrate(
   const monthlyMessageCount = await prisma.message.count({
     where: { companyId: company.id, senderType: 'customer', createdAt: { gte: currentMonthStart() } },
   });
-  const g4b = checkMessageQuota(monthlyMessageCount, getMonthlyMessageLimit(company));
+  const monthlyLimit = getMonthlyMessageLimit(company);
+
+  // Fires exactly once per company/month — see notifications.ts#notifyQuotaWarning
+  // for why an equality check on the count is enough, no extra state needed.
+  if (monthlyMessageCount === Math.ceil(monthlyLimit / 2)) {
+    await notifyQuotaWarning({ companyName: company.name, messageCount: monthlyMessageCount, limit: monthlyLimit });
+  }
+
+  const g4b = checkMessageQuota(monthlyMessageCount, monthlyLimit);
   if (!g4b.allowed) {
     await escalateToHuman(ticket.id);
     yield QUOTA_EXCEEDED_MESSAGE;

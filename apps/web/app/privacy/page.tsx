@@ -21,9 +21,9 @@ export default function PrivacyPage() {
 
       <h2 style={h2}>1. Quais dados coletamos</h2>
       <p style={p}>
-        <strong>Da empresa Contratante e seus usuários:</strong> nome, e-mail, senha (armazenada de
-        forma criptografada) e dados de pagamento — processados diretamente pelo Stripe, a Zappigo
-        nunca armazena número de cartão.
+        <strong>Da empresa Contratante e seus usuários:</strong> nome, e-mail, telefone (opcional),
+        senha (armazenada de forma criptografada) e dados de pagamento — processados diretamente
+        pelo Stripe, a Zappigo nunca armazena número de cartão.
       </p>
       <p style={p}>
         <strong>Dos clientes finais da Contratante</strong> (pessoas que conversam com o

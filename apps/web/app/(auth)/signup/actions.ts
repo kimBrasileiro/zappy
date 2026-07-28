@@ -29,6 +29,7 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   const companyName = String(formData.get('companyName') ?? '').trim();
   const name = String(formData.get('name') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
+  const phone = String(formData.get('phone') ?? '').trim() || null;
   const password = String(formData.get('password') ?? '');
   const planRaw = String(formData.get('plan') ?? 'basico');
   const acceptedTerms = formData.get('terms') === 'on';
@@ -69,7 +70,7 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   await createDefaultFaqs(company.id);
   await prisma.user.update({
     where: { email },
-    data: { termsAcceptedAt: new Date(), termsVersion: TERMS_VERSION },
+    data: { termsAcceptedAt: new Date(), termsVersion: TERMS_VERSION, phone },
   });
   await notifyNewSignup({ companyName, adminEmail: email, plan: company.plan });
 

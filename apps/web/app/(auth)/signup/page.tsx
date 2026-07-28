@@ -68,6 +68,10 @@ export default function SignUpPage() {
           <input name="email" type="email" required style={s.input} placeholder="voce@empresa.com" />
         </label>
         <label style={s.label}>
+          Telefone <span style={{ fontWeight: 400, color: '#999' }}>(opcional)</span>
+          <input name="phone" type="tel" style={s.input} placeholder="11 98765-4321" />
+        </label>
+        <label style={s.label}>
           Senha
           <input name="password" type="password" required minLength={10} style={s.input} />
           <span style={{ fontSize: 11.5, color: '#999', fontWeight: 400 }}>

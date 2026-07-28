@@ -8,6 +8,10 @@ model User {
   email         String   @unique
   emailVerified Boolean  @default(false) @map("email_verified")
   name          String
+  // Optional, collected at signup ((auth)/signup/actions.ts) — not used for
+  // login/auth, just a contact point on file. Never backfilled for users who
+  // signed up before this field existed, so null is a normal, expected value.
+  phone         String?
   role          String   @default("agent") // admin | agent | viewer
   avatarUrl     String?  @map("avatar_url") // Better Auth's "image" field, mapped via auth.ts fields config
   status        String   @default("active")

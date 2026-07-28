@@ -3,6 +3,7 @@ import type { Service } from '@zappigo/db';
 import { checkBookingRateLimit } from './rate-limit';
 import { notifyBookingCancelled, notifyBookingCreated } from '../notifications';
 import { brazilWallClockToUtc, toBrazilWallClock } from '../timezone';
+import { createEvent, deleteEvent, getFreeBusy, isCalendarConnected } from '../google-calendar/client';
 
 // Brazilian phone with DDD: 10 digits (landline, e.g. 11 3456-7890) or 11
 // (mobile, e.g. 11 98765-4321) once punctuation/spaces are stripped. Not a
@@ -231,6 +232,28 @@ export async function checkAvailability(
     }
   }
 
+  // Google Calendar busy time, if the company connected one (see
+  // lib/google-calendar/client.ts) — an extra blocking source on top of
+  // existing bookings and staff absences, for whichever real-world events
+  // the owner keeps on their own calendar that never touch this table at
+  // all (e.g. an appointment booked by phone, a personal commitment).
+  // Best-effort: a Google API hiccup here degrades to "just use Zappigo's
+  // own bookings," not a broken availability check — same reasoning as the
+  // Gemini model fallback elsewhere in this bot.
+  let calendarBusy: { startMs: number; endMs: number }[] = [];
+  if (isCalendarConnected(company)) {
+    try {
+      const busy = await getFreeBusy(company, brazilDayStart.toISOString(), brazilDayEnd.toISOString());
+      calendarBusy = busy.map((b) => ({ startMs: new Date(b.start).getTime(), endMs: new Date(b.end).getTime() }));
+    } catch (err) {
+      console.error('[google-calendar] freebusy failed, falling back to Zappigo-only availability', err);
+    }
+  }
+  const conflictsWithCalendar = (startMs: number, durationMin: number) => {
+    const endMs = startMs + durationMin * 60_000;
+    return calendarBusy.some((b) => startMs < b.endMs && b.startMs < endMs);
+  };
+
   const stepMinutes = service.durationMinutes;
   const now = Date.now();
   // Appointments always START on a round grid (:00/:15/:30/:45), independent
@@ -257,6 +280,7 @@ export async function checkAvailability(
     t += gridMs
   ) {
     if (t < now) continue; // no slots in the past
+    if (conflictsWithCalendar(t, stepMinutes)) continue;
 
     // No staff roster: one shared conflict pool for the whole service,
     // exactly the pre-staff behavior. With a roster: the slot survives as
@@ -324,6 +348,13 @@ export async function createBooking(
       message: `Não encontrei nenhum serviço ativo chamado "${args.serviceName}". Chame list_services de novo para ver os nomes exatos.`,
     };
   }
+
+  // Only the two calendar fields — cheap, and needed regardless of whether
+  // this company actually has Calendar connected, just to know that.
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { googleCalendarId: true, googleCalendarRefreshTokenEncrypted: true },
+  });
 
   const customerName = args.customerName.trim();
   if (!customerName) {
@@ -523,6 +554,17 @@ export async function createBooking(
         data: { status: 'cancelled' },
       });
       rescheduledFrom = previous[0]!.scheduledAt.toISOString();
+
+      if (company && isCalendarConnected(company)) {
+        for (const b of previous) {
+          if (!b.googleCalendarEventId) continue;
+          try {
+            await deleteEvent(company, b.googleCalendarEventId);
+          } catch (err) {
+            console.error('[google-calendar] deleteEvent failed during reschedule', err);
+          }
+        }
+      }
     }
   }
 
@@ -540,6 +582,24 @@ export async function createBooking(
         notes: `Cliente: ${customerName}, Tel: ${normalizedPhone}`,
       },
     });
+
+    // Best-effort, same reasoning as the freebusy check in checkAvailability
+    // above — a Google API failure here must never undo a booking that's
+    // already confirmed in Zappigo's own table. Only actually runs when this
+    // company connected a calendar; free for everyone else.
+    if (company && isCalendarConnected(company)) {
+      try {
+        const eventId = await createEvent(company, {
+          summary: `${service.name} — ${customerName}`,
+          description: `Agendado via Zappigo. Cliente: ${customerName}, Tel: ${normalizedPhone}.`,
+          startIso: booking.scheduledAt.toISOString(),
+          endIso: new Date(booking.scheduledAt.getTime() + booking.durationMinutes * 60_000).toISOString(),
+        });
+        await prisma.booking.update({ where: { id: booking.id }, data: { googleCalendarEventId: eventId } });
+      } catch (err) {
+        console.error('[google-calendar] createEvent failed, booking stays confirmed in Zappigo only', err);
+      }
+    }
 
     const requiresManualConfirmation = service.bookingMode === 'manual';
     await notifyBookingCreated({
@@ -652,6 +712,20 @@ export async function cancelBooking(
 
   await prisma.booking.update({ where: { id: booking.id }, data: { status: 'cancelled' } });
   await notifyBookingCancelled({ companyId, serviceName: service.name, scheduledAt: booking.scheduledAt });
+
+  if (booking.googleCalendarEventId) {
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+      select: { googleCalendarId: true, googleCalendarRefreshTokenEncrypted: true },
+    });
+    if (company && isCalendarConnected(company)) {
+      try {
+        await deleteEvent(company, booking.googleCalendarEventId);
+      } catch (err) {
+        console.error('[google-calendar] deleteEvent failed on cancel', err);
+      }
+    }
+  }
 
   const hoursUntil = (scheduledAt.getTime() - Date.now()) / 3_600_000;
   const withinFeeWindow = service.cancellationNoticeHours > 0 && hoursUntil < service.cancellationNoticeHours;

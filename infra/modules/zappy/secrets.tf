@@ -43,6 +43,7 @@ locals {
     META_APP_SECRET               = "meta-app-secret"
     META_WEBHOOK_VERIFY_TOKEN     = "meta-webhook-verify-token"
     WHATSAPP_TOKEN_ENCRYPTION_KEY = "whatsapp-token-encryption-key"
+    GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY = "google-calendar-token-encryption-key"
     CRON_SECRET                   = "cron-secret"
   }
 }

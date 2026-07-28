@@ -35,6 +35,17 @@ model Company {
   // subscription event regardless of where the change came from.
   cancelAtPeriodEnd      Boolean  @default(false) @map("cancel_at_period_end")
   trialEndsAt            DateTime? @map("trial_ends_at") @db.Timestamptz(6)
+  // Google Calendar integration (lib/google-calendar/client.ts,
+  // app/api/integrations/google-calendar/*) — all nullable, 100% opt-in.
+  // refresh_token is encrypted at rest via lib/crypto.ts, same reasoning as
+  // whatsappTokenEncrypted above but actually wired up. connectedEmail is
+  // display-only, shown on the dashboard integrations page so whoever's
+  // looking knows which Google account is connected without decrypting
+  // anything.
+  googleCalendarId                    String?   @map("google_calendar_id")
+  googleCalendarRefreshTokenEncrypted String?   @map("google_calendar_refresh_token_encrypted")
+  googleCalendarConnectedEmail        String?   @map("google_calendar_connected_email")
+  googleCalendarConnectedAt           DateTime? @map("google_calendar_connected_at") @db.Timestamptz(6)
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 

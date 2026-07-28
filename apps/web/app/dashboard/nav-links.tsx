@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/dashboard/services', label: 'Serviços' },
   { href: '/dashboard/bookings', label: 'Agendamentos' },
   { href: '/dashboard/instalacao', label: 'Instalação' },
+  { href: '/dashboard/integracoes', label: 'Integrações' },
   // { href: '/dashboard/billing', label: 'Assinatura' },
   { href: '/dashboard/suporte', label: 'Suporte' },
 ];

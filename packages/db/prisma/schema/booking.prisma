@@ -25,6 +25,11 @@ model Booking {
   // for services with no staff concept (staffNames empty), which keeps every
   // pre-existing booking and every single-provider service unaffected.
   staffName       String?  @map("staff_name")
+  // Set when the company has Google Calendar connected (see Company model)
+  // and the event was created successfully — lets cancel_booking delete the
+  // matching event. Null for every booking made before this existed, and
+  // for any company without Calendar connected; both are normal, not gaps.
+  googleCalendarEventId String? @map("google_calendar_event_id")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)

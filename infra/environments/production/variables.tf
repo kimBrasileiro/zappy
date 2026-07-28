@@ -42,6 +42,11 @@ variable "google_client_id" {
   default = ""
 }
 
+variable "google_calendar_client_id" {
+  type    = string
+  default = ""
+}
+
 variable "resend_from_email" {
   type    = string
   default = "Zappy <onboarding@resend.dev>"

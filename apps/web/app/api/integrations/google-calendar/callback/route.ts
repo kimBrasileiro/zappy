@@ -38,8 +38,8 @@ export async function GET(request: Request) {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID as string,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET as string,
+        client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID as string,
+        client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET as string,
         code,
         grant_type: 'authorization_code',
         redirect_uri: `${appUrl}${REDIRECT_PATH}`,

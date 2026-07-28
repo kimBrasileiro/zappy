@@ -93,6 +93,18 @@ variable "google_client_id" {
   default     = ""
 }
 
+# Separate OAuth Client from google_client_id above, on purpose — that one is
+# the login flow (better-auth, scoped to openid/email/profile); this one is
+# the per-company Google Calendar connection (scoped to calendar, a sensitive
+# scope), see apps/web/app/api/integrations/google-calendar/*. Keeping them
+# as two Google Cloud OAuth Clients means a compromised Calendar credential
+# never exposes the login flow or vice versa.
+variable "google_calendar_client_id" {
+  description = "Google OAuth client id for the Calendar integration (public half; secret half is GOOGLE_CALENDAR_CLIENT_SECRET in Secret Manager)."
+  type        = string
+  default     = ""
+}
+
 variable "resend_from_email" {
   type    = string
   default = "Zappy <onboarding@resend.dev>"

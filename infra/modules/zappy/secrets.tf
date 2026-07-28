@@ -39,6 +39,7 @@ locals {
     GEMINI_API_KEY                = "gemini-api-key"
     RESEND_API_KEY                = "resend-api-key"
     GOOGLE_CLIENT_SECRET          = "google-client-secret"
+    GOOGLE_CALENDAR_CLIENT_SECRET = "google-calendar-client-secret"
     WHATSAPP_CLOUD_API_TOKEN      = "whatsapp-cloud-api-token"
     META_APP_SECRET               = "meta-app-secret"
     META_WEBHOOK_VERIFY_TOKEN     = "meta-webhook-verify-token"

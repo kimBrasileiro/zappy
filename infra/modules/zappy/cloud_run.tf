@@ -10,6 +10,7 @@ locals {
       NEXT_PUBLIC_APP_URL                = var.app_url
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = var.stripe_publishable_key
       GOOGLE_CLIENT_ID                   = var.google_client_id
+      GOOGLE_CALENDAR_CLIENT_ID          = var.google_calendar_client_id
       RESEND_FROM_EMAIL                  = var.resend_from_email
       WHATSAPP_CLOUD_API_PHONE_NUMBER_ID = var.whatsapp_phone_number_id
       WHATSAPP_CLOUD_API_NUMBER          = var.whatsapp_number

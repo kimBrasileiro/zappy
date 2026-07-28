@@ -29,6 +29,7 @@ module "zappy" {
   app_url                   = var.app_url
   stripe_publishable_key    = var.stripe_publishable_key
   google_client_id          = var.google_client_id
+  google_calendar_client_id = var.google_calendar_client_id
   resend_from_email         = var.resend_from_email
   whatsapp_phone_number_id  = var.whatsapp_phone_number_id
   whatsapp_number           = var.whatsapp_number

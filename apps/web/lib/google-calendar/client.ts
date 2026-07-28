@@ -29,8 +29,8 @@ async function getAccessToken(company: CalendarConnectedCompany): Promise<string
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID as string,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET as string,
+      client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID as string,
+      client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET as string,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     }),

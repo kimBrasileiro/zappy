@@ -8,9 +8,9 @@ import type { ReactNode } from 'react';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const metadataBase = appUrl ? new URL(appUrl) : undefined;
 
-const TITLE = 'Zappigo — Sistema de Agendamento e Suporte via WhatsApp com IA';
+const TITLE = 'Zappigo — Sistema de Agendamento por WhatsApp com IA';
 const DESCRIPTION =
-  'Agendamento automático e suporte via WhatsApp e chat, com um assistente de IA que responde o FAQ da sua empresa e marca horários sozinho — com handoff pra atendimento humano quando precisar.';
+  'Sistema de agendamento por WhatsApp com IA: um assistente que responde o FAQ da sua empresa e marca horários sozinho no site e no WhatsApp — com handoff pra atendimento humano quando precisar.';
 
 export const metadata: Metadata = {
   metadataBase,
@@ -19,7 +19,15 @@ export const metadata: Metadata = {
     template: '%s · Zappigo',
   },
   description: DESCRIPTION,
+  // Primary target: "sistema de agendamento por whatsapp" — specific enough
+  // to be winnable for a new domain with zero backlink history, and already
+  // high-intent (whoever searches it knows they want WhatsApp specifically,
+  // which is this product's actual differentiator vs. generic scheduling
+  // tools). "sistema de agendamento" alone is the saturated, high-authority-
+  // dominated term — kept as a secondary signal, not the primary bet.
   keywords: [
+    'sistema de agendamento por whatsapp',
+    'agendamento por whatsapp',
     'sistema de agendamento',
     'agendamento automático',
     'agendamento online',

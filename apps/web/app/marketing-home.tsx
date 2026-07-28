@@ -127,6 +127,11 @@ const FAQ_ITEMS = [
     question: 'Como instalo no meu site?',
     answer: 'Depois de assinar, você cola uma única linha de <script> no seu site, sem mexer em mais nada, e o chat já aparece funcionando.',
   },
+  {
+    question: 'A Zappigo é um sistema de agendamento por WhatsApp?',
+    answer:
+      'Sim — é exatamente isso: um sistema de agendamento por WhatsApp com IA. Você não precisa registrar seu próprio número comercial pra começar (que costuma levar dias ou semanas de aprovação em outras plataformas); a Zappigo já sai com um número de WhatsApp compartilhado pronto pra uso.',
+  },
 ];
 
 function Button({
@@ -175,7 +180,7 @@ const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
-    'Plataforma de atendimento via IA com agendamento automático e suporte via WhatsApp e chat no site, com FAQ automático e handoff pra atendimento humano.',
+    'Sistema de agendamento por WhatsApp com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.',
   offers: FREE_TIER_MODE
     ? [{ '@type': 'Offer', name: 'Grátis (lançamento)', price: '0', priceCurrency: 'BRL', url: '/signup' }]
     : PRICING.map((plan) => ({
@@ -297,15 +302,16 @@ export async function MarketingHome() {
             marginBottom: 20,
           }}
         >
-          Sistema de agendamento e suporte via WhatsApp com IA
+          Sistema de agendamento por WhatsApp com IA
         </span>
         <h1 style={{ fontSize: 42, lineHeight: 1.2, margin: '0 auto 16px', maxWidth: 720 }}>
-          Agendamento automático e suporte via WhatsApp com IA para o seu negócio
+          Sistema de agendamento por WhatsApp com IA para o seu negócio
         </h1>
         <p style={{ fontSize: 16.5, color: '#555', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
-          A Zappigo conversa com seus clientes o dia todo no site e no WhatsApp, responde o FAQ da
-          sua empresa e marca horários de verdade sem ninguém do seu time digitar nada. Quando ela
-          não souber algo, um humano assume a conversa, sem enrolação.
+          A Zappigo é um sistema de agendamento por WhatsApp com IA que conversa com seus clientes
+          o dia todo no site e no WhatsApp, responde o FAQ da sua empresa e marca horários de
+          verdade sem ninguém do seu time digitar nada. Quando ela não souber algo, um humano
+          assume a conversa, sem enrolação.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 36 }}>
           <Button href="/signup">Começar agora</Button>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Script from 'next/script';
+import { FREE_TIER_MODE } from '../lib/stripe/plans';
 
 // Real Measurement ID for the "Zappigo" GA4 property — see privacy/page.tsx's
 // Cookies section, updated in the same change, for the disclosure this
@@ -16,9 +17,17 @@ const GA_MEASUREMENT_ID = 'G-EK9L29B8FH';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const metadataBase = appUrl ? new URL(appUrl) : undefined;
 
-const TITLE = 'Zappigo — Sistema de Agendamento por WhatsApp com IA';
-const DESCRIPTION =
-  'Sistema de agendamento por WhatsApp com IA: um assistente que responde o FAQ da sua empresa e marca horários sozinho no site e no WhatsApp — com handoff pra atendimento humano quando precisar.';
+// "Grátis" folded into the title/description/keywords ONLY while
+// FREE_TIER_MODE is on — it's a genuinely strong hook right now (the exact
+// gap every paid competitor in the space has, see zappy-pitch's competitor
+// table), but it stops being true the moment billing turns back on, and SEO
+// copy claiming otherwise then would be actively misleading.
+const TITLE = FREE_TIER_MODE
+  ? 'Zappigo — Agendamento por WhatsApp Grátis com IA'
+  : 'Zappigo — Sistema de Agendamento por WhatsApp com IA';
+const DESCRIPTION = FREE_TIER_MODE
+  ? 'Sistema de agendamento por WhatsApp grátis, com IA: um assistente que responde o FAQ da sua empresa e marca horários sozinho no site e no WhatsApp — sem cartão, sem mensalidade.'
+  : 'Sistema de agendamento por WhatsApp com IA: um assistente que responde o FAQ da sua empresa e marca horários sozinho no site e no WhatsApp — com handoff pra atendimento humano quando precisar.';
 
 export const metadata: Metadata = {
   metadataBase,
@@ -32,10 +41,12 @@ export const metadata: Metadata = {
   // high-intent (whoever searches it knows they want WhatsApp specifically,
   // which is this product's actual differentiator vs. generic scheduling
   // tools). "sistema de agendamento" alone is the saturated, high-authority-
-  // dominated term — kept as a secondary signal, not the primary bet.
+  // dominated term — kept as a secondary signal, not the primary bet. The
+  // "grátis" variants ride the same logic as TITLE/DESCRIPTION above.
   keywords: [
     'sistema de agendamento por whatsapp',
     'agendamento por whatsapp',
+    ...(FREE_TIER_MODE ? ['agendamento por whatsapp grátis', 'sistema de agendamento grátis'] : []),
     'sistema de agendamento',
     'agendamento automático',
     'agendamento online',

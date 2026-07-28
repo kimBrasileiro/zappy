@@ -179,8 +179,9 @@ const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
   name: 'Zappigo',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
-  description:
-    'Sistema de agendamento por WhatsApp com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.',
+  description: FREE_TIER_MODE
+    ? 'Sistema de agendamento por WhatsApp grátis, com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.'
+    : 'Sistema de agendamento por WhatsApp com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.',
   offers: FREE_TIER_MODE
     ? [{ '@type': 'Offer', name: 'Grátis (lançamento)', price: '0', priceCurrency: 'BRL', url: '/signup' }]
     : PRICING.map((plan) => ({
@@ -302,16 +303,18 @@ export async function MarketingHome() {
             marginBottom: 20,
           }}
         >
-          Sistema de agendamento por WhatsApp com IA
+          {FREE_TIER_MODE ? 'Grátis — Sistema de agendamento por WhatsApp com IA' : 'Sistema de agendamento por WhatsApp com IA'}
         </span>
         <h1 style={{ fontSize: 42, lineHeight: 1.2, margin: '0 auto 16px', maxWidth: 720 }}>
-          Sistema de agendamento por WhatsApp com IA para o seu negócio
+          {FREE_TIER_MODE
+            ? 'Sistema de agendamento por WhatsApp grátis, com IA para o seu negócio'
+            : 'Sistema de agendamento por WhatsApp com IA para o seu negócio'}
         </h1>
         <p style={{ fontSize: 16.5, color: '#555', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
-          A Zappigo é um sistema de agendamento por WhatsApp com IA que conversa com seus clientes
-          o dia todo no site e no WhatsApp, responde o FAQ da sua empresa e marca horários de
-          verdade sem ninguém do seu time digitar nada. Quando ela não souber algo, um humano
-          assume a conversa, sem enrolação.
+          A Zappigo é um sistema de agendamento por WhatsApp com IA{FREE_TIER_MODE ? ', grátis no lançamento,' : ''} que
+          conversa com seus clientes o dia todo no site e no WhatsApp, responde o FAQ da sua
+          empresa e marca horários de verdade sem ninguém do seu time digitar nada. Quando ela não
+          souber algo, um humano assume a conversa, sem enrolação.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 36 }}>
           <Button href="/signup">Começar agora</Button>

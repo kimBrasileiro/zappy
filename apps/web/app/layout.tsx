@@ -26,8 +26,8 @@ const TITLE = FREE_TIER_MODE
   ? 'Zappigo — Agendamento por WhatsApp Grátis com IA'
   : 'Zappigo — Sistema de Agendamento por WhatsApp com IA';
 const DESCRIPTION = FREE_TIER_MODE
-  ? 'Sistema de agendamento por WhatsApp grátis, com IA: um assistente que responde o FAQ da sua empresa e marca horários sozinho no site e no WhatsApp — sem cartão, sem mensalidade.'
-  : 'Sistema de agendamento por WhatsApp com IA: um assistente que responde o FAQ da sua empresa e marca horários sozinho no site e no WhatsApp — com handoff pra atendimento humano quando precisar.';
+  ? 'Sistema de agendamento por WhatsApp grátis, com IA: um assistente que agenda horários e presta atendimento e suporte aos seus clientes, respondendo dúvidas automaticamente, no site e no WhatsApp — sem cartão, sem mensalidade.'
+  : 'Sistema de agendamento por WhatsApp com IA: um assistente que agenda horários e presta atendimento e suporte aos seus clientes, respondendo dúvidas automaticamente, no site e no WhatsApp — com handoff pra atendimento humano quando precisar.';
 
 export const metadata: Metadata = {
   metadataBase,

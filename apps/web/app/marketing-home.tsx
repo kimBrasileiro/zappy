@@ -97,7 +97,7 @@ const FAQ_ITEMS = [
   {
     question: 'O que é a Zappigo?',
     answer:
-      'A Zappigo é uma plataforma de atendimento via IA que conversa com seus clientes no seu site e no WhatsApp, tira dúvidas, responde o FAQ da sua empresa e agenda horários automaticamente — com um humano do seu time podendo assumir a conversa a qualquer momento.',
+      'A Zappigo é uma plataforma de agendamento, suporte e atendimento via IA que conversa com seus clientes no seu site e no WhatsApp, marca horários automaticamente e tira dúvidas respondendo o FAQ da sua empresa — com um humano do seu time podendo assumir a conversa a qualquer momento.',
   },
   {
     question: 'Quanto custa?',
@@ -312,9 +312,9 @@ export async function MarketingHome() {
         </h1>
         <p style={{ fontSize: 16.5, color: '#555', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
           A Zappigo é um sistema de agendamento por WhatsApp com IA{FREE_TIER_MODE ? ', grátis no lançamento,' : ''} que
-          conversa com seus clientes o dia todo no site e no WhatsApp, responde o FAQ da sua
-          empresa e marca horários de verdade sem ninguém do seu time digitar nada. Quando ela não
-          souber algo, um humano assume a conversa, sem enrolação.
+          conversa com seus clientes o dia todo no site e no WhatsApp, marca horários de verdade e
+          presta atendimento e suporte respondendo o FAQ da sua empresa, sem ninguém do seu time
+          digitar nada. Quando ela não souber algo, um humano assume a conversa, sem enrolação.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 36 }}>
           <Button href="/signup">Começar agora</Button>

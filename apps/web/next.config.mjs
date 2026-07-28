@@ -15,6 +15,31 @@ loadEnv({ path: path.resolve(__dirname, '../../.env.local') });
 const nextConfig = {
   output: 'standalone',
   transpilePackages: ['@zappigo/db', '@zappigo/types'],
+  // Stop advertising the framework in every response — pure info-disclosure
+  // reduction, doesn't change behavior.
+  poweredByHeader: false,
+  // Baseline hardening found missing in the production security pass. Safe
+  // to apply to every route, including /widget.js and /api/chat: none of
+  // these headers affect how the widget embeds on a customer's page (that's
+  // a <script> injecting DOM on their site, never an iframe of our own
+  // pages) or the widget's CORS behavior (a separate, deliberately open
+  // Access-Control-Allow-Origin: * set per-route, untouched by this). CSP is
+  // deliberately NOT included here — this app relies on several inline
+  // scripts (JSON-LD, icons) that a real CSP would need auditing to not
+  // break, worth doing as its own pass rather than guessing at a policy.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+        ],
+      },
+    ];
+  },
   experimental: {
     serverActions: {
       // zappigo.com.br sits behind a Cloudflare Worker reverse proxy in

@@ -1,6 +1,12 @@
 import { prisma } from '@zappigo/db';
 import { currentMonthStart, DEFAULT_MONTHLY_MESSAGE_LIMIT, getMonthlyMessageLimit } from '../../../lib/bot/quota';
 
+// Always reflects the current month's real data — Next.js's build-time
+// static-generation attempt otherwise tries (and fails, harmlessly but
+// noisily in the build log) to reach the database at build time, since this
+// page has no static shell to fall back to anyway.
+export const dynamic = 'force-dynamic';
+
 interface UsageMetadata {
   costUsd?: number;
   tokens?: { prompt?: number; completion?: number };

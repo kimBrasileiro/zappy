@@ -35,6 +35,12 @@ export default function TermsPage() {
         realizadas na sua conta. Você declara ter capacidade legal para contratar em nome da
         empresa que está cadastrando.
       </p>
+      <p style={p}>
+        Ao clicar em &quot;Criar conta&quot; (ou equivalente) e efetivamente concluir o cadastro,
+        você declara ter lido, compreendido e aceitado integralmente estes Termos e a Política de
+        Privacidade — aceitação eletrônica válida e vinculante nos termos do art. 107 do Código
+        Civil e da Lei nº 14.063/2020, independentemente de assinatura física.
+      </p>
 
       <h2 style={h2}>3. Período gratuito, planos futuros e direito de alteração</h2>
       <p style={p}>
@@ -54,11 +60,13 @@ export default function TermsPage() {
       </p>
       <p style={p}>
         Caso a Zappigo passe a cobrar pelo uso, os preços vigentes na ocasião estarão disponíveis
-        em <strong>[zappigo.com.br/#precos]</strong>. A Contratante poderá optar por não aderir ao
-        plano pago, hipótese em que o acesso poderá ser suspenso ao fim do prazo de aviso acima. Uma
-        vez ativos, planos pagos podem ser reajustados mediante aviso prévio de pelo menos 30 dias,
-        aplicável a partir do próximo ciclo de cobrança; o não pagamento de uma fatura pode resultar
-        na suspensão do acesso até a regularização.
+        em <strong>zappigo.com.br/#precos</strong>. Contratantes já ativas mantêm o preço vigente na
+        data em que a cobrança começar a valer para elas até o fim do ciclo em curso — qualquer
+        reajuste posterior segue o aviso prévio de 30 dias abaixo, nunca retroativo. A Contratante
+        poderá optar por não aderir ao plano pago, hipótese em que o acesso poderá ser suspenso ao
+        fim do prazo de aviso acima. Uma vez ativos, planos pagos podem ser reajustados mediante
+        aviso prévio de pelo menos 30 dias, aplicável a partir do próximo ciclo de cobrança; o não
+        pagamento de uma fatura pode resultar na suspensão do acesso até a regularização.
       </p>
 
       <h2 style={h2}>4. Cancelamento</h2>
@@ -76,10 +84,42 @@ export default function TermsPage() {
         <li>enviar spam ou conteúdo ilegal, discriminatório ou que viole direitos de terceiros;</li>
         <li>tentar acessar dados de outras empresas cadastradas na plataforma;</li>
         <li>usar o número de WhatsApp compartilhado da Zappigo para fins diferentes do atendimento aos seus próprios clientes;</li>
+        <li>enviar mensagens a clientes finais que não tenham consentido em recebê-las por esse canal;</li>
         <li>sobrecarregar ou tentar comprometer a infraestrutura da plataforma.</li>
       </ul>
+      <p style={p}>
+        <strong>Número de WhatsApp compartilhado.</strong> Enquanto a Contratante estiver no plano
+        que usa o número de WhatsApp compartilhado da Zappigo, ela é responsável por obter o
+        consentimento prévio de seus próprios clientes finais para contato por esse canal, conforme
+        exigido pelas políticas comerciais da Meta. Denúncias de spam, bloqueio ou banimento do
+        número causados por conduta de uma Contratante podem afetar a disponibilidade do canal para
+        as demais — a Zappigo não se responsabiliza por indisponibilidade decorrente de ação de
+        terceiros (Meta) motivada por uso indevido de qualquer Contratante, e a Contratante responde
+        por prejuízos causados às demais nesse cenário.
+      </p>
+      <p style={p}>
+        <strong>Limite de uso razoável.</strong> Para viabilizar a oferta gratuita e conter custos de
+        processamento por IA, aplicamos um teto de mensagens automáticas por mês por Contratante
+        (atualmente 500 mensagens de clientes finais/mês, ajustável a nosso critério). Ao atingir o
+        teto, novas conversas do mês corrente são encaminhadas diretamente para atendimento humano
+        em vez de continuar sendo processadas pela IA. Contratantes com necessidade de volume maior
+        podem solicitar um limite personalizado pelo contato ao final destes Termos.
+      </p>
 
-      <h2 style={h2}>6. Propriedade intelectual</h2>
+      <h2 style={h2}>6. Confiabilidade das respostas da inteligência artificial</h2>
+      <p style={p}>
+        O assistente virtual da Zappigo é baseado em modelos de linguagem de terceiros e pode, em
+        alguns casos, gerar respostas incompletas, desatualizadas ou incorretas, apesar dos esforços
+        técnicos para reduzir esse risco (ex: respostas fundamentadas nos serviços, preços e FAQ
+        efetivamente cadastrados pela Contratante). A Contratante é responsável por revisar e manter
+        atualizado o catálogo de serviços, preços e FAQ configurado na plataforma, e por verificar
+        junto ao cliente final qualquer informação crítica antes de considerá-la definitiva. A
+        Zappigo não garante a exatidão do conteúdo gerado pela IA e não se responsabiliza por
+        compromissos que a própria Contratante não possa cumprir em decorrência de uma resposta
+        incorreta do assistente.
+      </p>
+
+      <h2 style={h2}>7. Propriedade intelectual</h2>
       <p style={p}>
         A Zappigo e todo o seu software, marca e conteúdo são de propriedade da{' '}
         <strong>KIM BRASILEIRO LEAL LTDA</strong>. O conteúdo que você cadastra (serviços, FAQs, dados de
@@ -87,7 +127,7 @@ export default function TermsPage() {
         processá-lo exclusivamente para prestar o serviço contratado.
       </p>
 
-      <h2 style={h2}>7. Dados e privacidade</h2>
+      <h2 style={h2}>8. Dados e privacidade</h2>
       <p style={p}>
         O tratamento de dados pessoais pela Zappigo — seus e dos seus clientes finais — segue nossa{' '}
         <a href="/privacy" style={{ color: '#2563eb' }}>
@@ -96,7 +136,7 @@ export default function TermsPage() {
         , parte integrante destes Termos.
       </p>
 
-      <h2 style={h2}>8. Limitação de responsabilidade</h2>
+      <h2 style={h2}>9. Limitação de responsabilidade</h2>
       <p style={p}>
         A Zappigo é fornecida &quot;como está&quot;. Fazemos esforços razoáveis para manter o serviço
         disponível e preciso, mas não garantimos operação ininterrupta ou livre de erros. Na máxima
@@ -108,21 +148,34 @@ export default function TermsPage() {
         Defesa do Consumidor, nem se aplica a danos decorrentes de dolo ou culpa grave.
       </p>
 
-      <h2 style={h2}>9. Suspensão e rescisão</h2>
+      <h2 style={h2}>10. Indenização</h2>
+      <p style={p}>
+        A Contratante concorda em indenizar e isentar a Zappigo de reclamações, perdas ou danos de
+        terceiros decorrentes de: uso da plataforma em violação destes Termos ou da lei; conteúdo
+        cadastrado pela Contratante (serviços, FAQ, políticas de cancelamento); ou envio de
+        mensagens a clientes finais sem o consentimento exigido na cláusula 5 — incluindo eventuais
+        reclamações desses clientes finais ou sanções aplicadas pela Meta/WhatsApp motivadas por
+        conduta da própria Contratante.
+      </p>
+
+      <h2 style={h2}>11. Suspensão, rescisão e dados após o encerramento</h2>
       <p style={p}>
         Podemos suspender ou encerrar sua conta em caso de violação destes Termos, inadimplência
         não regularizada, ou uso que coloque em risco a plataforma ou outros usuários, mediante
-        notificação prévia sempre que possível.
+        notificação prévia sempre que possível. Encerrada a conta (por cancelamento ou rescisão), a
+        Contratante pode solicitar a exportação de seus dados (histórico de conversas, agendamentos
+        e cadastros) em até 30 dias a partir do encerramento, findo o qual os dados seguem o prazo
+        de retenção descrito na Política de Privacidade.
       </p>
 
-      <h2 style={h2}>10. Alterações destes Termos</h2>
+      <h2 style={h2}>12. Alterações destes Termos</h2>
       <p style={p}>
         Podemos atualizar estes Termos periodicamente. Mudanças materiais serão comunicadas com
         antecedência razoável; o uso continuado da plataforma após a alteração constitui aceite dos
         novos Termos.
       </p>
 
-      <h2 style={h2}>11. Lei aplicável e foro</h2>
+      <h2 style={h2}>13. Lei aplicável e foro</h2>
       <p style={p}>
         Estes Termos são regidos pelas leis brasileiras. Fica eleito o foro da comarca de{' '}
         <strong>São Paulo/SP</strong> para dirimir eventuais controvérsias, com renúncia a qualquer
@@ -130,7 +183,7 @@ export default function TermsPage() {
         a lei assim exigir.
       </p>
 
-      <h2 style={h2}>12. Disposições gerais</h2>
+      <h2 style={h2}>14. Disposições gerais</h2>
       <p style={p}>
         Estes Termos, junto com a Política de Privacidade, constituem o acordo integral entre as
         partes sobre o seu objeto, substituindo entendimentos anteriores. Se qualquer cláusula for
@@ -143,8 +196,8 @@ export default function TermsPage() {
         venda de ativos, sem que isso reduza os direitos já garantidos à Contratante.
       </p>
 
-      <h2 style={h2}>13. Contato</h2>
-      <p style={p}>Dúvidas sobre estes Termos: kim@wisell.ai.</p>
+      <h2 style={h2}>15. Contato</h2>
+      <p style={p}>Dúvidas sobre estes Termos: suporte@zappigo.com.br.</p>
     </LegalPage>
   );
 }

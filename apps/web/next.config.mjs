@@ -15,6 +15,20 @@ loadEnv({ path: path.resolve(__dirname, '../../.env.local') });
 const nextConfig = {
   output: 'standalone',
   transpilePackages: ['@zappigo/db', '@zappigo/types'],
+  experimental: {
+    serverActions: {
+      // zappigo.com.br sits behind a Cloudflare Worker reverse proxy in
+      // front of this Cloud Run service (southamerica-east1 doesn't support
+      // Cloud Run domain mappings — see infra/README.md#custom-domain), so
+      // the request the app actually receives still has Host set to the raw
+      // *.run.app hostname while Origin is zappigo.com.br. Next.js's default
+      // Server Actions CSRF check compares those and rejects the mismatch
+      // ("Invalid Server Actions request") — this is the documented escape
+      // hatch, not a security loosening: it's still an explicit allowlist,
+      // just one that accounts for the proxy in front.
+      allowedOrigins: ['zappigo.com.br', 'www.zappigo.com.br'],
+    },
+  },
 };
 
 export default nextConfig;

@@ -6,7 +6,7 @@ import { requireSession } from '../../../../../lib/auth-server';
 // A separate Google OAuth Client from login's (lib/auth.ts's
 // socialProviders.google, GOOGLE_CLIENT_ID/SECRET) — GOOGLE_CALENDAR_CLIENT_ID/
 // SECRET here. Deliberately not shared: login only ever needs
-// openid/email/profile, this needs the sensitive `calendar` scope, and
+// openid/email/profile, this needs calendar-specific scopes (see below), and
 // keeping them as two Cloud Console OAuth Clients means a compromised
 // Calendar credential can't touch the login flow or vice versa.
 const REDIRECT_PATH = '/api/integrations/google-calendar/callback';
@@ -29,7 +29,20 @@ export async function GET() {
     client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID as string,
     redirect_uri: `${appUrl}${REDIRECT_PATH}`,
     response_type: 'code',
-    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email',
+    // Narrowest set that covers everything lib/google-calendar/client.ts
+    // actually does: calendar.events (createEvent/deleteEvent) +
+    // calendar.freebusy (getFreeBusy — freebusy.query accepts this narrower
+    // scope, confirmed against Google's own API reference, no need for the
+    // broad calendar.readonly/calendar scope). Matters beyond least-privilege
+    // principle: narrower scopes are far more likely to land in Google's
+    // "sensitive" verification tier instead of "restricted", which is the
+    // difference between a quick review and a paid third-party security
+    // assessment (CASA) that can take weeks.
+    scope: [
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/calendar.freebusy',
+      'https://www.googleapis.com/auth/userinfo.email',
+    ].join(' '),
     // offline + consent together are what actually guarantee a refresh_token
     // comes back — without prompt=consent, a user who already granted this
     // scope once (from an earlier disconnect/reconnect) gets silently

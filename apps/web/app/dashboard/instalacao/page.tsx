@@ -89,9 +89,69 @@ export default async function InstalacaoPage() {
       <div className="dash-card">
         <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Script do chat</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-          Uma linha de <code>&lt;script&gt;</code>, sem mudanças no resto do site:
+          Uma linha de <code>&lt;script&gt;</code>, sem mudanças no resto do site — cole antes do
+          fechamento de <code>&lt;/body&gt;</code>. Nunca mexeu com isso? Veja abaixo como fazer
+          conforme onde seu site foi feito:
         </p>
         <CopySnippet snippet={snippet} />
+
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <details>
+            <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
+              Meu site é WordPress
+            </summary>
+            <ol style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0', paddingLeft: 20 }}>
+              <li>
+                No menu do WordPress, instale o plugin gratuito <b>Insert Headers and Footers</b>{' '}
+                (Plugins → Adicionar novo → busque pelo nome).
+              </li>
+              <li>Depois de ativado, vá em Configurações → Insert Headers and Footers.</li>
+              <li>Cole o script no campo &quot;Scripts in Footer&quot; e clique em Salvar.</li>
+            </ol>
+          </details>
+
+          <details>
+            <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
+              Meu site é Wix
+            </summary>
+            <ol style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0', paddingLeft: 20 }}>
+              <li>No editor do Wix, vá em Configurações → Custom Code (Código personalizado).</li>
+              <li>Clique em &quot;Adicionar código personalizado&quot; e cole o script.</li>
+              <li>
+                Em &quot;Adicionar código para&quot;, escolha <b>Todas as páginas</b>, e em
+                &quot;Posição no código&quot;, escolha <b>Body - end</b>.
+              </li>
+              <li>Salve e publique o site.</li>
+            </ol>
+            <p style={{ fontSize: 12.5, color: '#999', margin: '8px 0 0' }}>
+              Custom Code só está disponível em planos pagos do Wix — no plano grátis, peça ajuda
+              pelo contato abaixo.
+            </p>
+          </details>
+
+          <details>
+            <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
+              Meu site foi feito por uma agência ou freelancer
+            </summary>
+            <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0' }}>
+              Encaminhe o script acima pra quem cuida do seu site e peça pra colar logo antes do
+              fechamento de <code>&lt;/body&gt;</code> — é uma instrução que qualquer desenvolvedor
+              reconhece na hora, geralmente leva menos de 5 minutos.
+            </p>
+          </details>
+
+          <details>
+            <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
+              Meu site é feito no Google Sites ou não sei onde colar
+            </summary>
+            <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0' }}>
+              O Google Sites não permite colar scripts personalizados — nesse caso, use o{' '}
+              <b>Link direto do WhatsApp</b> ou o <b>Botão do WhatsApp</b> no topo desta página, que
+              funcionam em qualquer lugar (Google Sites, Instagram, WhatsApp, onde quiser colar um
+              link). Se preferir, escreva pra suporte@zappigo.com.br que a gente ajuda a instalar.
+            </p>
+          </details>
+        </div>
       </div>
 
       <div className="dash-card">

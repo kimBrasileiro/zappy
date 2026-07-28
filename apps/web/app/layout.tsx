@@ -1,5 +1,13 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import Script from 'next/script';
+
+// Real Measurement ID for the "Zappigo" GA4 property — see privacy/page.tsx's
+// Cookies section, updated in the same change, for the disclosure this
+// requires. afterInteractive (not beforeInteractive/lazyOnload): loads after
+// the page is interactive so it never competes with hydration for the
+// first paint, but still fires early enough to capture the pageview.
+const GA_MEASUREMENT_ID = 'G-EK9L29B8FH';
 
 // Only set when NEXT_PUBLIC_APP_URL is a real absolute URL (see infra's
 // "chicken-and-egg app_url" note) — metadataBase just becomes unset
@@ -59,7 +67,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_MEASUREMENT_ID}');`}
+        </Script>
+      </body>
     </html>
   );
 }

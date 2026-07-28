@@ -11,7 +11,7 @@ const p = { margin: '0 0 12px' };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Política de Privacidade" lastUpdated="27 de julho de 2026">
+    <LegalPage title="Política de Privacidade" lastUpdated="28 de julho de 2026">
       <p style={p}>
         A Zappigo, operada por <strong>KIM BRASILEIRO LEAL LTDA</strong>, CNPJ{' '}
         <strong>63.020.695/0001-93</strong>, com sede em São Paulo/SP, é controladora dos dados
@@ -82,7 +82,10 @@ export default function PrivacyPage() {
           <strong>Resend</strong> — envio de e-mails transacionais;
         </li>
         <li>
-          <strong>Meta / WhatsApp Cloud API</strong> — mensageria via WhatsApp.
+          <strong>Meta / WhatsApp Cloud API</strong> — mensageria via WhatsApp;
+        </li>
+        <li>
+          <strong>Google Analytics</strong> — métricas agregadas de uso do site (ver seção 8).
         </li>
       </ul>
       <p style={p}>
@@ -123,10 +126,17 @@ export default function PrivacyPage() {
         afetados em prazo razoável, nos termos do art. 48 da LGPD.
       </p>
 
-      <h2 style={h2}>8. Cookies</h2>
+      <h2 style={h2}>8. Cookies e analytics</h2>
       <p style={p}>
         Usamos cookies estritamente necessários para manter sua sessão autenticada no dashboard.
-        Não usamos cookies de rastreamento publicitário nem ferramentas de analytics de terceiros.
+        Usamos também o <strong>Google Analytics (GA4)</strong> para entender de forma agregada
+        como o site é utilizado (páginas visitadas, origem do acesso) — não usamos cookies de
+        rastreamento publicitário. Os dados de navegação coletados pelo Google Analytics são
+        tratados conforme a{' '}
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style={{ color: '#2563eb' }}>
+          política de privacidade do Google
+        </a>
+        .
       </p>
 
       <h2 style={h2}>9. Alterações desta Política</h2>

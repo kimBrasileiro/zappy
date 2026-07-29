@@ -8,6 +8,15 @@ const WHATSAPP_GREEN = '#25D366';
 const ICON_WHATSAPP =
   '<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M12 2a10 10 0 0 0-8.66 15L2 22l5.14-1.31A10 10 0 1 0 12 2zm0 18.2a8.16 8.16 0 0 1-4.17-1.14l-.3-.18-3.05.78.82-2.97-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81s-.4-.12-.56.12-.63.81-.78.97-.28.19-.53.06a6.7 6.7 0 0 1-1.97-1.22 7.4 7.4 0 0 1-1.36-1.7c-.14-.25 0-.38.11-.5s.25-.29.37-.44a1.6 1.6 0 0 0 .25-.41.46.46 0 0 0 0-.44c-.06-.12-.56-1.35-.77-1.85s-.4-.42-.56-.43h-.48a.9.9 0 0 0-.66.31 2.76 2.76 0 0 0-.86 2.05 4.78 4.78 0 0 0 1 2.54 10.9 10.9 0 0 0 4.19 3.7c.58.25 1.04.4 1.4.51a3.37 3.37 0 0 0 1.54.1 2.52 2.52 0 0 0 1.65-1.16 2 2 0 0 0 .14-1.16c-.06-.1-.22-.16-.47-.28z"/></svg>';
 
+// (11) 97831-4841 instead of the raw +5511978314841 — for anyone reading it
+// out loud, printing it, or typing it by hand (Instagram bio, a physical
+// sign), not just clicking a pre-filled wa.me link.
+function formatWhatsAppNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  const match = digits.match(/^55(\d{2})(\d{4,5})(\d{4})$/);
+  return match ? `+55 (${match[1]}) ${match[2]}-${match[3]}` : raw;
+}
+
 export default async function InstalacaoPage() {
   const { companyId } = await requireSession();
   const company = await prisma.company.findUnique({ where: { id: companyId } });
@@ -57,6 +66,21 @@ export default async function InstalacaoPage() {
               automaticamente pelo WhatsApp, sem precisar instalar nada:
             </p>
             <CopySnippet snippet={waLink} />
+
+            <p style={{ color: '#666', fontSize: 13, margin: '16px 0 6px' }}>
+              Pra qualquer lugar onde não dá pra usar um link clicável (ex: falar de viva voz,
+              cartão de visita, bio do Instagram), passe o número e essa frase exata pro cliente
+              mandar:
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 6px' }}>
+              {formatWhatsAppNumber(whatsappNumber ?? '')}
+            </p>
+            <CopySnippet snippet={`Olá, gostaria de agendar serviços com ${company.name}`} />
+            <p style={{ color: '#999', fontSize: 12, margin: '8px 0 0' }}>
+              O número é compartilhado entre várias empresas — é essa frase exata (com o nome da
+              sua empresa) que garante que o assistente saiba que é com você que o cliente quer
+              falar.
+            </p>
           </>
         ) : (
           <p style={{ color: '#999', fontSize: 13, margin: 0 }}>

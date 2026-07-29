@@ -54,6 +54,13 @@ export default async function DashboardHomePage() {
     whatsappDigits && company
       ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de agendar serviços com ${company.name}`)}`
       : null;
+  // (11) 97831-4841 instead of the raw +5511978314841 — same reasoning as
+  // dashboard/instalacao/page.tsx's copy of this same helper: readable out
+  // loud or on a printed sign, not just clickable.
+  const formattedWhatsAppNumber = whatsappNumber?.replace(/\D/g, '').match(/^55(\d{2})(\d{4,5})(\d{4})$/);
+  const whatsappNumberLabel = formattedWhatsAppNumber
+    ? `+55 (${formattedWhatsAppNumber[1]}) ${formattedWhatsAppNumber[2]}-${formattedWhatsAppNumber[3]}`
+    : whatsappNumber;
 
   return (
     <>
@@ -107,6 +114,17 @@ export default async function DashboardHomePage() {
               conversa já identificando sua empresa pro bot:
             </p>
             <CopySnippet snippet={waLink} />
+
+            <p style={{ color: '#666', fontSize: 13, margin: '16px 0 6px' }}>
+              Sem link clicável (de viva voz, cartão de visita)? Passe o número e peça pro
+              cliente mandar essa frase exata:
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 6px' }}>{whatsappNumberLabel}</p>
+            <CopySnippet snippet={`Olá, gostaria de agendar serviços com ${company?.name ?? ''}`} />
+            <p style={{ color: '#999', fontSize: 12, margin: '8px 0 0' }}>
+              O número é compartilhado entre várias empresas — a frase exata (com o nome da sua
+              empresa) é o que garante que o assistente identifique que é com você.
+            </p>
           </>
         ) : (
           <p style={{ color: '#999', fontSize: 13, margin: 0 }}>

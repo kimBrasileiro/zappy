@@ -127,13 +127,21 @@ export function verifyWebhookSignature(rawBody: string, signatureHeader: string 
 
 export interface InboundWhatsAppMessage {
   fromWaPhoneNumber: string; // raw, as Meta sends it (digits, country code, no "+") — also the "to" address for replies
-  text: string;
+  // Exactly one of text/audio is ever set. text stays required-ish in
+  // practice (every existing call site reads it directly), audio is the new
+  // case a caller has to check for and resolve to text itself (see
+  // api/webhooks/whatsapp/route.ts) before anything downstream (routing,
+  // orchestrate) can run — this module has no way to transcribe on its own.
+  text?: string;
+  audio?: { mediaId: string; mimeType: string };
   wamid: string;
 }
 
 // Meta's webhook payload shape: entry[].changes[].value.messages[]. Handles
-// plain text and taps on our own interactive messages (button_reply/list_reply)
-// — both come back as `null` for anything else (media/location/etc.), since no
+// plain text, taps on our own interactive messages (button_reply/list_reply),
+// and voice notes/audio shares (message.audio = { id, mime_type }, no inline
+// bytes — the caller downloads it separately via downloadMedia below).
+// Everything else (image, location, etc.) still comes back `null`, since no
 // tool in this system's catalog can do anything useful with those yet.
 export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | null {
   const entry = (payload as { entry?: unknown[] })?.entry?.[0] as
@@ -146,6 +154,7 @@ export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | 
         id?: string;
         type?: string;
         text?: { body?: string };
+        audio?: { id?: string; mime_type?: string };
         interactive?: {
           type?: string;
           button_reply?: { id?: string };
@@ -160,6 +169,14 @@ export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | 
     return { fromWaPhoneNumber: message.from, text: message.text.body, wamid: message.id };
   }
 
+  if (message.type === 'audio' && message.audio?.id) {
+    return {
+      fromWaPhoneNumber: message.from,
+      audio: { mediaId: message.audio.id, mimeType: message.audio.mime_type ?? 'audio/ogg' },
+      wamid: message.id,
+    };
+  }
+
   // A button/list tap's `id` is the full original quick-reply text we sent it
   // as (see sendWhatsAppQuickReplies) — feeding it back through as if the
   // customer typed it themselves keeps the orchestrator's contract (it only
@@ -170,6 +187,43 @@ export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | 
   }
 
   return null;
+}
+
+// Meta's media API is a two-step fetch: this call returns metadata + a
+// temporary signed URL (expires in minutes), then a second authenticated GET
+// against that URL gets the actual bytes — neither step is inline in the
+// webhook payload itself (message.audio only ever carries an id). Best-
+// effort, same reasoning as sendWhatsAppPayload above: a download failure
+// must never crash the webhook, just mean this one message can't be understood.
+export async function downloadMedia(mediaId: string): Promise<{ base64: string; mimeType: string } | null> {
+  const token = process.env.WHATSAPP_CLOUD_API_TOKEN;
+  if (!token) {
+    console.warn(`[whatsapp] credenciais ausentes — não foi possível baixar mídia ${mediaId}`);
+    return null;
+  }
+
+  try {
+    const metaResponse = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${mediaId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!metaResponse.ok) {
+      console.error(`[whatsapp] media metadata fetch failed (${metaResponse.status}) for ${mediaId}`);
+      return null;
+    }
+    const meta = (await metaResponse.json()) as { url?: string; mime_type?: string };
+    if (!meta.url) return null;
+
+    const fileResponse = await fetch(meta.url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!fileResponse.ok) {
+      console.error(`[whatsapp] media download failed (${fileResponse.status}) for ${mediaId}`);
+      return null;
+    }
+    const buffer = Buffer.from(await fileResponse.arrayBuffer());
+    return { base64: buffer.toString('base64'), mimeType: meta.mime_type ?? 'audio/ogg' };
+  } catch (err) {
+    console.error(`[whatsapp] media download threw for ${mediaId}`, err);
+    return null;
+  }
 }
 
 // services.ts#normalizePhone already normalizes customer-provided phone

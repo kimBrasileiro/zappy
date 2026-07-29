@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { resolveWhatsAppRoute } from '../../../../lib/bot/conversation';
 import { OrchestratorBlockedError, orchestrate } from '../../../../lib/bot/orchestrator';
+import { transcribeAudio } from '../../../../lib/ai/gemini';
 import {
+  downloadMedia,
   parseInboundMessage,
   sendWhatsAppMessage,
   sendWhatsAppQuickReplies,
@@ -10,6 +12,9 @@ import {
 
 const NEEDS_CODE_MESSAGE =
   'Oi! Esse número atende várias empresas — me diga o nome da empresa que você quer falar (ex: "quero falar com a Zappigo") que eu já te conecto.';
+
+const AUDIO_UNDERSTOOD_FAILED_MESSAGE =
+  'Não consegui entender esse áudio — pode tentar gravar de novo, ou escrever a mensagem?';
 
 // Meta re-delivers a webhook event if it doesn't get a fast 200, or on any
 // transient error on its side — dedup by message id (wamid) so a retry never
@@ -82,7 +87,31 @@ export async function POST(request: Request) {
   if (!inbound) return NextResponse.json({ ok: true });
   if (isDuplicate(inbound.wamid)) return NextResponse.json({ ok: true });
 
-  const route = await resolveWhatsAppRoute(inbound.fromWaPhoneNumber, inbound.text);
+  // Voice note: resolve it to real text BEFORE routing — resolveWhatsAppRoute
+  // itself needs actual text (Z:slug / company-name matching), so this can't
+  // wait until orchestrate() the way the rest of this handler might suggest.
+  // Its Gemini cost still ends up attributed correctly: carried forward as
+  // pretranscribedUsage below and folded into this same turn's cost tracking
+  // in orchestrator.ts, not a separate untracked spend.
+  let text = inbound.text;
+  let pretranscribedUsage: { costUsd: number; promptTokens: number; completionTokens: number } | undefined;
+  if (!text && inbound.audio) {
+    const media = await downloadMedia(inbound.audio.mediaId);
+    const transcription = media ? await transcribeAudio(media.base64, media.mimeType) : null;
+    if (!transcription) {
+      await sendWhatsAppMessage(inbound.fromWaPhoneNumber, AUDIO_UNDERSTOOD_FAILED_MESSAGE);
+      return NextResponse.json({ ok: true });
+    }
+    text = transcription.text;
+    pretranscribedUsage = {
+      costUsd: transcription.costUsd,
+      promptTokens: transcription.promptTokens,
+      completionTokens: transcription.completionTokens,
+    };
+  }
+  if (!text) return NextResponse.json({ ok: true }); // neither text nor audio resolved — nothing to act on
+
+  const route = await resolveWhatsAppRoute(inbound.fromWaPhoneNumber, text);
   if (route.needsCode) {
     await sendWhatsAppMessage(inbound.fromWaPhoneNumber, NEEDS_CODE_MESSAGE);
     return NextResponse.json({ ok: true });
@@ -103,6 +132,7 @@ export async function POST(request: Request) {
       conversationId: route.customer.phone!,
       message: route.message,
       isNewContext: route.isSwitch,
+      pretranscribedUsage,
     });
     // Empty only happens for a channel/guardrail case orchestrate() itself
     // has nothing to say about — G11 (already human-handled) now always

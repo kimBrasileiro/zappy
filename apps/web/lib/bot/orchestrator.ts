@@ -66,6 +66,14 @@ export interface OrchestrateInput {
   // they happened to type isn't guaranteed to make clear. Never set for
   // site_chat — there's no shared-number ambiguity to resolve there.
   isNewContext?: boolean;
+  // Set only when `message` came from transcribeAudio (lib/ai/gemini.ts) — a
+  // WhatsApp voice note, transcribed by api/webhooks/whatsapp/route.ts BEFORE
+  // this function ever runs (routing itself needs real text — see
+  // conversation.ts#resolveWhatsAppRoute — so transcription can't happen in
+  // here). Folded into this turn's own cost accumulators below so the real
+  // Gemini spend for that transcription call still ends up in the same
+  // Message.metadata as everything else, instead of a separate untracked cost.
+  pretranscribedUsage?: { costUsd: number; promptTokens: number; completionTokens: number };
 }
 
 export interface OrchestrateResult {
@@ -292,9 +300,11 @@ export async function* orchestrate(
   // the final 'bot' message below so the admin usage dashboard can attribute
   // real Gemini cost per company/month straight from the messages table,
   // with no separate ledger to keep in sync.
-  let totalPromptTokens = 0;
-  let totalCompletionTokens = 0;
-  let totalCostUsd = 0;
+  // Seeded from a voice note's transcription call, if this turn came from
+  // one — see OrchestrateInput.pretranscribedUsage.
+  let totalPromptTokens = input.pretranscribedUsage?.promptTokens ?? 0;
+  let totalCompletionTokens = input.pretranscribedUsage?.completionTokens ?? 0;
+  let totalCostUsd = input.pretranscribedUsage?.costUsd ?? 0;
 
   for (;;) {
     let toolCalls: ToolCall[] | null = null;

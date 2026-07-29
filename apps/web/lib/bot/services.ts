@@ -264,6 +264,47 @@ export async function checkAvailability(
       console.error('[google-calendar] freebusy failed, falling back to Zappigo-only availability', err);
     }
   }
+
+  // Self-heal stale calendar events: cancelBooking/createBooking's own
+  // deleteEvent call is best-effort (a Google API failure there must never
+  // undo an already-cancelled Zappigo booking), so it can leave an orphaned
+  // event still "confirmed" on the real calendar — which then blocks this
+  // exact slot forever, for every service, since nothing else ever retries
+  // that delete. A busy interval whose start/end line up exactly with one of
+  // this company's own cancelled-but-still-linked bookings is near-certainly
+  // that same leftover event, not a genuine external conflict (a real
+  // personal event landing on the identical minute would be an extraordinary
+  // coincidence) — retry the delete and don't let it block this slot while
+  // we're at it, instead of waiting for someone to notice. Awaited, not
+  // fire-and-forget: Cloud Run throttles CPU once the response is sent, so a
+  // detached promise here isn't reliably given the chance to finish.
+  if (calendarBusy.length > 0) {
+    const staleCandidates = await prisma.booking.findMany({
+      where: {
+        companyId,
+        status: 'cancelled',
+        googleCalendarEventId: { not: null },
+        scheduledAt: { gte: brazilDayStart, lte: brazilDayEnd },
+      },
+    });
+    const staleRetries: Promise<void>[] = [];
+    calendarBusy = calendarBusy.filter((b) => {
+      const stale = staleCandidates.find(
+        (c) =>
+          c.scheduledAt.getTime() === b.startMs &&
+          c.scheduledAt.getTime() + c.durationMinutes * 60_000 === b.endMs,
+      );
+      if (!stale) return true;
+      staleRetries.push(
+        deleteEvent(company, stale.googleCalendarEventId!).catch((err) =>
+          console.error('[google-calendar] self-heal deleteEvent retry failed', err),
+        ),
+      );
+      return false;
+    });
+    await Promise.all(staleRetries);
+  }
+
   const conflictsWithCalendar = (startMs: number, durationMin: number) => {
     const endMs = startMs + durationMin * 60_000;
     return calendarBusy.some((b) => startMs < b.endMs && b.startMs < endMs);

@@ -104,15 +104,27 @@ export async function createEvent(company: CalendarConnectedCompany, input: Crea
   return data.id;
 }
 
+// A failed delete leaves the event live on the customer's real calendar,
+// permanently blocking that slot's availability until someone notices — see
+// checkAvailability's self-heal filter in services.ts for the other half of
+// this defense. Most real-world failures here are a transient network/API
+// blip, not a lasting one, so a couple of retries clears the large majority
+// of cases before ever reaching that fallback.
+const DELETE_EVENT_ATTEMPTS = 3;
+
 export async function deleteEvent(company: CalendarConnectedCompany, eventId: string): Promise<void> {
   const accessToken = await getAccessToken(company);
-  const response = await fetch(
-    `${CALENDAR_API}/calendars/${encodeURIComponent(company.googleCalendarId as string)}/events/${encodeURIComponent(eventId)}`,
-    { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } },
-  );
-  // 410 Gone means it's already deleted (e.g. removed by hand in Calendar) —
-  // that's the outcome we wanted anyway, not a real failure.
-  if (!response.ok && response.status !== 404 && response.status !== 410) {
-    throw new Error(`google_calendar_delete_event_failed: ${response.status} ${await response.text()}`);
+  const url = `${CALENDAR_API}/calendars/${encodeURIComponent(company.googleCalendarId as string)}/events/${encodeURIComponent(eventId)}`;
+
+  let lastError: string | undefined;
+  for (let attempt = 1; attempt <= DELETE_EVENT_ATTEMPTS; attempt++) {
+    const response = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } });
+    // 410 Gone means it's already deleted (e.g. removed by hand in Calendar) —
+    // that's the outcome we wanted anyway, not a real failure.
+    if (response.ok || response.status === 404 || response.status === 410) return;
+
+    lastError = `${response.status} ${await response.text()}`;
+    if (attempt < DELETE_EVENT_ATTEMPTS) await new Promise((resolve) => setTimeout(resolve, attempt * 500));
   }
+  throw new Error(`google_calendar_delete_event_failed: ${lastError}`);
 }

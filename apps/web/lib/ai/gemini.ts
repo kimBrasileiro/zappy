@@ -199,59 +199,62 @@ export async function suggestQuickReplies(userMessage: string, botMessage: strin
   }
 }
 
-// WhatsApp voice notes arrive as audio/ogg (Opus codec) per Meta's Cloud API
-// — everything else here is defensive in case a customer instead shares a
-// pre-recorded audio file (mp3/wav/m4a) rather than recording a note live.
-function audioFormatFromMimeType(mimeType: string): string {
-  if (mimeType.includes('ogg')) return 'ogg';
-  if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return 'mp3';
-  if (mimeType.includes('wav')) return 'wav';
-  if (mimeType.includes('mp4') || mimeType.includes('m4a') || mimeType.includes('aac')) return 'mp4';
-  return 'ogg';
-}
-
 const TRANSCRIBE_SYSTEM_PROMPT =
   'Transcreva o áudio a seguir literalmente, palavra por palavra, no idioma original em que a pessoa ' +
   'está falando. Responda APENAS com a transcrição em texto puro — sem aspas, sem comentário, sem ' +
   'markdown. Se o áudio estiver incompreensível, vazio ou não tiver fala, responda exatamente: [inaudível]';
 
-// Confirmed against a real API call (not assumed): Gemini's OpenAI-compat
-// endpoint accepts audio via the standard input_audio content part — no
-// separate speech-to-text service needed, same client as everything else in
-// this file. Best-effort, same reasoning as suggestQuickReplies above: the
-// caller (api/webhooks/whatsapp/route.ts) treats a null return as "couldn't
+// Deliberately NOT the OpenAI-compat client used everywhere else in this
+// file — confirmed against a real WhatsApp-shaped request that the compat
+// layer's input_audio only accepts format "wav"/"mp3" ("Invalid audio format
+// \"ogg\"..."), while WhatsApp voice notes are always OGG/Opus. Gemini's own
+// native generateContent endpoint takes the real mime_type Meta gives us
+// as-is (confirmed working via a live test), so this one call goes straight
+// to it instead of transcoding audio server-side just to satisfy the
+// compat shim's narrower format list. thinkingConfig.thinkingBudget: 0 for
+// the same reason streamGeminiCompletion sets reasoning_effort: 'none' —
+// this is a short, mechanical task, thinking tokens would only add cost and
+// latency here.
+const GEMINI_NATIVE_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
+// Best-effort, same reasoning as suggestQuickReplies above: the caller
+// (api/webhooks/whatsapp/route.ts) treats a null return as "couldn't
 // understand this one," not a hard failure.
 export async function transcribeAudio(
   base64: string,
   mimeType: string,
 ): Promise<{ text: string; costUsd: number; promptTokens: number; completionTokens: number } | null> {
-  try {
-    const response = await getClient().chat.completions.create({
-      model: PRIMARY_GEMINI_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: TRANSCRIBE_SYSTEM_PROMPT },
-            { type: 'input_audio', input_audio: { data: base64, format: audioFormatFromMimeType(mimeType) } },
-          ],
-        },
-      ],
-      stream: false,
-      reasoning_effort: 'none',
-    } as unknown as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
 
-    const text = response.choices[0]?.message?.content?.trim();
+  try {
+    const response = await fetch(`${GEMINI_NATIVE_API_BASE}/models/${PRIMARY_GEMINI_MODEL}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: TRANSCRIBE_SYSTEM_PROMPT }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
+        generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    });
+    if (!response.ok) {
+      console.error(`[gemini] transcribeAudio failed (${response.status}): ${await response.text()}`);
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+      usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+    };
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!text || text === '[inaudível]') return null;
 
-    const usage = response.usage;
+    const promptTokens = data.usageMetadata?.promptTokenCount ?? 0;
+    const completionTokens = data.usageMetadata?.candidatesTokenCount ?? 0;
     return {
       text,
-      promptTokens: usage?.prompt_tokens ?? 0,
-      completionTokens: usage?.completion_tokens ?? 0,
-      costUsd: usage
-        ? estimateCostUsd(PRIMARY_GEMINI_MODEL, { promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens })
-        : 0,
+      promptTokens,
+      completionTokens,
+      costUsd: estimateCostUsd(PRIMARY_GEMINI_MODEL, { promptTokens, completionTokens }),
     };
   } catch (err) {
     console.error('[gemini] transcribeAudio failed', err);

@@ -1,5 +1,6 @@
 import { prisma } from '@zappigo/db';
 import { sendEmail } from './email/resend';
+import { formatBrazilDateTime } from './timezone';
 import { sendWhatsAppMessage, toWhatsAppPhone } from './whatsapp/client';
 import { SUPER_ADMIN_EMAIL } from './admin-auth';
 
@@ -25,10 +26,7 @@ export async function notifyBookingCreated(params: {
   requiresManualConfirmation: boolean;
 }): Promise<void> {
   const company = await getActiveAdminEmails(params.companyId);
-  // Matches the same (server-timezone, no explicit UTC label) formatting
-  // already used in dashboard/bookings/page.tsx — not introducing a second
-  // date-display convention on top of the existing documented timezone gap.
-  const when = params.scheduledAt.toLocaleString('pt-BR');
+  const when = formatBrazilDateTime(params.scheduledAt);
 
   if (company?.emails.length) {
     await sendEmail(
@@ -55,7 +53,7 @@ export async function notifyBookingCancelled(params: {
   const company = await getActiveAdminEmails(params.companyId);
   if (!company?.emails.length) return;
 
-  const when = params.scheduledAt.toLocaleString('pt-BR');
+  const when = formatBrazilDateTime(params.scheduledAt);
   await sendEmail(
     company.emails,
     `Agendamento cancelado — ${params.serviceName}`,

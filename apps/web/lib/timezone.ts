@@ -43,3 +43,12 @@ export function toBrazilWallClock(date: Date): {
     minute: shifted.getUTCMinutes(),
   };
 }
+
+// Renders a UTC instant as a Brazil-local date/time string — for any
+// customer- or admin-facing text (WhatsApp messages, emails). Plain
+// `date.toLocaleString('pt-BR')` depends on the server's own timezone; Cloud
+// Run's containers default to UTC, which silently rendered the raw UTC hour
+// (3h off) in production. Always pass the explicit timeZone instead.
+export function formatBrazilDateTime(date: Date): string {
+  return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+}

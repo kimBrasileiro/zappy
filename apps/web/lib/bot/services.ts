@@ -38,6 +38,21 @@ function getBusinessHours(company: { config: unknown }, service: { businessHours
   return config?.businessHours ?? DEFAULT_BUSINESS_HOURS;
 }
 
+// Every scheduledAt returned to the model — in a tool result field or
+// embedded directly in a message string — needs this alongside the raw ISO
+// value. Confirmed in production: the model reads the bare UTC 'Z' instant
+// and states THAT hour back to the customer a meaningful fraction of the
+// time (e.g. told a customer "16:00" for a booking actually stored, and
+// correctly shown on the connected Google Calendar, as 13:00 Brazil-local —
+// exactly a 3h/UTC-offset misread). The ISO field can't be removed (cancel_
+// booking needs the exact instant back to look the row up), so every call
+// site that surfaces a time to the model now also gets this pre-converted,
+// unambiguous local string to actually say out loud.
+function formatBrazilDateTime(d: Date): string {
+  const wc = toBrazilWallClock(d);
+  return `${String(wc.day).padStart(2, '0')}/${String(wc.month0 + 1).padStart(2, '0')}/${wc.year} às ${String(wc.hour).padStart(2, '0')}:${String(wc.minute).padStart(2, '0')}`;
+}
+
 function overlaps(aStart: number, aDurationMin: number, bStart: number, bDurationMin: number): boolean {
   const aEnd = aStart + aDurationMin * 60_000;
   const bEnd = bStart + bDurationMin * 60_000;
@@ -544,8 +559,16 @@ export async function createBooking(
     if (previous.length > 0 && !args.confirmReplaceExisting) {
       return {
         error: 'existing_booking_conflict',
-        existingBooking: { serviceName: service.name, scheduledAt: previous[0]!.scheduledAt.toISOString() },
-        message: `Esse cliente já tem um agendamento CONFIRMADO de ${service.name} para ${previous[0]!.scheduledAt.toISOString()} — NÃO crie o novo agendamento ainda. Lembre o cliente desse agendamento existente e pergunte explicitamente: ele quer REAGENDAR esse agendamento pro novo horário (nesse caso, chame create_booking de novo com os mesmos dados E confirmReplaceExisting: true, só depois que ele confirmar), ou prefere MANTER o agendamento antigo como está (nesse caso não chame create_booking de novo agora)? Nunca assuma a resposta.`,
+        existingBooking: {
+          serviceName: service.name,
+          scheduledAt: previous[0]!.scheduledAt.toISOString(),
+          // Say THIS to the customer, never the scheduledAt above — that one
+          // is UTC (always 3h off Brazil time) and exists only so a
+          // follow-up create_booking(confirmReplaceExisting: true) call can
+          // reference the exact instant.
+          scheduledAtLocal: formatBrazilDateTime(previous[0]!.scheduledAt),
+        },
+        message: `Esse cliente já tem um agendamento CONFIRMADO de ${service.name} para ${formatBrazilDateTime(previous[0]!.scheduledAt)} (horário de Brasília) — NÃO crie o novo agendamento ainda. Lembre o cliente desse agendamento existente, dizendo exatamente esse horário de Brasília (nunca o campo scheduledAt em UTC), e pergunte explicitamente: ele quer REAGENDAR esse agendamento pro novo horário (nesse caso, chame create_booking de novo com os mesmos dados E confirmReplaceExisting: true, só depois que ele confirmar), ou prefere MANTER o agendamento antigo como está (nesse caso não chame create_booking de novo agora)? Nunca assuma a resposta.`,
       };
     }
     if (previous.length > 0) {
@@ -553,7 +576,11 @@ export async function createBooking(
         where: { id: { in: previous.map((b) => b.id) } },
         data: { status: 'cancelled' },
       });
-      rescheduledFrom = previous[0]!.scheduledAt.toISOString();
+      // Display-only (nothing re-parses this), so it goes straight to the
+      // Brazil-local string — no reason to hand the model a UTC value here
+      // it would only have to convert and might misread, same fix as
+      // scheduledAtLocal above.
+      rescheduledFrom = formatBrazilDateTime(previous[0]!.scheduledAt);
 
       if (company && isCalendarConnected(company)) {
         for (const b of previous) {
@@ -616,6 +643,10 @@ export async function createBooking(
       bookingId: booking.id,
       serviceName: service.name,
       scheduledAt: booking.scheduledAt.toISOString(),
+      // The only one of these two fields to ever say out loud — scheduledAt
+      // above is UTC (see formatBrazilDateTime's comment near the top of
+      // this file for why that's not safe to read directly).
+      scheduledAtLocal: formatBrazilDateTime(booking.scheduledAt),
       durationMinutes: booking.durationMinutes,
       priceCents: booking.priceCents,
       requiresManualConfirmation,
@@ -663,6 +694,8 @@ export async function listBookings(companyId: string, customerId: string | null)
     bookings: bookings.map((b) => ({
       serviceName: b.service.name,
       scheduledAt: b.scheduledAt.toISOString(),
+      // Say this one, not scheduledAt (UTC) — see formatBrazilDateTime.
+      scheduledAtLocal: formatBrazilDateTime(b.scheduledAt),
       ...(b.staffName ? { staffName: b.staffName } : {}),
     })),
   };
@@ -734,6 +767,8 @@ export async function cancelBooking(
     success: true,
     serviceName: service.name,
     scheduledAt: booking.scheduledAt.toISOString(),
+    // Say this one, not scheduledAt (UTC) — see formatBrazilDateTime.
+    scheduledAtLocal: formatBrazilDateTime(booking.scheduledAt),
     // Purely informational — there's no in-chat payment collection, so the
     // bot can only tell the customer a fee may apply per the company's
     // policy, never actually charge it.

@@ -518,7 +518,17 @@ export async function MarketingHome() {
         <a href="/privacy" style={{ color: '#999' }}>{t('footer.privacy')}</a>
       </footer>
 
+      {/* key={locale}: a plain prop change on an already-loaded <script
+          src> does NOT make Next.js re-execute it — the widget only reads
+          data-lang once, synchronously, at initial script execution.
+          Changing the key forces React to remove and re-insert the tag
+          (see widget/src/index.ts's window.__zappigoWidgetInstance
+          teardown for how the previous instance gets cleaned up instead
+          of a second widget stacking on the page), so a locale switch on
+          this page actually reaches the widget instead of needing a full
+          reload. Same pattern app/page.tsx already used (key={companySlug}). */}
       <Script
+        key={locale}
         src="/widget.js"
         strategy="afterInteractive"
         data-company="zappigo"

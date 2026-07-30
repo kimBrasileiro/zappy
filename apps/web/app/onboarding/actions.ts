@@ -6,6 +6,7 @@ import { prisma } from '@zappigo/db';
 import { auth } from '../../lib/auth';
 import { generateUniqueSlug } from '../../lib/slug';
 import { createDefaultFaqs } from '../../lib/default-faqs';
+import { getDeploymentDefaultLocale } from '../../i18n/default-locale';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../lib/stripe/client';
 import { TERMS_VERSION } from '../../lib/legal';
 import { notifyNewSignup } from '../../lib/notifications';
@@ -40,7 +41,14 @@ export async function completeOnboarding(
 
   const slug = await generateUniqueSlug(companyName);
   const company = await prisma.company.create({
-    data: { name: companyName, slug, plan: stripeEnabled ? plan : 'starter', status: 'active' },
+    data: {
+      name: companyName,
+      slug,
+      plan: stripeEnabled ? plan : 'starter',
+      status: 'active',
+      // See signup/actions.ts's identical field for why.
+      config: { language: getDeploymentDefaultLocale() },
+    },
   });
 
   await prisma.user.update({

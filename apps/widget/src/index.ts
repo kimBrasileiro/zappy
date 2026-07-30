@@ -37,8 +37,22 @@ const config: WidgetConfig = script
       companyName: 'unknown',
     };
 
+// A property on `window`, not a module-scoped variable — a plain <script
+// src> re-executing (see marketing-home.tsx's `key={locale}` on the
+// Script tag, which forces exactly that on a locale switch) runs in a
+// fresh top-level scope each time, so a module-scoped variable wouldn't
+// carry over from the previous execution the way `window` does. Lets the
+// new execution find and tear down the previous instance instead of
+// stacking a second widget on the page.
+declare global {
+  interface Window {
+    __zappigoWidgetInstance?: ChatWidget;
+  }
+}
+
 function mount(): void {
-  new ChatWidget(config);
+  window.__zappigoWidgetInstance?.destroy();
+  window.__zappigoWidgetInstance = new ChatWidget(config);
 }
 
 if (document.body) {

@@ -6,6 +6,7 @@ import { prisma } from '@zappigo/db';
 import { auth } from '../../../lib/auth';
 import { generateUniqueSlug } from '../../../lib/slug';
 import { createDefaultFaqs } from '../../../lib/default-faqs';
+import { getDeploymentDefaultLocale } from '../../../i18n/default-locale';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../../lib/stripe/client';
 import { TERMS_VERSION } from '../../../lib/legal';
 import { validatePassword } from '../../../lib/password';
@@ -50,7 +51,17 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
 
   const slug = await generateUniqueSlug(companyName);
   const company = await prisma.company.create({
-    data: { name: companyName, slug, plan: stripeEnabled ? plan : 'starter', status: 'active' },
+    data: {
+      name: companyName,
+      slug,
+      plan: stripeEnabled ? plan : 'starter',
+      status: 'active',
+      // This deployment's own default language (see i18n/default-locale.ts)
+      // — e.g. a company signing up on a Spanish-default deployment gets a
+      // bot that replies in Spanish to its own customers by default,
+      // matching the Spanish default FAQs createDefaultFaqs seeds below.
+      config: { language: getDeploymentDefaultLocale() },
+    },
   });
 
   let signUpResult: Awaited<ReturnType<typeof auth.api.signUpEmail>>;

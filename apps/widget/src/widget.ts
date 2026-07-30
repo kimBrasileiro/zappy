@@ -61,6 +61,7 @@ export class ChatWidget {
   private inputEl!: HTMLInputElement;
   private sendBtnEl!: HTMLButtonElement;
   private strings: ReturnType<typeof widgetStrings>;
+  private hostEl!: HTMLDivElement;
 
   constructor(config: WidgetConfig) {
     this.config = config;
@@ -68,6 +69,7 @@ export class ChatWidget {
     this.state = loadState(config.companyId);
 
     const host = document.createElement('div');
+    this.hostEl = host;
     document.body.appendChild(host);
     this.shadow = host.attachShadow({ mode: 'open' });
 
@@ -180,6 +182,16 @@ export class ChatWidget {
     if (this.pollTimer === null) return;
     window.clearInterval(this.pollTimer);
     this.pollTimer = null;
+  }
+
+  // Called by index.ts when the install <script> re-executes (e.g. the
+  // marketing site's own locale switcher forcing a fresh mount to pick up
+  // a new data-lang) — without this, the previous instance's poll
+  // interval would keep running forever in the background even after its
+  // DOM is gone, and a second widget would stack on top of it.
+  public destroy(): void {
+    this.stopPolling();
+    this.hostEl.remove();
   }
 
   // Picks up agent replies sent from the dashboard — the only kind of

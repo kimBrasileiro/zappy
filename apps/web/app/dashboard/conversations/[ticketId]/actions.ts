@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
-import { sendWhatsAppMessage } from '../../../../lib/whatsapp/client';
+import { sendWhatsAppMessage, toWhatsAppPhone } from '../../../../lib/whatsapp/client';
 
 export interface ReplyState {
   error?: string;
@@ -19,7 +19,7 @@ export async function sendAgentReply(
   const content = String(formData.get('content') ?? '').trim();
   if (!content) return { error: 'Escreve uma mensagem antes de enviar.' };
 
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, include: { customer: true } });
   if (!ticket || ticket.companyId !== companyId) {
     // Same spirit as the orchestrator's G7 — never act on a ticket that
     // doesn't belong to the caller's company, even if the id lookup alone
@@ -33,10 +33,14 @@ export async function sendAgentReply(
 
   // WhatsApp tickets have no client polling the DB for new messages like the
   // widget does — without an explicit send here, an agent's reply from the
-  // Inbox would just sit in Postgres and never reach the customer.
-  if (ticket.channel === 'whatsapp' && ticket.customerId) {
-    const route = await prisma.whatsAppRoute.findFirst({ where: { customerId: ticket.customerId } });
-    if (route) await sendWhatsAppMessage(route.waPhoneNumber, content);
+  // Inbox would just sit in Postgres and never reach the customer. Send
+  // straight to the ticket's own customer.phone — NOT via WhatsAppRoute,
+  // which only resolves which company an INBOUND message on the shared
+  // number belongs to and gets overwritten whenever this same phone number
+  // messages a different company. This ticket's company/customer are
+  // already certain, so there's nothing to resolve.
+  if (ticket.channel === 'whatsapp' && ticket.customer?.phone) {
+    await sendWhatsAppMessage(toWhatsAppPhone(ticket.customer.phone), content);
   }
 
   if (ticket.status === 'bot_active' || ticket.status === 'waiting_human') {

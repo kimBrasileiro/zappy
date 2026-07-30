@@ -22,12 +22,13 @@ export async function streamBotReply(
   companyId: string,
   conversationId: string,
   message: string,
+  language: string | undefined,
   onChunk: (text: string) => void,
 ): Promise<StreamBotReplyResult> {
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ companyId, conversationId, message }),
+    body: JSON.stringify({ companyId, conversationId, message, ...(language ? { language } : {}) }),
   });
 
   if (!response.ok || !response.body) {

@@ -1,0 +1,221 @@
+{
+  "localeSwitcher": {
+    "pt": "PT",
+    "es": "ES",
+    "en": "EN"
+  },
+  "dashboard": {
+    "nav": {
+      "home": "Inicio",
+      "inbox": "Bandeja de entrada",
+      "conversations": "Conversaciones",
+      "faq": "Preguntas frecuentes",
+      "quickReplies": "Respuestas rápidas",
+      "services": "Servicios",
+      "bookings": "Citas",
+      "installation": "Instalación",
+      "integrations": "Integraciones",
+      "support": "Soporte"
+    },
+    "impersonation": {
+      "viewingAs": "Viendo como <b>{name}</b>.",
+      "backToMyCompany": "Volver a mi empresa"
+    },
+    "home": {
+      "title": "Resumen",
+      "subtitle": "Resumen de tu empresa, actualizado ahora.",
+      "profileCardTitle": "Nombre y descripción de la empresa",
+      "profileCardBody": "El nombre aparece para el cliente en el botón de WhatsApp del widget (ej: \"Hola, quiero agendar servicios con {name}\") y es como el bot se identifica en las conversaciones. La descripción aparece en tu página pública (mira abajo).",
+      "checklistTitle": "Primeros pasos",
+      "checklist": {
+        "service": "Registra tu primer servicio",
+        "faq": "Registra tus primeras preguntas frecuentes",
+        "quickReplies": "Crea respuestas rápidas para dudas comunes",
+        "widget": "Instala el widget en la web de tu empresa",
+        "description": "Escribe una descripción de tu empresa"
+      },
+      "whatsappCardTitle": "Enlace directo de WhatsApp",
+      "whatsappShareIntro": "Comparte este enlace (redes sociales, bio, código QR) para que los clientes inicien una conversación ya identificando tu empresa ante el bot:",
+      "whatsappNoLinkIntro": "¿Sin enlace clicable (de viva voz, tarjeta de presentación)? Pasa el número y pide al cliente que mande esta frase exacta:",
+      "whatsappGreeting": "Hola, quiero agendar servicios con {name}",
+      "whatsappSharedNote": "El número es compartido entre varias empresas — la frase exacta (con el nombre de tu empresa) es lo que garantiza que el asistente identifique que es contigo.",
+      "whatsappNotConfigured": "El número compartido de WhatsApp de Zappigo aún no se ha configurado en esta instancia — en cuanto lo esté, el enlace aparece aquí automáticamente. Mira más en {link}.",
+      "homepageCardTitle": "Página pública de tu empresa",
+      "homepageCardBody": "¿No tienes web? Usa este enlace listo — con el chat y el WhatsApp de tu empresa — en Google Maps, en la bio de Instagram o donde quieras difundirlo.",
+      "sectionAttendance": "Atención al cliente",
+      "statWaitingHuman": "Esperando humano",
+      "statInProgress": "En curso",
+      "statTotalConversations": "Total de conversaciones",
+      "sectionBookings": "Citas",
+      "statNext7Days": "En los próximos 7 días",
+      "statTotalConfirmed": "Total confirmadas",
+      "sectionContent": "Contenido registrado",
+      "statActiveServices": "Servicios activos",
+      "statActiveFaqs": "Preguntas frecuentes registradas",
+      "statQuickReplies": "Respuestas rápidas",
+      "sectionRecent": "Conversaciones recientes",
+      "tableCustomer": "Cliente",
+      "tableChannel": "Canal",
+      "tableStatus": "Estado",
+      "tableUpdatedAt": "Actualizado el",
+      "anonymous": "Anónimo",
+      "noConversations": "Todavía no hay conversaciones."
+    }
+  },
+  "marketing": {
+    "nav": {
+      "resources": "Funciones",
+      "pricing": "Precios",
+      "howItWorks": "Cómo funciona",
+      "faq": "Preguntas frecuentes",
+      "login": "Iniciar sesión",
+      "start": "Empezar ahora"
+    },
+    "hero": {
+      "badgeFree": "Gratis — Sistema de citas por WhatsApp con IA",
+      "badgePaid": "Sistema de citas por WhatsApp con IA",
+      "titleFree": "Sistema de citas por WhatsApp gratis, con IA para tu negocio",
+      "titlePaid": "Sistema de citas por WhatsApp con IA para tu negocio",
+      "descriptionFree": "Zappigo es un sistema de citas por WhatsApp con IA, gratis durante el lanzamiento, que conversa con tus clientes todo el día en tu web y en WhatsApp, agenda citas de verdad y da soporte respondiendo las preguntas frecuentes de tu empresa, sin que nadie de tu equipo escriba nada. Cuando no sepa algo, un humano toma la conversación, sin vueltas.",
+      "descriptionPaid": "Zappigo es un sistema de citas por WhatsApp con IA que conversa con tus clientes todo el día en tu web y en WhatsApp, agenda citas de verdad y da soporte respondiendo las preguntas frecuentes de tu empresa, sin que nadie de tu equipo escriba nada. Cuando no sepa algo, un humano toma la conversación, sin vueltas.",
+      "start": "Empezar ahora",
+      "talkToAssistant": "Hablar con el asistente"
+    },
+    "trustItems": [
+      "Gratis, sin tarjeta de crédito",
+      "Listo en minutos, sin necesitar equipo técnico",
+      "WhatsApp ya incluido, sin número aparte que comprar"
+    ],
+    "features": {
+      "sectionTitle": "Todo lo que tu atención al cliente necesita",
+      "items": [
+        { "icon": "whatsapp", "title": "WhatsApp incluido", "body": "Ya viene con número compartido de Zappigo." },
+        { "icon": "chat", "title": "Chat en tu web 24h", "body": "Un asistente que responde a cualquier hora." },
+        { "icon": "calendar", "title": "Citas automáticas", "body": "El bot agenda horarios directo con el cliente." },
+        { "icon": "question", "title": "Preguntas frecuentes automáticas", "body": "Respuestas listas para lo que más te preguntan." },
+        { "icon": "headset", "title": "Transferencia a un humano", "body": "Cuando el bot no sabe, alguien del equipo toma la conversación." }
+      ]
+    },
+    "pricing": {
+      "sectionTitleFree": "Lanzamiento",
+      "sectionTitle": "Planes",
+      "sectionSubtitleFree": "Estamos en lanzamiento — usa Zappigo sin costo, sin tarjeta, con el WhatsApp compartido de la plataforma.",
+      "sectionSubtitle": "Empieza con el plan básico y habla con nosotros si necesitas algo a medida.",
+      "mostPopular": "Más popular",
+      "free": {
+        "badge": "Lanzamiento",
+        "title": "Zappigo Gratis",
+        "price": "R$ 0",
+        "period": "/mes",
+        "items": [
+          "Panel de citas, conversaciones y preguntas frecuentes",
+          "Widget de chat en tu web",
+          "Número de WhatsApp compartido de Zappigo",
+          "Transferencia a atención humana"
+        ],
+        "cta": "Empezar gratis"
+      },
+      "plans": [
+        {
+          "name": "Básico",
+          "price": "R$ 197",
+          "period": "/mes",
+          "items": [
+            "Panel de citas, conversaciones y preguntas frecuentes",
+            "Widget de chat en tu web",
+            "Número de WhatsApp compartido de Zappigo",
+            "Transferencia a atención humana"
+          ],
+          "cta": "Empezar ahora"
+        },
+        {
+          "name": "WhatsApp propio",
+          "price": "R$ 397",
+          "period": "/mes",
+          "items": [
+            "Todo lo del plan Básico",
+            "Número de WhatsApp exclusivo de tu empresa",
+            "Onboarding asistido por nuestro equipo"
+          ],
+          "cta": "Empezar ahora"
+        },
+        {
+          "name": "Integración con tu sistema",
+          "price": "R$ 997",
+          "period": "/mes",
+          "items": [
+            "Todo lo del plan Básico",
+            "Conecta con el sistema de citas que ya usas",
+            "Sin cambiar de herramienta tu equipo"
+          ],
+          "cta": "Empezar ahora"
+        }
+      ]
+    },
+    "howItWorks": {
+      "sectionTitle": "Cómo funciona",
+      "sectionSubtitle": "Sin instalación complicada, sin depender de un equipo técnico.",
+      "steps": [
+        { "title": "Registra tu empresa", "body": "Lleva menos de dos minutos, sin trámites y sin necesitar equipo técnico." },
+        { "title": "Configura servicios y preguntas frecuentes", "body": "Registra los servicios que ofreces y las dudas que tus clientes ya te hacen todos los días." },
+        { "title": "Empieza a atender en tu web y en WhatsApp", "body": "Activa el chat en tu web y usa el número de WhatsApp ya incluido — listo para hablar con tus clientes." }
+      ]
+    },
+    "mission": {
+      "title": "Nuestra misión",
+      "body": "Poner la atención al cliente con inteligencia artificial al alcance de cualquier negocio."
+    },
+    "vision": {
+      "title": "Nuestra visión",
+      "body": "Ser una referencia en tecnología y servicios para empresas."
+    },
+    "faq": {
+      "sectionTitle": "Preguntas frecuentes",
+      "sectionSubtitle": "O pregúntale directo al asistente en la esquina de la pantalla — responde con base en estas mismas preguntas frecuentes.",
+      "items": [
+        {
+          "question": "¿Qué es Zappigo?",
+          "answer": "Zappigo es una plataforma de citas, soporte y atención al cliente con IA que conversa con tus clientes en tu web y en WhatsApp, agenda horarios automáticamente y responde dudas usando las preguntas frecuentes de tu empresa — con un humano de tu equipo pudiendo tomar la conversación en cualquier momento."
+        },
+        {
+          "question": "¿Cuánto cuesta?",
+          "answerFree": "¡Nada! Estamos en el período de lanzamiento y Zappigo es gratis para todos, incluyendo el widget de chat para tu web y un número de WhatsApp compartido. Sin tarjeta, sin trampas.",
+          "answerPaid": "El plan básico cuesta R$ 197/mes e incluye el widget de chat para tu web y un número de WhatsApp compartido de Zappigo. Si quieres un número de WhatsApp exclusivo de tu empresa, el plan cuesta R$ 397/mes; si quieres conectar con un sistema de citas que ya usas, cuesta R$ 997/mes. Cada plan ya incluye todo lo del básico. Todos los planes tienen 7 días gratis de prueba."
+        },
+        {
+          "question": "¿Cómo funcionan las citas automáticas?",
+          "answer": "Registras tus servicios (nombre, duración, precio) en el panel, y el bot verifica los horarios libres y confirma la cita directamente con el cliente, respetando el horario de atención de tu empresa — sin que nadie de tu equipo tenga que escribir nada."
+        },
+        {
+          "question": "¿Cómo funciona el soporte por WhatsApp?",
+          "answer": "Toda empresa que se suscribe a Zappigo obtiene acceso a un número de WhatsApp compartido — el mismo bot que atiende en tu web también atiende ahí, identificando automáticamente con qué empresa quiere hablar el cliente."
+        },
+        {
+          "question": "¿Y si el bot no sabe responder?",
+          "answer": "El bot transfiere la conversación a un agente humano automáticamente, y aparece en la pestaña Bandeja de entrada de tu panel para que alguien de tu equipo responda."
+        },
+        {
+          "question": "¿Cómo lo instalo en mi web?",
+          "answer": "Después de suscribirte, pegas una sola línea de <script> en tu web, sin tocar nada más, y el chat ya aparece funcionando."
+        },
+        {
+          "question": "¿Zappigo es un sistema de citas por WhatsApp?",
+          "answer": "Sí — es exactamente eso: un sistema de citas por WhatsApp con IA. No necesitas registrar tu propio número comercial para empezar (algo que suele tardar días o semanas de aprobación en otras plataformas); Zappigo ya viene con un número de WhatsApp compartido listo para usar."
+        }
+      ],
+      "jsonLdDescriptionFree": "Sistema de citas por WhatsApp gratis, con IA — atención automática en la web y en WhatsApp, con preguntas frecuentes automáticas y transferencia a atención humana.",
+      "jsonLdDescriptionPaid": "Sistema de citas por WhatsApp con IA — atención automática en la web y en WhatsApp, con preguntas frecuentes automáticas y transferencia a atención humana.",
+      "jsonLdFreeOfferName": "Gratis (lanzamiento)"
+    },
+    "chatCta": {
+      "title": "Habla con nuestro asistente ahora",
+      "body": "Haz clic en el botón de chat en la esquina inferior derecha — responde dudas sobre Zappigo y ya agenda una demostración con nuestro equipo, en la propia web o por WhatsApp."
+    },
+    "footer": {
+      "login": "Iniciar sesión",
+      "signup": "Crear cuenta",
+      "terms": "Términos de uso",
+      "privacy": "Privacidad"
+    }
+  }
+}

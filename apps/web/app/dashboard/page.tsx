@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 import { RefreshButton } from './refresh-button';
@@ -7,6 +8,7 @@ import { CompanyProfileForm } from './company-name-form';
 
 export default async function DashboardHomePage() {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.home');
 
   const now = new Date();
   const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60_000);
@@ -43,11 +45,11 @@ export default async function DashboardHomePage() {
   // companies that are already up and running.
   const hasDomain = (company?.allowedDomains.length ?? 0) > 0;
   const checklist = [
-    { label: 'Cadastre seu primeiro serviço', href: '/dashboard/services', done: activeServices > 0 },
-    { label: 'Cadastre suas primeiras FAQs', href: '/dashboard/faq', done: activeFaqs > 0 },
-    { label: 'Crie Quick Replies para respostas comuns', href: '/dashboard/quick-replies', done: quickReplies > 0 },
-    { label: 'Instale o widget no site da sua empresa', href: '/dashboard/instalacao', done: hasDomain },
-    { label: 'Escreva uma descrição da sua empresa', href: '/dashboard', done: !!companyDescription },
+    { label: t('checklist.service'), href: '/dashboard/services', done: activeServices > 0 },
+    { label: t('checklist.faq'), href: '/dashboard/faq', done: activeFaqs > 0 },
+    { label: t('checklist.quickReplies'), href: '/dashboard/quick-replies', done: quickReplies > 0 },
+    { label: t('checklist.widget'), href: '/dashboard/instalacao', done: hasDomain },
+    { label: t('checklist.description'), href: '/dashboard', done: !!companyDescription },
   ];
   const allStepsDone = checklist.every((step) => step.done);
 
@@ -56,10 +58,9 @@ export default async function DashboardHomePage() {
 
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
   const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
+  const whatsappGreeting = t('whatsappGreeting', { name: company?.name ?? '' });
   const waLink =
-    whatsappDigits && company
-      ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de agendar serviços com ${company.name}`)}`
-      : null;
+    whatsappDigits && company ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(whatsappGreeting)}` : null;
   // (11) 97831-4841 instead of the raw +5511978314841 — same reasoning as
   // dashboard/instalacao/page.tsx's copy of this same helper: readable out
   // loud or on a printed sign, not just clickable.
@@ -72,27 +73,25 @@ export default async function DashboardHomePage() {
     <>
       <div className="dash-toolbar">
         <div>
-          <h1 className="dash-h1">Visão geral</h1>
+          <h1 className="dash-h1">{t('title')}</h1>
           <p className="dash-subtitle" style={{ marginBottom: 0 }}>
-            Resumo da sua empresa, atualizado agora.
+            {t('subtitle')}
           </p>
         </div>
         <RefreshButton />
       </div>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Nome e descrição da empresa</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('profileCardTitle')}</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-          O nome aparece pro cliente no botão de WhatsApp do widget (ex: "Olá, gostaria de
-          agendar serviços com {company?.name}") e é como o bot se identifica nas conversas. A
-          descrição aparece na sua página pública (veja abaixo).
+          {t('profileCardBody', { name: company?.name ?? '' })}
         </p>
         <CompanyProfileForm defaultName={company?.name ?? ''} defaultDescription={companyDescription} />
       </div>
 
       {!allStepsDone && (
         <div className="dash-card">
-          <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 12 }}>Primeiros passos</h3>
+          <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 12 }}>{t('checklistTitle')}</h3>
           <ul className="dash-checklist">
             {checklist.map((step) => (
               <li key={step.href} className="dash-checklist-item">
@@ -113,96 +112,84 @@ export default async function DashboardHomePage() {
       )}
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Link direto do WhatsApp</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('whatsappCardTitle')}</h3>
         {waLink ? (
           <>
-            <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-              Compartilhe este link (redes sociais, bio, QR code) pra clientes iniciarem uma
-              conversa já identificando sua empresa pro bot:
-            </p>
+            <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>{t('whatsappShareIntro')}</p>
             <CopySnippet snippet={waLink} />
 
-            <p style={{ color: '#666', fontSize: 13, margin: '16px 0 6px' }}>
-              Sem link clicável (de viva voz, cartão de visita)? Passe o número e peça pro
-              cliente mandar essa frase exata:
-            </p>
+            <p style={{ color: '#666', fontSize: 13, margin: '16px 0 6px' }}>{t('whatsappNoLinkIntro')}</p>
             <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 6px' }}>{whatsappNumberLabel}</p>
-            <CopySnippet snippet={`Olá, gostaria de agendar serviços com ${company?.name ?? ''}`} />
-            <p style={{ color: '#999', fontSize: 12, margin: '8px 0 0' }}>
-              O número é compartilhado entre várias empresas — a frase exata (com o nome da sua
-              empresa) é o que garante que o assistente identifique que é com você.
-            </p>
+            <CopySnippet snippet={whatsappGreeting} />
+            <p style={{ color: '#999', fontSize: 12, margin: '8px 0 0' }}>{t('whatsappSharedNote')}</p>
           </>
         ) : (
           <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
-            O número compartilhado de WhatsApp da Zappigo ainda não foi configurado nesta
-            instância — assim que estiver, o link aparece aqui automaticamente. Veja mais em{' '}
-            <Link href="/dashboard/instalacao">Instalação</Link>.
+            {t.rich('whatsappNotConfigured', {
+              link: (chunks) => <Link href="/dashboard/instalacao">{chunks}</Link>,
+            })}
           </p>
         )}
       </div>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Página pública da sua empresa</h3>
-        <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-          Não tem site? Use esse link pronto — com o chat e o WhatsApp da sua empresa — no Google
-          Maps, na bio do Instagram ou onde quiser divulgar.
-        </p>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('homepageCardTitle')}</h3>
+        <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>{t('homepageCardBody')}</p>
         {homepageLink && <CopySnippet snippet={homepageLink} />}
       </div>
 
-      <div className="dash-section-title">Atendimento</div>
+      <div className="dash-section-title">{t('sectionAttendance')}</div>
       <div className="dash-stat-grid">
         <Link href="/dashboard/inbox" className="dash-stat-tile dash-stat-tile-link dash-stat-amber">
           <span className="dash-stat-value">{waitingHuman}</span>
-          <span className="dash-stat-label">Aguardando humano</span>
+          <span className="dash-stat-label">{t('statWaitingHuman')}</span>
         </Link>
         <div className="dash-stat-tile dash-stat-green">
           <span className="dash-stat-value">{inProgress}</span>
-          <span className="dash-stat-label">Em andamento</span>
+          <span className="dash-stat-label">{t('statInProgress')}</span>
         </div>
         <Link href="/dashboard/conversations" className="dash-stat-tile dash-stat-tile-link">
           <span className="dash-stat-value">{totalConversations}</span>
-          <span className="dash-stat-label">Total de conversas</span>
+          <span className="dash-stat-label">{t('statTotalConversations')}</span>
         </Link>
       </div>
 
-      <div className="dash-section-title">Agendamentos</div>
+      <div className="dash-section-title">{t('sectionBookings')}</div>
       <div className="dash-stat-grid">
         <Link href="/dashboard/bookings" className="dash-stat-tile dash-stat-tile-link">
           <span className="dash-stat-value">{upcomingBookings}</span>
-          <span className="dash-stat-label">Nos próximos 7 dias</span>
+          <span className="dash-stat-label">{t('statNext7Days')}</span>
         </Link>
         <Link href="/dashboard/bookings" className="dash-stat-tile dash-stat-tile-link">
           <span className="dash-stat-value">{totalConfirmedBookings}</span>
-          <span className="dash-stat-label">Total confirmados</span>
+          <span className="dash-stat-label">{t('statTotalConfirmed')}</span>
         </Link>
       </div>
 
-      <div className="dash-section-title">Conteúdo cadastrado</div>
+      <div className="dash-section-title">{t('sectionContent')}</div>
       <div className="dash-stat-grid">
         <Link href="/dashboard/services" className="dash-stat-tile dash-stat-tile-link">
           <span className="dash-stat-value">{activeServices}</span>
-          <span className="dash-stat-label">Serviços ativos</span>
+          <span className="dash-stat-label">{t('statActiveServices')}</span>
         </Link>
         <Link href="/dashboard/faq" className="dash-stat-tile dash-stat-tile-link">
           <span className="dash-stat-value">{activeFaqs}</span>
-          <span className="dash-stat-label">FAQs cadastradas</span>
+          <span className="dash-stat-label">{t('statActiveFaqs')}</span>
         </Link>
         <Link href="/dashboard/quick-replies" className="dash-stat-tile dash-stat-tile-link">
           <span className="dash-stat-value">{quickReplies}</span>
-          <span className="dash-stat-label">Quick Replies</span>
+          <span className="dash-stat-label">{t('statQuickReplies')}</span>
         </Link>
       </div>
 
-      <div className="dash-section-title">Conversas recentes</div>
+      <div className="dash-section-title">{t('sectionRecent')}</div>
       <table className="dash-table">
         <thead>
           <tr>
-            <th>Cliente</th>
-            <th>Canal</th>
-            <th>Status</th>
-            <th>Atualizado em</th>
+            <th>{t('tableCustomer')}</th>
+            <th>{t('tableChannel')}</th>
+            <th>{t('tableStatus')}</th>
+            <th>{t('tableUpdatedAt')}</th>
           </tr>
         </thead>
         <tbody>
@@ -210,7 +197,7 @@ export default async function DashboardHomePage() {
             <tr key={ticket.id}>
               <td>
                 <Link href={`/dashboard/conversations/${ticket.id}`}>
-                  {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? 'Anônimo'}
+                  {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? t('anonymous')}
                 </Link>
               </td>
               <td>{ticket.channel}</td>
@@ -223,7 +210,7 @@ export default async function DashboardHomePage() {
           {recentTickets.length === 0 && (
             <tr>
               <td colSpan={4} style={{ color: '#999' }}>
-                Nenhuma conversa ainda.
+                {t('noConversations')}
               </td>
             </tr>
           )}

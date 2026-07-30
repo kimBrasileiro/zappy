@@ -17,6 +17,7 @@
     "better-auth": "^1.6.23",
     "date-fns": "^4.4.0",
     "next": "^14.2.18",
+    "next-intl": "^4.13.4",
     "openai": "^4.77.0",
     "react": "^18.3.1",
     "react-big-calendar": "^1.20.0",

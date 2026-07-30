@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { OrchestratorBlockedError, orchestrate, type OrchestrateResult } from '../../../lib/bot/orchestrator';
+import { isSupportedLocale } from '../../../i18n/locales';
 
 // The widget is designed to be embedded on arbitrary third-party domains
 // (single <script> tag, no changes to the host site), so this endpoint is
@@ -17,7 +18,7 @@ export function OPTIONS() {
 }
 
 export async function POST(request: Request) {
-  let body: { companyId?: string; conversationId?: string; message?: string };
+  let body: { companyId?: string; conversationId?: string; message?: string; language?: string };
   try {
     body = await request.json();
   } catch {
@@ -25,6 +26,12 @@ export async function POST(request: Request) {
   }
 
   const { companyId, conversationId, message } = body;
+  // Only the Zappigo marketing site's own widget sends this (see
+  // orchestrator.ts's OrchestrateInput.language) — validated against the
+  // fixed supported-locale list rather than trusted as free text, since
+  // this endpoint is public/cross-origin and the value flows straight into
+  // the model's system prompt.
+  const language = isSupportedLocale(body.language) ? body.language : undefined;
   if (!companyId || !conversationId || !message?.trim()) {
     return NextResponse.json(
       { error: 'missing_fields' },
@@ -43,6 +50,7 @@ export async function POST(request: Request) {
       conversationId,
       message,
       origin: request.headers.get('origin'),
+      language,
     });
     // Force guardrail checks (which run before the first `yield`) to execute
     // now, so a blocked/invalid request returns a clean JSON error instead of

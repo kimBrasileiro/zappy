@@ -1,0 +1,221 @@
+{
+  "localeSwitcher": {
+    "pt": "PT",
+    "es": "ES",
+    "en": "EN"
+  },
+  "dashboard": {
+    "nav": {
+      "home": "Início",
+      "inbox": "Inbox",
+      "conversations": "Conversas",
+      "faq": "FAQ",
+      "quickReplies": "Quick Replies",
+      "services": "Serviços",
+      "bookings": "Agendamentos",
+      "installation": "Instalação",
+      "integrations": "Integrações",
+      "support": "Suporte"
+    },
+    "impersonation": {
+      "viewingAs": "Visualizando como <b>{name}</b>.",
+      "backToMyCompany": "Voltar pra minha empresa"
+    },
+    "home": {
+      "title": "Visão geral",
+      "subtitle": "Resumo da sua empresa, atualizado agora.",
+      "profileCardTitle": "Nome e descrição da empresa",
+      "profileCardBody": "O nome aparece pro cliente no botão de WhatsApp do widget (ex: \"Olá, gostaria de agendar serviços com {name}\") e é como o bot se identifica nas conversas. A descrição aparece na sua página pública (veja abaixo).",
+      "checklistTitle": "Primeiros passos",
+      "checklist": {
+        "service": "Cadastre seu primeiro serviço",
+        "faq": "Cadastre suas primeiras FAQs",
+        "quickReplies": "Crie Quick Replies para respostas comuns",
+        "widget": "Instale o widget no site da sua empresa",
+        "description": "Escreva uma descrição da sua empresa"
+      },
+      "whatsappCardTitle": "Link direto do WhatsApp",
+      "whatsappShareIntro": "Compartilhe este link (redes sociais, bio, QR code) pra clientes iniciarem uma conversa já identificando sua empresa pro bot:",
+      "whatsappNoLinkIntro": "Sem link clicável (de viva voz, cartão de visita)? Passe o número e peça pro cliente mandar essa frase exata:",
+      "whatsappGreeting": "Olá, gostaria de agendar serviços com {name}",
+      "whatsappSharedNote": "O número é compartilhado entre várias empresas — a frase exata (com o nome da sua empresa) é o que garante que o assistente identifique que é com você.",
+      "whatsappNotConfigured": "O número compartilhado de WhatsApp da Zappigo ainda não foi configurado nesta instância — assim que estiver, o link aparece aqui automaticamente. Veja mais em {link}.",
+      "homepageCardTitle": "Página pública da sua empresa",
+      "homepageCardBody": "Não tem site? Use esse link pronto — com o chat e o WhatsApp da sua empresa — no Google Maps, na bio do Instagram ou onde quiser divulgar.",
+      "sectionAttendance": "Atendimento",
+      "statWaitingHuman": "Aguardando humano",
+      "statInProgress": "Em andamento",
+      "statTotalConversations": "Total de conversas",
+      "sectionBookings": "Agendamentos",
+      "statNext7Days": "Nos próximos 7 dias",
+      "statTotalConfirmed": "Total confirmados",
+      "sectionContent": "Conteúdo cadastrado",
+      "statActiveServices": "Serviços ativos",
+      "statActiveFaqs": "FAQs cadastradas",
+      "statQuickReplies": "Quick Replies",
+      "sectionRecent": "Conversas recentes",
+      "tableCustomer": "Cliente",
+      "tableChannel": "Canal",
+      "tableStatus": "Status",
+      "tableUpdatedAt": "Atualizado em",
+      "anonymous": "Anônimo",
+      "noConversations": "Nenhuma conversa ainda."
+    }
+  },
+  "marketing": {
+    "nav": {
+      "resources": "Recursos",
+      "pricing": "Preços",
+      "howItWorks": "Como funciona",
+      "faq": "FAQ",
+      "login": "Entrar",
+      "start": "Começar agora"
+    },
+    "hero": {
+      "badgeFree": "Grátis — Sistema de agendamento por WhatsApp com IA",
+      "badgePaid": "Sistema de agendamento por WhatsApp com IA",
+      "titleFree": "Sistema de agendamento por WhatsApp grátis, com IA para o seu negócio",
+      "titlePaid": "Sistema de agendamento por WhatsApp com IA para o seu negócio",
+      "descriptionFree": "A Zappigo é um sistema de agendamento por WhatsApp com IA, grátis no lançamento, que conversa com seus clientes o dia todo no site e no WhatsApp, marca horários de verdade e presta atendimento e suporte respondendo o FAQ da sua empresa, sem ninguém do seu time digitar nada. Quando ela não souber algo, um humano assume a conversa, sem enrolação.",
+      "descriptionPaid": "A Zappigo é um sistema de agendamento por WhatsApp com IA que conversa com seus clientes o dia todo no site e no WhatsApp, marca horários de verdade e presta atendimento e suporte respondendo o FAQ da sua empresa, sem ninguém do seu time digitar nada. Quando ela não souber algo, um humano assume a conversa, sem enrolação.",
+      "start": "Começar agora",
+      "talkToAssistant": "Conversar com o assistente"
+    },
+    "trustItems": [
+      "Grátis, sem cartão de crédito",
+      "No ar em minutos, sem precisar de time técnico",
+      "WhatsApp já incluso, sem número separado pra comprar"
+    ],
+    "features": {
+      "sectionTitle": "Tudo que seu atendimento precisa",
+      "items": [
+        { "icon": "whatsapp", "title": "WhatsApp incluso", "body": "Já vem com número compartilhado da Zappigo." },
+        { "icon": "chat", "title": "Chat no site 24h", "body": "Um assistente que responde a qualquer hora." },
+        { "icon": "calendar", "title": "Agendamento automático", "body": "O bot marca horários direto com o cliente." },
+        { "icon": "question", "title": "FAQ automático", "body": "Respostas prontas pro que você mais responde." },
+        { "icon": "headset", "title": "Handoff pra humano", "body": "Quando o bot não sabe, alguém do time assume." }
+      ]
+    },
+    "pricing": {
+      "sectionTitleFree": "Lançamento",
+      "sectionTitle": "Planos",
+      "sectionSubtitleFree": "Estamos em lançamento — use a Zappigo sem custo, sem cartão, com o WhatsApp compartilhado da plataforma.",
+      "sectionSubtitle": "Comece com o plano básico e fale com a gente se precisar de algo sob medida.",
+      "mostPopular": "Mais popular",
+      "free": {
+        "badge": "Lançamento",
+        "title": "Zappigo Grátis",
+        "price": "R$ 0",
+        "period": "/mês",
+        "items": [
+          "Dashboard de agendamentos, conversas e FAQ",
+          "Widget de chat no seu site",
+          "Número de WhatsApp compartilhado da Zappigo",
+          "Handoff pra atendimento humano"
+        ],
+        "cta": "Começar grátis"
+      },
+      "plans": [
+        {
+          "name": "Básico",
+          "price": "R$ 197",
+          "period": "/mês",
+          "items": [
+            "Dashboard de agendamentos, conversas e FAQ",
+            "Widget de chat no seu site",
+            "Número de WhatsApp compartilhado da Zappigo",
+            "Handoff pra atendimento humano"
+          ],
+          "cta": "Começar agora"
+        },
+        {
+          "name": "WhatsApp próprio",
+          "price": "R$ 397",
+          "period": "/mês",
+          "items": [
+            "Tudo do plano Básico",
+            "Número de WhatsApp exclusivo da sua empresa",
+            "Onboarding assistido pelo nosso time"
+          ],
+          "cta": "Começar agora"
+        },
+        {
+          "name": "Integração com seu sistema",
+          "price": "R$ 997",
+          "period": "/mês",
+          "items": [
+            "Tudo do plano Básico",
+            "Conecta com o sistema de agendamento que você já usa",
+            "Sem trocar de ferramenta pro seu time"
+          ],
+          "cta": "Começar agora"
+        }
+      ]
+    },
+    "howItWorks": {
+      "sectionTitle": "Como funciona",
+      "sectionSubtitle": "Sem instalação complicada, sem depender de time técnico.",
+      "steps": [
+        { "title": "Cadastre sua empresa", "body": "Leva menos de dois minutos, sem burocracia e sem precisar de time técnico." },
+        { "title": "Configure atendimentos e perguntas frequentes", "body": "Cadastre os serviços que você oferece e as dúvidas que os clientes já te fazem todo dia." },
+        { "title": "Comece a atender no site e no WhatsApp", "body": "Ative o chat no seu site e use o número de WhatsApp já incluso — pronto pra conversar com seus clientes." }
+      ]
+    },
+    "mission": {
+      "title": "Nossa missão",
+      "body": "Disponibilizar atendimento via inteligência artificial para qualquer negócio em todo o Brasil."
+    },
+    "vision": {
+      "title": "Nossa visão",
+      "body": "Ser uma referência em tecnologia e serviços para empresas."
+    },
+    "faq": {
+      "sectionTitle": "Perguntas frequentes",
+      "sectionSubtitle": "Ou pergunte direto pro assistente no canto da tela — ele responde com base nesse mesmo FAQ.",
+      "items": [
+        {
+          "question": "O que é a Zappigo?",
+          "answer": "A Zappigo é uma plataforma de agendamento, suporte e atendimento via IA que conversa com seus clientes no seu site e no WhatsApp, marca horários automaticamente e tira dúvidas respondendo o FAQ da sua empresa — com um humano do seu time podendo assumir a conversa a qualquer momento."
+        },
+        {
+          "question": "Quanto custa?",
+          "answerFree": "Nada! Estamos no período de lançamento e a Zappigo está gratuita pra todo mundo, incluindo o widget de chat pro seu site e um número de WhatsApp compartilhado. Sem cartão, sem pegadinha.",
+          "answerPaid": "O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappigo. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar."
+        },
+        {
+          "question": "Como funciona o agendamento automático?",
+          "answer": "Você cadastra seus serviços (nome, duração, preço) no dashboard, e o bot verifica os horários livres e confirma o agendamento direto com o cliente, respeitando o horário de funcionamento da sua empresa — sem ninguém do seu time precisar digitar nada."
+        },
+        {
+          "question": "Como funciona o suporte via WhatsApp?",
+          "answer": "Toda empresa que assina a Zappigo já sai com acesso a um número de WhatsApp compartilhado — o mesmo bot que atende no seu site também atende por lá, identificando automaticamente qual empresa o cliente quer falar."
+        },
+        {
+          "question": "E se o bot não souber responder?",
+          "answer": "O bot encaminha a conversa pra um atendente humano automaticamente, e ela aparece na aba Inbox do seu dashboard pra alguém do seu time responder."
+        },
+        {
+          "question": "Como instalo no meu site?",
+          "answer": "Depois de assinar, você cola uma única linha de <script> no seu site, sem mexer em mais nada, e o chat já aparece funcionando."
+        },
+        {
+          "question": "A Zappigo é um sistema de agendamento por WhatsApp?",
+          "answer": "Sim — é exatamente isso: um sistema de agendamento por WhatsApp com IA. Você não precisa registrar seu próprio número comercial pra começar (que costuma levar dias ou semanas de aprovação em outras plataformas); a Zappigo já sai com um número de WhatsApp compartilhado pronto pra uso."
+        }
+      ],
+      "jsonLdDescriptionFree": "Sistema de agendamento por WhatsApp grátis, com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.",
+      "jsonLdDescriptionPaid": "Sistema de agendamento por WhatsApp com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.",
+      "jsonLdFreeOfferName": "Grátis (lançamento)"
+    },
+    "chatCta": {
+      "title": "Fale com o nosso assistente agora",
+      "body": "Clique no botão de chat no canto inferior direito — ele responde dúvidas sobre a Zappigo e já agenda uma demonstração com o nosso time, no próprio site ou pelo WhatsApp."
+    },
+    "footer": {
+      "login": "Entrar",
+      "signup": "Criar conta",
+      "terms": "Termos de Uso",
+      "privacy": "Privacidade"
+    }
+  }
+}

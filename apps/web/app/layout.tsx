@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Script from 'next/script';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import { FREE_TIER_MODE } from '../lib/stripe/plans';
 
 // Real Measurement ID for the "Zappigo" GA4 property — see privacy/page.tsx's
@@ -57,6 +59,13 @@ export const metadata: Metadata = {
     'FAQ automático',
     'chat com IA para empresas',
   ],
+  // Deliberately not locale-aware even though the site itself now is
+  // (LocaleSwitcher, NEXT_LOCALE cookie, see i18n/request.ts): this static
+  // `metadata` export can't read the request-scoped locale cookie the way
+  // an async generateMetadata() could, and crawlers/link-preview bots never
+  // carry that cookie in the first place — they'd always see the pt-BR
+  // version regardless, so localizing it here would have no real SEO/
+  // share-preview effect, only added complexity.
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
@@ -75,11 +84,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+// en/es aren't real regional variants (en-US, es-ES) — this app has no
+// region-specific behavior tied to the locale beyond the three flat
+// dictionaries in messages/, so the bare language code is the honest tag.
+const HTML_LANG: Record<string, string> = { pt: 'pt-BR', es: 'es', en: 'en' };
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="pt-BR">
+    <html lang={HTML_LANG[locale] ?? 'pt-BR'}>
       <body>
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <Script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
         <Script id="ga4-init" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];

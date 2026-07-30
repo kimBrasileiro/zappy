@@ -1,11 +1,17 @@
 import Script from 'next/script';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { FREE_TIER_MODE } from '../lib/stripe/plans';
+import { LocaleSwitcher } from './locale-switcher';
 
 const BRAND_COLOR = '#2563eb';
 
 // Overrides the widget's generic defaults (apps/widget/src/quick-replies.ts
 // assumes a service business booking appointments) — same 3 flows
-// (FAQ/booking/escalação), reworded for a SaaS sales chat.
+// (FAQ/booking/escalação), reworded for a SaaS sales chat. Kept in
+// Portuguese regardless of site locale on purpose: the widget's own reply
+// language still follows data-lang (see below), but these are literal
+// strings the customer clicks, which only matters for the pt-BR default
+// company config today — revisit if quick-replies ever need translating too.
 const ZAPPIGO_QUICK_REPLIES = [
   'Quais planos e preços vocês têm?',
   'Quero agendar uma demo',
@@ -22,117 +28,13 @@ const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.or
 const ICON_TARGET = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>`;
 const ICON_EYE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>`;
 
-const FEATURES = [
-  { icon: ICON_WHATSAPP, title: 'WhatsApp incluso', body: 'Já vem com número compartilhado da Zappigo.' },
-  { icon: ICON_CHAT, title: 'Chat no site 24h', body: 'Um assistente que responde a qualquer hora.' },
-  { icon: ICON_CALENDAR, title: 'Agendamento automático', body: 'O bot marca horários direto com o cliente.' },
-  { icon: ICON_QUESTION, title: 'FAQ automático', body: 'Respostas prontas pro que você mais responde.' },
-  { icon: ICON_HEADSET, title: 'Handoff pra humano', body: 'Quando o bot não sabe, alguém do time assume.' },
-];
-
-const PRICING = [
-  {
-    name: 'Básico',
-    price: 'R$ 197',
-    period: '/mês',
-    highlight: true,
-    items: [
-      'Dashboard de agendamentos, conversas e FAQ',
-      'Widget de chat no seu site',
-      'Número de WhatsApp compartilhado da Zappigo',
-      'Handoff pra atendimento humano',
-    ],
-    cta: { label: 'Começar agora', href: '/signup' },
-  },
-  {
-    name: 'WhatsApp próprio',
-    price: 'R$ 397',
-    period: '/mês',
-    highlight: false,
-    items: [
-      'Tudo do plano Básico',
-      'Número de WhatsApp exclusivo da sua empresa',
-      'Onboarding assistido pelo nosso time',
-    ],
-    cta: { label: 'Começar agora', href: '/signup' },
-  },
-  {
-    name: 'Integração com seu sistema',
-    price: 'R$ 997',
-    period: '/mês',
-    highlight: false,
-    items: [
-      'Tudo do plano Básico',
-      'Conecta com o sistema de agendamento que você já usa',
-      'Sem trocar de ferramenta pro seu time',
-    ],
-    cta: { label: 'Começar agora', href: '/signup' },
-  },
-];
-
-const STEPS = [
-  { title: 'Cadastre sua empresa', body: 'Leva menos de dois minutos, sem burocracia e sem precisar de time técnico.' },
-  {
-    title: 'Configure atendimentos e perguntas frequentes',
-    body: 'Cadastre os serviços que você oferece e as dúvidas que os clientes já te fazem todo dia.',
-  },
-  {
-    title: 'Comece a atender no site e no WhatsApp',
-    body: 'Ative o chat no seu site e use o número de WhatsApp já incluso — pronto pra conversar com seus clientes.',
-  },
-];
-
-const TRUST_ITEMS = [
-  'Grátis, sem cartão de crédito',
-  'No ar em minutos, sem precisar de time técnico',
-  'WhatsApp já incluso, sem número separado pra comprar',
-];
-
-// Mirrors packages/db/prisma/schema/migrations/20260722010000_seed_zappigo_company
-// (the Zappigo company's own cadastrado FAQ, used by the live chat below) —
-// kept as separate static copy here on purpose, same reasoning as PRICING
-// above: this is crawlable page content for search engines, not something
-// that should depend on a database round-trip on every page load.
-const FAQ_ITEMS = [
-  {
-    question: 'O que é a Zappigo?',
-    answer:
-      'A Zappigo é uma plataforma de agendamento, suporte e atendimento via IA que conversa com seus clientes no seu site e no WhatsApp, marca horários automaticamente e tira dúvidas respondendo o FAQ da sua empresa — com um humano do seu time podendo assumir a conversa a qualquer momento.',
-  },
-  {
-    question: 'Quanto custa?',
-    // FREE_TIER_MODE (lib/stripe/plans.ts) — real pricing returns here the
-    // moment that flips back to false; the paid-tier copy is preserved in
-    // git history rather than deleted.
-    answer: FREE_TIER_MODE
-      ? 'Nada! Estamos no período de lançamento e a Zappigo está gratuita pra todo mundo, incluindo o widget de chat pro seu site e um número de WhatsApp compartilhado. Sem cartão, sem pegadinha.'
-      : 'O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappigo. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar.',
-  },
-  {
-    question: 'Como funciona o agendamento automático?',
-    answer:
-      'Você cadastra seus serviços (nome, duração, preço) no dashboard, e o bot verifica os horários livres e confirma o agendamento direto com o cliente, respeitando o horário de funcionamento da sua empresa — sem ninguém do seu time precisar digitar nada.',
-  },
-  {
-    question: 'Como funciona o suporte via WhatsApp?',
-    answer:
-      'Toda empresa que assina a Zappigo já sai com acesso a um número de WhatsApp compartilhado — o mesmo bot que atende no seu site também atende por lá, identificando automaticamente qual empresa o cliente quer falar.',
-  },
-  {
-    question: 'E se o bot não souber responder?',
-    answer:
-      'O bot encaminha a conversa pra um atendente humano automaticamente, e ela aparece na aba Inbox do seu dashboard pra alguém do seu time responder.',
-  },
-  {
-    question: 'Como instalo no meu site?',
-    answer: 'Depois de assinar, você cola uma única linha de <script> no seu site, sem mexer em mais nada, e o chat já aparece funcionando.',
-  },
-  {
-    question: 'A Zappigo é um sistema de agendamento por WhatsApp?',
-    answer:
-      'Sim — é exatamente isso: um sistema de agendamento por WhatsApp com IA. Você não precisa registrar seu próprio número comercial pra começar (que costuma levar dias ou semanas de aprovação em outras plataformas); a Zappigo já sai com um número de WhatsApp compartilhado pronto pra uso.',
-  },
-];
+const FEATURE_ICONS: Record<string, string> = {
+  whatsapp: ICON_WHATSAPP,
+  chat: ICON_CHAT,
+  calendar: ICON_CALENDAR,
+  question: ICON_QUESTION,
+  headset: ICON_HEADSET,
+};
 
 function Button({
   href,
@@ -167,44 +69,53 @@ function Button({
 // Rich-result eligibility for "sistema de agendamento" / "suporte via
 // whatsapp" / pricing searches (SoftwareApplication+offers) and for the FAQ
 // section above (FAQPage) — escaping `<` defensively even though every
-// input here is our own static copy, not user data, so a stray `</script>`
+// input here is our own copy, not user data, so a stray `</script>`
 // substring can never prematurely close this tag.
 function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
 
-const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'Zappigo',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Web',
-  description: FREE_TIER_MODE
-    ? 'Sistema de agendamento por WhatsApp grátis, com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.'
-    : 'Sistema de agendamento por WhatsApp com IA — atendimento automático no site e no WhatsApp, com FAQ automático e handoff pra atendimento humano.',
-  offers: FREE_TIER_MODE
-    ? [{ '@type': 'Offer', name: 'Grátis (lançamento)', price: '0', priceCurrency: 'BRL', url: '/signup' }]
-    : PRICING.map((plan) => ({
-        '@type': 'Offer',
-        name: plan.name,
-        price: plan.price.replace(/\D/g, ''),
-        priceCurrency: 'BRL',
-        url: plan.cta.href,
-      })),
-});
-
-const FAQ_JSON_LD = jsonLd({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQ_ITEMS.map((item) => ({
-    '@type': 'Question',
-    name: item.question,
-    acceptedAnswer: { '@type': 'Answer', text: item.answer },
-  })),
-});
-
 export async function MarketingHome() {
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
+  const locale = await getLocale();
+  const t = await getTranslations('marketing');
+
+  const trustItems = t.raw('trustItems') as string[];
+  const features = t.raw('features.items') as { icon: string; title: string; body: string }[];
+  const plans = t.raw('pricing.plans') as { name: string; price: string; period: string; items: string[]; cta: string }[];
+  const freePlanItems = t.raw('pricing.free.items') as string[];
+  const steps = t.raw('howItWorks.steps') as { title: string; body: string }[];
+  const faqItems = t.raw('faq.items') as { question: string; answer: string; answerFree?: string; answerPaid?: string }[];
+
+  const planHrefs = ['/signup', '/signup', '/signup'];
+
+  const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Zappigo',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    description: FREE_TIER_MODE ? t('faq.jsonLdDescriptionFree') : t('faq.jsonLdDescriptionPaid'),
+    offers: FREE_TIER_MODE
+      ? [{ '@type': 'Offer', name: t('faq.jsonLdFreeOfferName'), price: '0', priceCurrency: 'BRL', url: '/signup' }]
+      : plans.map((plan, i) => ({
+          '@type': 'Offer',
+          name: plan.name,
+          price: plan.price.replace(/\D/g, ''),
+          priceCurrency: 'BRL',
+          url: planHrefs[i],
+        })),
+  });
+
+  const FAQ_JSON_LD = jsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answerFree !== undefined ? (FREE_TIER_MODE ? item.answerFree : item.answerPaid) : item.answer },
+    })),
+  });
 
   return (
     <main
@@ -262,23 +173,24 @@ export async function MarketingHome() {
         <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
           <div className="marketing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
             <a href="#recursos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-              Recursos
+              {t('nav.resources')}
             </a>
             <a href="#precos" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-              Preços
+              {t('nav.pricing')}
             </a>
             <a href="#como-funciona" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-              Como funciona
+              {t('nav.howItWorks')}
             </a>
             <a href="#faq" style={{ color: '#555', fontSize: 13.5, textDecoration: 'none' }}>
-              FAQ
+              {t('nav.faq')}
             </a>
           </div>
+          <LocaleSwitcher />
           <div className="marketing-header-buttons" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <Button href="/login" variant="secondary">
-              Entrar
+              {t('nav.login')}
             </Button>
-            <Button href="/signup">Começar agora</Button>
+            <Button href="/signup">{t('nav.start')}</Button>
           </div>
         </nav>
       </header>
@@ -303,23 +215,18 @@ export async function MarketingHome() {
             marginBottom: 20,
           }}
         >
-          {FREE_TIER_MODE ? 'Grátis — Sistema de agendamento por WhatsApp com IA' : 'Sistema de agendamento por WhatsApp com IA'}
+          {FREE_TIER_MODE ? t('hero.badgeFree') : t('hero.badgePaid')}
         </span>
         <h1 style={{ fontSize: 42, lineHeight: 1.2, margin: '0 auto 16px', maxWidth: 720 }}>
-          {FREE_TIER_MODE
-            ? 'Sistema de agendamento por WhatsApp grátis, com IA para o seu negócio'
-            : 'Sistema de agendamento por WhatsApp com IA para o seu negócio'}
+          {FREE_TIER_MODE ? t('hero.titleFree') : t('hero.titlePaid')}
         </h1>
         <p style={{ fontSize: 16.5, color: '#555', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
-          A Zappigo é um sistema de agendamento por WhatsApp com IA{FREE_TIER_MODE ? ', grátis no lançamento,' : ''} que
-          conversa com seus clientes o dia todo no site e no WhatsApp, marca horários de verdade e
-          presta atendimento e suporte respondendo o FAQ da sua empresa, sem ninguém do seu time
-          digitar nada. Quando ela não souber algo, um humano assume a conversa, sem enrolação.
+          {FREE_TIER_MODE ? t('hero.descriptionFree') : t('hero.descriptionPaid')}
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 36 }}>
-          <Button href="/signup">Começar agora</Button>
+          <Button href="/signup">{t('hero.start')}</Button>
           <Button href="#assistente" variant="secondary">
-            Conversar com o assistente
+            {t('hero.talkToAssistant')}
           </Button>
         </div>
         <div
@@ -332,7 +239,7 @@ export async function MarketingHome() {
             margin: '0 auto',
           }}
         >
-          {TRUST_ITEMS.map((item) => (
+          {trustItems.map((item) => (
             <span
               key={item}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#555' }}
@@ -349,7 +256,7 @@ export async function MarketingHome() {
 
       {/* Features */}
       <section id="recursos" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 48 }}>Tudo que seu atendimento precisa</h2>
+        <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 48 }}>{t('features.sectionTitle')}</h2>
         <div
           style={{
             display: 'grid',
@@ -357,7 +264,7 @@ export async function MarketingHome() {
             gap: 20,
           }}
         >
-          {FEATURES.map((f) => (
+          {features.map((f) => (
             <div
               key={f.title}
               style={{
@@ -382,7 +289,7 @@ export async function MarketingHome() {
                   marginBottom: 14,
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: f.icon.replace('width="24"', 'width="26"').replace('height="24"', 'height="26"'),
+                  __html: (FEATURE_ICONS[f.icon] ?? ICON_CHAT).replace('width="24"', 'width="26"').replace('height="24"', 'height="26"'),
                 }}
               />
               <h3 style={{ fontSize: 15, margin: '0 0 6px' }}>{f.title}</h3>
@@ -396,12 +303,10 @@ export async function MarketingHome() {
       <section id="precos" style={{ padding: '80px 24px', background: '#f8f9fb' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>
-            {FREE_TIER_MODE ? 'Lançamento ' : 'Planos'}
+            {FREE_TIER_MODE ? t('pricing.sectionTitleFree') : t('pricing.sectionTitle')}
           </h2>
           <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 48 }}>
-            {FREE_TIER_MODE
-              ? 'Estamos em lançamento — use a Zappigo sem custo, sem cartão, com o WhatsApp compartilhado da plataforma.'
-              : 'Comece com o plano básico e fale com a gente se precisar de algo sob medida.'}
+            {FREE_TIER_MODE ? t('pricing.sectionSubtitleFree') : t('pricing.sectionSubtitle')}
           </p>
 
           {FREE_TIER_MODE ? (
@@ -429,20 +334,15 @@ export async function MarketingHome() {
                   marginBottom: 14,
                 }}
               >
-                Lançamento
+                {t('pricing.free.badge')}
               </span>
-              <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>Zappigo Grátis</h3>
+              <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>{t('pricing.free.title')}</h3>
               <div style={{ marginBottom: 20 }}>
-                <span style={{ fontSize: 30, fontWeight: 700 }}>R$ 0</span>
-                <span style={{ fontSize: 13.5, color: '#888' }}> /mês</span>
+                <span style={{ fontSize: 30, fontWeight: 700 }}>{t('pricing.free.price')}</span>
+                <span style={{ fontSize: 13.5, color: '#888' }}> {t('pricing.free.period')}</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', textAlign: 'left' }}>
-                {[
-                  'Dashboard de agendamentos, conversas e FAQ',
-                  'Widget de chat no seu site',
-                  'Número de WhatsApp compartilhado da Zappigo',
-                  'Handoff pra atendimento humano',
-                ].map((item) => (
+                {freePlanItems.map((item) => (
                   <li key={item} style={{ display: 'flex', gap: 8, fontSize: 13.5, color: '#444', marginBottom: 10 }}>
                     <span
                       style={{ color: BRAND_COLOR, flexShrink: 0, width: 16, height: 16, marginTop: 1 }}
@@ -453,7 +353,7 @@ export async function MarketingHome() {
                 ))}
               </ul>
               <Button href="/signup" variant="primary">
-                Começar grátis
+                {t('pricing.free.cta')}
               </Button>
             </div>
           ) : (
@@ -465,7 +365,7 @@ export async function MarketingHome() {
               alignItems: 'stretch',
             }}
           >
-            {PRICING.map((plan) => (
+            {plans.map((plan, i) => (
               <div
                 key={plan.name}
                 style={{
@@ -478,7 +378,7 @@ export async function MarketingHome() {
                   flexDirection: 'column',
                 }}
               >
-                {plan.highlight && (
+                {i === 0 && (
                   <span
                     style={{
                       alignSelf: 'flex-start',
@@ -491,12 +391,12 @@ export async function MarketingHome() {
                       marginBottom: 14,
                     }}
                   >
-                    Mais popular
+                    {t('pricing.mostPopular')}
                   </span>
                 )}
                 <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>{plan.name}</h3>
                 <div style={{ marginBottom: 20 }}>
-                  <span style={{ fontSize: plan.highlight ? 30 : 20, fontWeight: 700 }}>{plan.price}</span>
+                  <span style={{ fontSize: i === 0 ? 30 : 20, fontWeight: 700 }}>{plan.price}</span>
                   <span style={{ fontSize: 13.5, color: '#888' }}>{plan.period}</span>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', flex: 1 }}>
@@ -513,8 +413,8 @@ export async function MarketingHome() {
                     </li>
                   ))}
                 </ul>
-                <Button href={plan.cta.href} variant="primary">
-                  {plan.cta.label}
+                <Button href={planHrefs[i] ?? '/signup'} variant="primary">
+                  {plan.cta}
                 </Button>
               </div>
             ))}
@@ -525,9 +425,9 @@ export async function MarketingHome() {
 
       {/* Como funciona */}
       <section id="como-funciona" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>Como funciona</h2>
+        <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>{t('howItWorks.sectionTitle')}</h2>
         <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 48 }}>
-          Sem instalação complicada, sem depender de time técnico.
+          {t('howItWorks.sectionSubtitle')}
         </p>
         <div
           style={{
@@ -536,7 +436,7 @@ export async function MarketingHome() {
             gap: 28,
           }}
         >
-          {STEPS.map((step, i) => (
+          {steps.map((step, i) => (
             <div key={step.title}>
               <span
                 style={{
@@ -598,10 +498,8 @@ export async function MarketingHome() {
                 __html: ICON_TARGET.replace('width="24"', 'width="19"').replace('height="24"', 'height="19"'),
               }}
             />
-            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>Nossa missão</h3>
-            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>
-              Disponibilizar atendimento via inteligência artificial para qualquer negócio em todo o Brasil.
-            </p>
+            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>{t('mission.title')}</h3>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>{t('mission.body')}</p>
           </div>
           <div
             style={{
@@ -628,24 +526,22 @@ export async function MarketingHome() {
                 __html: ICON_EYE.replace('width="24"', 'width="19"').replace('height="24"', 'height="19"'),
               }}
             />
-            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>Nossa visão</h3>
-            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>
-              Ser uma referência em tecnologia e serviços para empresas.
-            </p>
+            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>{t('vision.title')}</h3>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>{t('vision.body')}</p>
           </div>
         </div>
       </section>
 
       {/* FAQ — real, crawlable Q&A content (also emitted as FAQPage JSON-LD
-          below), not just something buried inside the live chat widget. */}
+          above), not just something buried inside the live chat widget. */}
       <section id="faq" style={{ padding: '80px 24px', background: '#f8f9fb' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>Perguntas frequentes</h2>
+          <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 12 }}>{t('faq.sectionTitle')}</h2>
           <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 40 }}>
-            Ou pergunte direto pro assistente no canto da tela — ele responde com base nesse mesmo FAQ.
+            {t('faq.sectionSubtitle')}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {FAQ_ITEMS.map((item) => (
+            {faqItems.map((item) => (
               <details
                 key={item.question}
                 style={{
@@ -656,7 +552,9 @@ export async function MarketingHome() {
                 }}
               >
                 <summary style={{ fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>{item.question}</summary>
-                <p style={{ fontSize: 13.5, color: '#555', lineHeight: 1.7, margin: '10px 0 0' }}>{item.answer}</p>
+                <p style={{ fontSize: 13.5, color: '#555', lineHeight: 1.7, margin: '10px 0 0' }}>
+                  {item.answerFree !== undefined ? (FREE_TIER_MODE ? item.answerFree : item.answerPaid) : item.answer}
+                </p>
               </details>
             ))}
           </div>
@@ -686,11 +584,8 @@ export async function MarketingHome() {
           }}
           dangerouslySetInnerHTML={{ __html: ICON_WHATSAPP }}
         />
-        <h2 style={{ fontSize: 26, margin: '0 0 12px' }}>Fale com o nosso assistente agora</h2>
-        <p style={{ fontSize: 14.5, opacity: 0.9, maxWidth: 480, margin: '0 auto' }}>
-          Clique no botão de chat no canto inferior direito — ele responde dúvidas sobre a Zappigo e
-          já agenda uma demonstração com o nosso time, no próprio site ou pelo WhatsApp.
-        </p>
+        <h2 style={{ fontSize: 26, margin: '0 0 12px' }}>{t('chatCta.title')}</h2>
+        <p style={{ fontSize: 14.5, opacity: 0.9, maxWidth: 480, margin: '0 auto' }}>{t('chatCta.body')}</p>
       </section>
 
       <footer
@@ -702,10 +597,10 @@ export async function MarketingHome() {
           borderTop: '1px solid rgba(0,0,0,0.06)',
         }}
       >
-        © {new Date().getFullYear()} Zappigo · <a href="/login" style={{ color: '#999' }}>Entrar</a> ·{' '}
-        <a href="/signup" style={{ color: '#999' }}>Criar conta</a> ·{' '}
-        <a href="/terms" style={{ color: '#999' }}>Termos de Uso</a> ·{' '}
-        <a href="/privacy" style={{ color: '#999' }}>Privacidade</a>
+        © {new Date().getFullYear()} Zappigo · <a href="/login" style={{ color: '#999' }}>{t('footer.login')}</a> ·{' '}
+        <a href="/signup" style={{ color: '#999' }}>{t('footer.signup')}</a> ·{' '}
+        <a href="/terms" style={{ color: '#999' }}>{t('footer.terms')}</a> ·{' '}
+        <a href="/privacy" style={{ color: '#999' }}>{t('footer.privacy')}</a>
       </footer>
 
       <Script
@@ -716,6 +611,7 @@ export async function MarketingHome() {
         data-color={BRAND_COLOR}
         data-whatsapp={whatsappNumber}
         data-quick-replies={ZAPPIGO_QUICK_REPLIES}
+        data-lang={locale}
       />
     </main>
   );

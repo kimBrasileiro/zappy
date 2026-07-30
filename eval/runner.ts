@@ -47,6 +47,12 @@ interface ScenarioTurn {
 interface Scenario {
   name: string;
   description: string;
+  // Per-request language override (see OrchestrateInput.language) — applied
+  // to every turn in this scenario, simulating a visitor whose locale was
+  // fixed for their whole session (the marketing site's own switcher, the
+  // only real caller of this today). Omitted = today's default behavior,
+  // Company.config.language (or 'pt-BR' if that's unset too).
+  language?: string;
   service?: {
     name: string;
     durationMinutes: number;
@@ -218,6 +224,7 @@ async function runScenario(scenario: Scenario): Promise<{ name: string; passed: 
             channel: 'site_chat',
             conversationId: CONVERSATION_ID,
             message: turn.message,
+            language: scenario.language,
           });
           allPassed = false;
           details.push(`✗ turn ${i + 1}: expected blocked (${turn.expectBlocked}) but orchestrate() completed normally`);
@@ -238,6 +245,7 @@ async function runScenario(scenario: Scenario): Promise<{ name: string; passed: 
         channel: 'site_chat',
         conversationId: CONVERSATION_ID,
         message: turn.message,
+        language: scenario.language,
       });
       transcriptLines.push(`Assistente: ${result.text}`);
       if (result.quickReplies.length) {

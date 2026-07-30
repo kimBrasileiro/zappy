@@ -2,27 +2,29 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-const LINKS = [
-  { href: '/dashboard', label: 'Início' },
-  { href: '/dashboard/inbox', label: 'Inbox' },
-  { href: '/dashboard/conversations', label: 'Conversas' },
-  { href: '/dashboard/faq', label: 'FAQ' },
-  { href: '/dashboard/quick-replies', label: 'Quick Replies' },
-  { href: '/dashboard/services', label: 'Serviços' },
-  { href: '/dashboard/bookings', label: 'Agendamentos' },
-  { href: '/dashboard/instalacao', label: 'Instalação' },
-  { href: '/dashboard/integracoes', label: 'Integrações' },
-  // { href: '/dashboard/billing', label: 'Assinatura' },
-  { href: '/dashboard/suporte', label: 'Suporte' },
-];
+import { useTranslations } from 'next-intl';
 
 export function NavLinks() {
   const pathname = usePathname();
+  const t = useTranslations('dashboard.nav');
+
+  const links = [
+    { href: '/dashboard', label: t('home') },
+    { href: '/dashboard/inbox', label: t('inbox') },
+    { href: '/dashboard/conversations', label: t('conversations') },
+    { href: '/dashboard/faq', label: t('faq') },
+    { href: '/dashboard/quick-replies', label: t('quickReplies') },
+    { href: '/dashboard/services', label: t('services') },
+    { href: '/dashboard/bookings', label: t('bookings') },
+    { href: '/dashboard/instalacao', label: t('installation') },
+    { href: '/dashboard/integracoes', label: t('integrations') },
+    // { href: '/dashboard/billing', label: 'Assinatura' },
+    { href: '/dashboard/suporte', label: t('support') },
+  ];
 
   return (
     <>
-      {LINKS.map((link) => {
+      {links.map((link) => {
         // '/dashboard' itself must be an exact match — otherwise its
         // startsWith(`${href}/`) check would match every other dashboard
         // route too (they all start with "/dashboard/").

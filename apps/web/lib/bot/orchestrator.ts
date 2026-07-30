@@ -74,6 +74,13 @@ export interface OrchestrateInput {
   // Gemini spend for that transcription call still ends up in the same
   // Message.metadata as everything else, instead of a separate untracked cost.
   pretranscribedUsage?: { costUsd: number; promptTokens: number; completionTokens: number };
+  // Per-request override of the bot's reply language, wins over
+  // guardrails.ts#resolveLanguage's company-level default when present.
+  // Only ever set by the Zappigo marketing site's own widget today (see
+  // api/chat/route.ts), following its own locale switcher — every other
+  // company's bot keeps using its own configured Company.config.language
+  // for its own customers, completely unaffected by this.
+  language?: string;
 }
 
 export interface OrchestrateResult {
@@ -104,6 +111,22 @@ const STILL_ESCALATED_MESSAGE =
 // otherwise guess — the three things a customer actually comes to this bot
 // for, always available at the very start of a conversation.
 const NEW_CONTEXT_QUICK_REPLIES = ['Agendar um serviço', 'Cancelar um agendamento', 'Tenho uma dúvida'];
+
+// resolveLanguage/OrchestrateInput.language hand back a bare code ('en',
+// 'es', 'pt', or a company's own 'pt-BR' default) — telling the model
+// "Responda sempre em en" turned out to be a noticeably weaker instruction
+// than naming the language properly (caught by eval/scenarios/language.json's
+// language_override_english flaking in a full suite run while
+// language_override_spanish never did), especially with every other
+// instruction around it written in Portuguese. Falls back to the raw code
+// for anything not in this map (e.g. a company that set a custom value
+// directly in the DB) rather than breaking.
+const LANGUAGE_NAMES: Record<string, string> = {
+  pt: 'português',
+  'pt-BR': 'português',
+  es: 'espanhol',
+  en: 'inglês',
+};
 
 // G4b — see guardrails.ts#checkMessageQuota and lib/bot/quota.ts for the
 // actual limit. Deliberately reads as "we're busy," never "you hit a limit"
@@ -220,7 +243,8 @@ export async function* orchestrate(
   let ticketMetadata: TicketMetadata = (ticket.metadata as TicketMetadata | null) ?? {};
   const bookingDraft = ticketMetadata.bookingDraft;
 
-  const language = resolveLanguage(company);
+  const languageCode = input.language ?? resolveLanguage(company);
+  const language = LANGUAGE_NAMES[languageCode] ?? languageCode;
   const config = company.config as { botName?: string; extraInstructions?: string } | null;
   const botName = config?.botName ?? 'Assistente';
   // Brazil-local "today" (see lib/timezone.ts) — consistent with
@@ -234,7 +258,7 @@ export async function* orchestrate(
   const todayWeekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' }).format(today);
   const systemPrompt = [
     `Você é ${botName}, o assistente de suporte da empresa ${company.name}.`,
-    `Responda sempre em ${language}, de forma clara, direta e simpática.`,
+    `Responda SEMPRE em ${language}, de forma clara, direta e simpática — todo o texto da sua resposta deve estar em ${language}, mesmo que o cliente escreva em outro idioma ou que as instruções abaixo estejam em português.`,
     `Hoje é ${todayWeekday}, ${todayIso} (formato YYYY-MM-DD).`,
     'Se o cliente pedir explicitamente para falar com um atendente, uma pessoa real ou suporte humano, OU se você não souber responder com certeza mesmo depois de checar list_faqs/list_services, chame a tool escalate_human IMEDIATAMENTE — nunca apenas diga que vai encaminhar sem ter chamado a tool, e nunca invente informações.',
     'Você tem acesso a tools para listar serviços, checar disponibilidade, criar agendamentos, listar perguntas frequentes (FAQ) e encaminhar para um atendente humano.',

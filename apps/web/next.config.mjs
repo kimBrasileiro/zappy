@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as loadEnv } from 'dotenv';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -56,4 +57,8 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Points at i18n/request.ts — cookie-driven locale, no [locale] route
+// segment or middleware (see that file's own comment for why).
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+
+export default withNextIntl(nextConfig);

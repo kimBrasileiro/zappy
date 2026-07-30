@@ -1,0 +1,221 @@
+{
+  "localeSwitcher": {
+    "pt": "PT",
+    "es": "ES",
+    "en": "EN"
+  },
+  "dashboard": {
+    "nav": {
+      "home": "Home",
+      "inbox": "Inbox",
+      "conversations": "Conversations",
+      "faq": "FAQ",
+      "quickReplies": "Quick Replies",
+      "services": "Services",
+      "bookings": "Bookings",
+      "installation": "Installation",
+      "integrations": "Integrations",
+      "support": "Support"
+    },
+    "impersonation": {
+      "viewingAs": "Viewing as <b>{name}</b>.",
+      "backToMyCompany": "Back to my company"
+    },
+    "home": {
+      "title": "Overview",
+      "subtitle": "Your company's summary, updated now.",
+      "profileCardTitle": "Company name and description",
+      "profileCardBody": "The name shows up to customers on the widget's WhatsApp button (e.g. \"Hi, I'd like to book with {name}\") and is how the bot identifies itself in conversations. The description shows up on your public page (see below).",
+      "checklistTitle": "Getting started",
+      "checklist": {
+        "service": "Register your first service",
+        "faq": "Register your first FAQs",
+        "quickReplies": "Create Quick Replies for common answers",
+        "widget": "Install the widget on your company's site",
+        "description": "Write a description for your company"
+      },
+      "whatsappCardTitle": "Direct WhatsApp link",
+      "whatsappShareIntro": "Share this link (social media, bio, QR code) so customers start a conversation already identifying your company to the bot:",
+      "whatsappNoLinkIntro": "No clickable link (spoken aloud, business card)? Give out the number and ask the customer to send this exact phrase:",
+      "whatsappGreeting": "Hi, I'd like to book with {name}",
+      "whatsappSharedNote": "The number is shared across several companies — the exact phrase (with your company's name) is what guarantees the assistant identifies it's with you.",
+      "whatsappNotConfigured": "Zappigo's shared WhatsApp number hasn't been configured on this instance yet — once it is, the link will show up here automatically. See more at {link}.",
+      "homepageCardTitle": "Your company's public page",
+      "homepageCardBody": "No website? Use this ready-made link — with your company's chat and WhatsApp — on Google Maps, your Instagram bio, or wherever you want to share it.",
+      "sectionAttendance": "Support",
+      "statWaitingHuman": "Waiting on human",
+      "statInProgress": "In progress",
+      "statTotalConversations": "Total conversations",
+      "sectionBookings": "Bookings",
+      "statNext7Days": "In the next 7 days",
+      "statTotalConfirmed": "Total confirmed",
+      "sectionContent": "Registered content",
+      "statActiveServices": "Active services",
+      "statActiveFaqs": "Registered FAQs",
+      "statQuickReplies": "Quick Replies",
+      "sectionRecent": "Recent conversations",
+      "tableCustomer": "Customer",
+      "tableChannel": "Channel",
+      "tableStatus": "Status",
+      "tableUpdatedAt": "Updated at",
+      "anonymous": "Anonymous",
+      "noConversations": "No conversations yet."
+    }
+  },
+  "marketing": {
+    "nav": {
+      "resources": "Features",
+      "pricing": "Pricing",
+      "howItWorks": "How it works",
+      "faq": "FAQ",
+      "login": "Log in",
+      "start": "Get started"
+    },
+    "hero": {
+      "badgeFree": "Free — AI WhatsApp scheduling system",
+      "badgePaid": "AI WhatsApp scheduling system",
+      "titleFree": "A free, AI-powered WhatsApp scheduling system for your business",
+      "titlePaid": "An AI-powered WhatsApp scheduling system for your business",
+      "descriptionFree": "Zappigo is an AI WhatsApp scheduling system, free during launch, that talks to your customers all day on your site and on WhatsApp, books real appointments, and handles support by answering your company's FAQ — with nobody on your team typing anything. When it doesn't know something, a human takes over the conversation, no runaround.",
+      "descriptionPaid": "Zappigo is an AI WhatsApp scheduling system that talks to your customers all day on your site and on WhatsApp, books real appointments, and handles support by answering your company's FAQ — with nobody on your team typing anything. When it doesn't know something, a human takes over the conversation, no runaround.",
+      "start": "Get started",
+      "talkToAssistant": "Talk to the assistant"
+    },
+    "trustItems": [
+      "Free, no credit card",
+      "Live in minutes, no technical team needed",
+      "WhatsApp already included, no separate number to buy"
+    ],
+    "features": {
+      "sectionTitle": "Everything your customer support needs",
+      "items": [
+        { "icon": "whatsapp", "title": "WhatsApp included", "body": "Comes with Zappigo's own shared number." },
+        { "icon": "chat", "title": "24/7 site chat", "body": "An assistant that replies any time of day." },
+        { "icon": "calendar", "title": "Automatic scheduling", "body": "The bot books appointments directly with the customer." },
+        { "icon": "question", "title": "Automatic FAQ", "body": "Ready answers for what you get asked most." },
+        { "icon": "headset", "title": "Human handoff", "body": "When the bot doesn't know, someone on your team steps in." }
+      ]
+    },
+    "pricing": {
+      "sectionTitleFree": "Launch",
+      "sectionTitle": "Plans",
+      "sectionSubtitleFree": "We're in launch mode — use Zappigo at no cost, no card required, with the platform's shared WhatsApp number.",
+      "sectionSubtitle": "Start with the Basic plan and talk to us if you need something custom.",
+      "mostPopular": "Most popular",
+      "free": {
+        "badge": "Launch",
+        "title": "Zappigo Free",
+        "price": "R$ 0",
+        "period": "/mo",
+        "items": [
+          "Dashboard for appointments, conversations, and FAQ",
+          "Chat widget for your site",
+          "Zappigo's shared WhatsApp number",
+          "Handoff to human support"
+        ],
+        "cta": "Start for free"
+      },
+      "plans": [
+        {
+          "name": "Basic",
+          "price": "R$ 197",
+          "period": "/mo",
+          "items": [
+            "Dashboard for appointments, conversations, and FAQ",
+            "Chat widget for your site",
+            "Zappigo's shared WhatsApp number",
+            "Handoff to human support"
+          ],
+          "cta": "Get started"
+        },
+        {
+          "name": "Own WhatsApp number",
+          "price": "R$ 397",
+          "period": "/mo",
+          "items": [
+            "Everything in Basic",
+            "A WhatsApp number exclusive to your business",
+            "Onboarding assisted by our team"
+          ],
+          "cta": "Get started"
+        },
+        {
+          "name": "Integrate with your system",
+          "price": "R$ 997",
+          "period": "/mo",
+          "items": [
+            "Everything in Basic",
+            "Connects to the scheduling system you already use",
+            "No new tool for your team to learn"
+          ],
+          "cta": "Get started"
+        }
+      ]
+    },
+    "howItWorks": {
+      "sectionTitle": "How it works",
+      "sectionSubtitle": "No complicated setup, no technical team required.",
+      "steps": [
+        { "title": "Sign up your business", "body": "Takes under two minutes, no paperwork and no technical team needed." },
+        { "title": "Set up services and FAQ", "body": "Register the services you offer and the questions your customers already ask every day." },
+        { "title": "Start serving customers on your site and WhatsApp", "body": "Turn on the site chat and use the WhatsApp number already included — ready to talk to your customers." }
+      ]
+    },
+    "mission": {
+      "title": "Our mission",
+      "body": "Make AI-powered customer support available to any business."
+    },
+    "vision": {
+      "title": "Our vision",
+      "body": "Be a reference in technology and services for businesses."
+    },
+    "faq": {
+      "sectionTitle": "Frequently asked questions",
+      "sectionSubtitle": "Or ask the assistant directly in the corner of the screen — it answers using this same FAQ.",
+      "items": [
+        {
+          "question": "What is Zappigo?",
+          "answer": "Zappigo is an AI scheduling, support, and customer service platform that talks to your customers on your site and on WhatsApp, books appointments automatically, and answers questions using your company's FAQ — with someone on your team able to take over the conversation at any time."
+        },
+        {
+          "question": "How much does it cost?",
+          "answerFree": "Nothing! We're in our launch period and Zappigo is free for everyone, including the chat widget for your site and a shared WhatsApp number. No card, no catch.",
+          "answerPaid": "The Basic plan costs R$ 197/month and already includes the chat widget for your site and a shared Zappigo WhatsApp number. If you want a WhatsApp number exclusive to your business, the plan costs R$ 397/month; to connect to a scheduling system you already use, it's R$ 997/month. Each plan includes everything in Basic. Every plan has a 7-day free trial."
+        },
+        {
+          "question": "How does automatic scheduling work?",
+          "answer": "You register your services (name, duration, price) in the dashboard, and the bot checks open time slots and confirms the appointment directly with the customer, respecting your business hours — with nobody on your team having to type anything."
+        },
+        {
+          "question": "How does WhatsApp support work?",
+          "answer": "Every company that subscribes to Zappigo gets access to a shared WhatsApp number — the same bot that serves your site also serves customers there, automatically identifying which company the customer wants to talk to."
+        },
+        {
+          "question": "What if the bot doesn't know the answer?",
+          "answer": "The bot automatically forwards the conversation to a human agent, and it shows up in your dashboard's Inbox tab for someone on your team to answer."
+        },
+        {
+          "question": "How do I install it on my site?",
+          "answer": "After subscribing, you paste a single <script> line into your site, nothing else to change, and the chat shows up working right away."
+        },
+        {
+          "question": "Is Zappigo a WhatsApp scheduling system?",
+          "answer": "Yes — that's exactly what it is: an AI-powered WhatsApp scheduling system. You don't need to register your own business number to get started (which usually takes days or weeks of approval on other platforms) — Zappigo already comes with a shared WhatsApp number ready to use."
+        }
+      ],
+      "jsonLdDescriptionFree": "Free AI-powered WhatsApp scheduling system — automatic customer service on the site and on WhatsApp, with automatic FAQ and human handoff.",
+      "jsonLdDescriptionPaid": "AI-powered WhatsApp scheduling system — automatic customer service on the site and on WhatsApp, with automatic FAQ and human handoff.",
+      "jsonLdFreeOfferName": "Free (launch)"
+    },
+    "chatCta": {
+      "title": "Talk to our assistant now",
+      "body": "Click the chat button in the bottom-right corner — it answers questions about Zappigo and can already schedule a demo with our team, right on the site or over WhatsApp."
+    },
+    "footer": {
+      "login": "Log in",
+      "signup": "Create account",
+      "terms": "Terms of use",
+      "privacy": "Privacy"
+    }
+  }
+}

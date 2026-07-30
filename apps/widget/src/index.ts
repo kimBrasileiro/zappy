@@ -20,6 +20,7 @@ function readConfig(script: HTMLOrSVGScriptElement): WidgetConfig {
       ?.split('|')
       .map((q) => q.trim())
       .filter(Boolean),
+    language: el.dataset['lang'] || undefined,
   };
 }
 

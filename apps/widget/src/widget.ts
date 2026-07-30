@@ -30,6 +30,12 @@ export interface WidgetConfig {
   // institutional site itself uses sales-flavored chips instead of the
   // generic "agendar um horário" ones meant for a service business.
   quickReplies?: string[];
+  // Per-request override of the bot's reply language (e.g. "pt"/"es"/"en"),
+  // independent of Company.config.language (that company's own default for
+  // its own customers, untouched by this). Only the Zappigo marketing site
+  // sets this today (data-lang, following its own locale switcher) — no
+  // attribute set means undefined, so every other install is unaffected.
+  language?: string;
 }
 
 const FALLBACK_REPLY =
@@ -277,6 +283,7 @@ export class ChatWidget {
         this.config.companyId,
         conversationIdAtSend,
         text,
+        this.config.language,
         (chunk) => {
           if (this.state.conversationId !== conversationIdAtSend) return; // reset while streaming
           if (!liveBubble) {

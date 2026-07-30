@@ -1,0 +1,38 @@
+[
+  {
+    "name": "language_override_english",
+    "description": "OrchestrateInput.language ('en') must make the bot reply in English even though the customer wrote in Portuguese — the marketing site's locale switcher is the only real caller of this today.",
+    "language": "en",
+    "faqs": [{ "question": "Qual o horário de funcionamento?", "answer": "Funcionamos de segunda a sexta, das 9h às 18h." }],
+    "turns": [
+      {
+        "message": "Oi, vocês têm horário de funcionamento?"
+      }
+    ],
+    "successCriteria": "The customer wrote in Portuguese, but the assistant's reply must be in English (the language override wins over whatever language the customer used) — using the real registered FAQ content (9am-6pm, Monday to Friday) translated into English, not improvised."
+  },
+  {
+    "name": "language_override_spanish",
+    "description": "Same mechanism, Spanish override — confirms it's not English-specific.",
+    "language": "es",
+    "faqs": [{ "question": "Vocês têm estacionamento?", "answer": "Sim, temos estacionamento gratuito para clientes." }],
+    "turns": [
+      {
+        "message": "Oi, vocês tem estacionamento?"
+      }
+    ],
+    "successCriteria": "The customer wrote in Portuguese, but the assistant's reply must be in Spanish (the language override wins over whatever language the customer used) — using the real registered FAQ content (free parking for customers) translated into Spanish, not improvised."
+  },
+  {
+    "name": "language_default_unaffected_when_no_override",
+    "description": "Regression check: a scenario with no `language` field set must keep replying in the company's default (Portuguese) — proves the new override is opt-in and doesn't leak into ordinary conversations (every other scenario file already exercises this implicitly, but this one asserts it explicitly).",
+    "faqs": [{ "question": "Qual a forma de pagamento?", "answer": "Aceitamos cartão, pix e dinheiro." }],
+    "turns": [
+      {
+        "message": "Qual a forma de pagamento?",
+        "expectContains": ["cartão", "pix"]
+      }
+    ],
+    "successCriteria": "N/A — fully covered by expectContains (Portuguese FAQ content verbatim)."
+  }
+]

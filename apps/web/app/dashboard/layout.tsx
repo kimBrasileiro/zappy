@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 import { SignOutButton } from './sign-out-button';
 import { CompanySwitcher } from './company-switcher';
 import { NavLinks } from './nav-links';
+import { LocaleSwitcher } from '../locale-switcher';
 import { stopImpersonating } from './impersonate-actions';
 import './dashboard.css';
 
@@ -11,6 +13,7 @@ const ICON_CHAT = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const { companyId, isSuperAdmin, actualCompanyId } = await requireSession(); // redirects to /login or /onboarding when needed
+  const t = await getTranslations('dashboard.impersonation');
 
   const isImpersonating = isSuperAdmin && companyId !== actualCompanyId;
   const companies = isSuperAdmin
@@ -28,6 +31,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           Zappigo
         </div>
         {isSuperAdmin && <CompanySwitcher companies={companies} currentCompanyId={companyId} />}
+        <div style={{ padding: '0 8px 10px' }}>
+          <LocaleSwitcher />
+        </div>
         {isImpersonating && (
           <div
             style={{
@@ -40,7 +46,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               lineHeight: 1.5,
             }}
           >
-            Visualizando como <strong>{impersonatedCompany?.name}</strong>.
+            {t.rich('viewingAs', { name: impersonatedCompany?.name ?? '', b: (chunks) => <strong>{chunks}</strong> })}
             <form action={stopImpersonating}>
               <button
                 type="submit"
@@ -56,7 +62,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                   display: 'block',
                 }}
               >
-                Voltar pra minha empresa
+                {t('backToMyCompany')}
               </button>
             </form>
           </div>

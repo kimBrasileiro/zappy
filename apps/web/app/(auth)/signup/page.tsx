@@ -1,13 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { signUp, type SignUpState } from './actions';
+import { authClient } from '../../../lib/auth-client';
 import { authStyles as s } from '../auth-styles';
 import { PaymentStep } from '../../../lib/stripe/payment-step';
 import { PLANS, stripeConfiguredOnClient } from '../../../lib/stripe/plans';
 
 const initialState: SignUpState = {};
+
+const GOOGLE_ICON = (
+  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" />
+    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" />
+    <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" />
+    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" />
+  </svg>
+);
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -20,6 +31,28 @@ function SubmitButton() {
 
 export default function SignUpPage() {
   const [state, formAction] = useFormState(signUp, initialState);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const [googlePending, setGooglePending] = useState(false);
+
+  async function handleGoogle() {
+    setGoogleError(null);
+    setGooglePending(true);
+    // Same button either creates a brand-new User (no companyId yet — lands
+    // on /onboarding to create the company, see dashboard/layout.tsx's
+    // requireSession redirect) or logs an existing one straight into
+    // /dashboard — Google itself doesn't distinguish sign-up from sign-in,
+    // so neither does this. On success this navigates away to Google's
+    // consent screen; handleGoogle only finishes running if something went
+    // wrong before that redirect happened.
+    const { error: signInError } = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: '/dashboard',
+    });
+    if (signInError) {
+      setGoogleError(signInError.message ?? 'Não foi possível continuar com o Google. Tenta de novo.');
+      setGooglePending(false);
+    }
+  }
 
   if (state?.needsVerification) {
     return (
@@ -107,6 +140,15 @@ export default function SignUpPage() {
         </label>
 
         <SubmitButton />
+
+        <div style={s.divider}>ou</div>
+
+        {googleError && <div style={s.error}>{googleError}</div>}
+
+        <button type="button" onClick={handleGoogle} disabled={googlePending} style={s.googleButton}>
+          {GOOGLE_ICON}
+          {googlePending ? 'Redirecionando...' : 'Cadastrar com Google'}
+        </button>
 
         <p style={s.footerText}>
           Já tem conta? <Link href="/login">Entrar</Link>

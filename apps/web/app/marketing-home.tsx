@@ -5,28 +5,12 @@ import { LocaleSwitcher } from './locale-switcher';
 
 const BRAND_COLOR = '#2563eb';
 
-// Overrides the widget's generic defaults (apps/widget/src/quick-replies.ts
-// assumes a service business booking appointments) — same 3 flows
-// (FAQ/booking/escalação), reworded for a SaaS sales chat. Kept in
-// Portuguese regardless of site locale on purpose: the widget's own reply
-// language still follows data-lang (see below), but these are literal
-// strings the customer clicks, which only matters for the pt-BR default
-// company config today — revisit if quick-replies ever need translating too.
-const ZAPPIGO_QUICK_REPLIES = [
-  'Quais planos e preços vocês têm?',
-  'Quero agendar uma demo',
-  'Como funciona a Zappigo?',
-  'Falar com o time comercial',
-].join('|');
-
 const ICON_CHAT = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
 const ICON_WHATSAPP = `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 0 0-8.66 15L2 22l5.14-1.31A10 10 0 1 0 12 2zm0 18.2a8.16 8.16 0 0 1-4.17-1.14l-.3-.18-3.05.78.82-2.97-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81s-.4-.12-.56.12-.63.81-.78.97-.28.19-.53.06a6.7 6.7 0 0 1-1.97-1.22 7.4 7.4 0 0 1-1.36-1.7c-.14-.25 0-.38.11-.5s.25-.29.37-.44a1.6 1.6 0 0 0 .25-.41.46.46 0 0 0 0-.44c-.06-.12-.56-1.35-.77-1.85s-.4-.42-.56-.43h-.48a.9.9 0 0 0-.66.31 2.76 2.76 0 0 0-.86 2.05 4.78 4.78 0 0 0 1 2.54 10.9 10.9 0 0 0 4.19 3.7c.58.25 1.04.4 1.4.51a3.37 3.37 0 0 0 1.54.1 2.52 2.52 0 0 0 1.65-1.16 2 2 0 0 0 .14-1.16c-.06-.1-.22-.16-.47-.28z"/></svg>`;
 const ICON_CALENDAR = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICON_HEADSET = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13v-1a8 8 0 0 1 16 0v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="2" y="13" width="5" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="17" y="13" width="5" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M19 20v1a2 2 0 0 1-2 2h-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICON_QUESTION = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>`;
 const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const ICON_TARGET = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>`;
-const ICON_EYE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>`;
 
 const FEATURE_ICONS: Record<string, string> = {
   whatsapp: ICON_WHATSAPP,
@@ -86,6 +70,7 @@ export async function MarketingHome() {
   const freePlanItems = t.raw('pricing.free.items') as string[];
   const steps = t.raw('howItWorks.steps') as { title: string; body: string }[];
   const faqItems = t.raw('faq.items') as { question: string; answer: string; answerFree?: string; answerPaid?: string }[];
+  const demoQuickReplies = (t.raw('demoQuickReplies') as string[]).join('|');
 
   const planHrefs = ['/signup', '/signup', '/signup'];
 
@@ -462,76 +447,6 @@ export async function MarketingHome() {
         </div>
       </section>
 
-      {/* Missão & Visão */}
-      <section style={{ padding: '80px 24px' }}>
-        <div
-          style={{
-            maxWidth: 900,
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: 24,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid rgba(0,0,0,0.06)',
-              borderRadius: 16,
-              padding: 32,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}
-          >
-            <span
-              style={{
-                display: 'inline-flex',
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: '#eef2ff',
-                color: BRAND_COLOR,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 16,
-              }}
-              dangerouslySetInnerHTML={{
-                __html: ICON_TARGET.replace('width="24"', 'width="19"').replace('height="24"', 'height="19"'),
-              }}
-            />
-            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>{t('mission.title')}</h3>
-            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>{t('mission.body')}</p>
-          </div>
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid rgba(0,0,0,0.06)',
-              borderRadius: 16,
-              padding: 32,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}
-          >
-            <span
-              style={{
-                display: 'inline-flex',
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: '#eef2ff',
-                color: BRAND_COLOR,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 16,
-              }}
-              dangerouslySetInnerHTML={{
-                __html: ICON_EYE.replace('width="24"', 'width="19"').replace('height="24"', 'height="19"'),
-              }}
-            />
-            <h3 style={{ fontSize: 18, margin: '0 0 10px' }}>{t('vision.title')}</h3>
-            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: 0 }}>{t('vision.body')}</p>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ — real, crawlable Q&A content (also emitted as FAQPage JSON-LD
           above), not just something buried inside the live chat widget. */}
       <section id="faq" style={{ padding: '80px 24px', background: '#f8f9fb' }}>
@@ -610,7 +525,7 @@ export async function MarketingHome() {
         data-company-name="Zappigo"
         data-color={BRAND_COLOR}
         data-whatsapp={whatsappNumber}
-        data-quick-replies={ZAPPIGO_QUICK_REPLIES}
+        data-quick-replies={demoQuickReplies}
         data-lang={locale}
       />
     </main>

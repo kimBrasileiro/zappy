@@ -8,8 +8,8 @@ import {
   type WidgetMessage,
   type WidgetState,
 } from './state';
-import { QUICK_REPLIES } from './quick-replies';
 import { pollAgentMessages, streamBotReply } from './api';
+import { widgetStrings } from './i18n';
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -38,9 +38,6 @@ export interface WidgetConfig {
   language?: string;
 }
 
-const FALLBACK_REPLY =
-  'Desculpa, tive um problema para responder agora. Tenta de novo em instantes.';
-
 const ICON_CHAT = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
 const ICON_CLOSE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICON_RESTART = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -63,9 +60,11 @@ export class ChatWidget {
   private quickRepliesEl!: HTMLDivElement;
   private inputEl!: HTMLInputElement;
   private sendBtnEl!: HTMLButtonElement;
+  private strings: ReturnType<typeof widgetStrings>;
 
   constructor(config: WidgetConfig) {
     this.config = config;
+    this.strings = widgetStrings(config.language);
     this.state = loadState(config.companyId);
 
     const host = document.createElement('div');
@@ -93,18 +92,18 @@ export class ChatWidget {
       <div class="header">
         <div class="avatar">${this.config.botName.charAt(0).toUpperCase()}</div>
         <div class="name">${escapeHtml(this.config.botName)}</div>
-        ${this.config.whatsappNumber ? `<button class="whatsapp" aria-label="Continuar no WhatsApp" title="Continuar no WhatsApp">${ICON_WHATSAPP}</button>` : ''}
-        <button class="restart" aria-label="Reiniciar conversa" title="Reiniciar conversa">${ICON_RESTART}</button>
-        <button class="close" aria-label="Fechar chat">${ICON_CLOSE}</button>
+        ${this.config.whatsappNumber ? `<button class="whatsapp" aria-label="${this.strings.continueOnWhatsApp}" title="${this.strings.continueOnWhatsApp}">${ICON_WHATSAPP}</button>` : ''}
+        <button class="restart" aria-label="${this.strings.restartConversation}" title="${this.strings.restartConversation}">${ICON_RESTART}</button>
+        <button class="close" aria-label="${this.strings.closeChat}">${ICON_CLOSE}</button>
       </div>
-      <div class="escalated-banner"><span class="dot"></span>Aguardando um atendente humano</div>
+      <div class="escalated-banner"><span class="dot"></span>${this.strings.waitingForHuman}</div>
       <div class="messages"></div>
       <div class="quick-replies"></div>
       <div class="input-row">
-        <input class="input" type="text" placeholder="Digite sua mensagem..." aria-label="Mensagem" />
-        <button class="send" aria-label="Enviar">${ICON_SEND}</button>
+        <input class="input" type="text" placeholder="${this.strings.messagePlaceholder}" aria-label="${this.strings.messageAriaLabel}" />
+        <button class="send" aria-label="${this.strings.send}">${ICON_SEND}</button>
       </div>
-      <div class="footer">Powered by Zappigo</div>
+      <div class="footer">${this.strings.poweredBy}</div>
     `;
     this.panelEl = panel;
     this.escalatedBannerEl = panel.querySelector('.escalated-banner')!;
@@ -115,7 +114,7 @@ export class ChatWidget {
 
     const fab = document.createElement('button');
     fab.className = 'fab';
-    fab.setAttribute('aria-label', 'Abrir chat');
+    fab.setAttribute('aria-label', this.strings.openChat);
     fab.innerHTML = ICON_CHAT;
     fab.addEventListener('click', () => this.toggle());
     this.fabEl = fab;
@@ -168,7 +167,7 @@ export class ChatWidget {
   private openWhatsApp(): void {
     if (!this.config.whatsappNumber) return;
     const digits = this.config.whatsappNumber.replace(/\D/g, '');
-    const text = `Olá, gostaria de agendar serviços com ${this.config.companyName}`;
+    const text = this.strings.whatsappGreeting(this.config.companyName);
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }
 
@@ -220,7 +219,7 @@ export class ChatWidget {
 
     const lastIndex = this.state.messages.length - 1;
     this.messagesEl.innerHTML = this.state.messages
-      .map((m, i) => bubbleHtml(m, i === lastIndex))
+      .map((m, i) => bubbleHtml(m, i === lastIndex, this.strings.agent))
       .join('');
     this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
 
@@ -234,7 +233,7 @@ export class ChatWidget {
       });
     }
 
-    const quickReplies = this.config.quickReplies ?? QUICK_REPLIES;
+    const quickReplies = this.config.quickReplies ?? this.strings.defaultQuickReplies;
     this.quickRepliesEl.style.display = this.state.hasSentFirstMessage ? 'none' : 'flex';
     this.quickRepliesEl.innerHTML = this.state.hasSentFirstMessage
       ? ''
@@ -300,7 +299,7 @@ export class ChatWidget {
       options = result.options;
       escalated = result.escalated;
     } catch {
-      full = FALLBACK_REPLY;
+      full = this.strings.fallbackReply;
     }
 
     // The conversation was reset while this request was in flight — this
@@ -325,8 +324,8 @@ export class ChatWidget {
   }
 }
 
-function bubbleHtml(message: WidgetMessage, isLast: boolean): string {
-  const label = message.senderType === 'agent' ? '<div class="msg-sender">Atendente</div>' : '';
+function bubbleHtml(message: WidgetMessage, isLast: boolean, agentLabel: string): string {
+  const label = message.senderType === 'agent' ? `<div class="msg-sender">${agentLabel}</div>` : '';
   const bubble = `${label}<div class="bubble ${message.senderType}">${escapeHtml(message.content)}</div>`;
   if (isLast && message.senderType === 'bot' && message.options?.length) {
     const chips = message.options.map((o) => `<button class="chip">${escapeHtml(o)}</button>`).join('');

@@ -161,14 +161,6 @@
         { "title": "Start serving customers on your site and WhatsApp", "body": "Turn on the site chat and use the WhatsApp number already included — ready to talk to your customers." }
       ]
     },
-    "mission": {
-      "title": "Our mission",
-      "body": "Make AI-powered customer support available to any business."
-    },
-    "vision": {
-      "title": "Our vision",
-      "body": "Be a reference in technology and services for businesses."
-    },
     "faq": {
       "sectionTitle": "Frequently asked questions",
       "sectionSubtitle": "Or ask the assistant directly in the corner of the screen — it answers using this same FAQ.",
@@ -211,6 +203,12 @@
       "title": "Talk to our assistant now",
       "body": "Click the chat button in the bottom-right corner — it answers questions about Zappigo and can already schedule a demo with our team, right on the site or over WhatsApp."
     },
+    "demoQuickReplies": [
+      "What plans and pricing do you have?",
+      "I'd like to book a demo",
+      "How does Zappigo work?",
+      "Talk to the sales team"
+    ],
     "footer": {
       "login": "Log in",
       "signup": "Create account",

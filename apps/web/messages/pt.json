@@ -161,14 +161,6 @@
         { "title": "Comece a atender no site e no WhatsApp", "body": "Ative o chat no seu site e use o número de WhatsApp já incluso — pronto pra conversar com seus clientes." }
       ]
     },
-    "mission": {
-      "title": "Nossa missão",
-      "body": "Disponibilizar atendimento via inteligência artificial para qualquer negócio em todo o Brasil."
-    },
-    "vision": {
-      "title": "Nossa visão",
-      "body": "Ser uma referência em tecnologia e serviços para empresas."
-    },
     "faq": {
       "sectionTitle": "Perguntas frequentes",
       "sectionSubtitle": "Ou pergunte direto pro assistente no canto da tela — ele responde com base nesse mesmo FAQ.",
@@ -211,6 +203,12 @@
       "title": "Fale com o nosso assistente agora",
       "body": "Clique no botão de chat no canto inferior direito — ele responde dúvidas sobre a Zappigo e já agenda uma demonstração com o nosso time, no próprio site ou pelo WhatsApp."
     },
+    "demoQuickReplies": [
+      "Quais planos e preços vocês têm?",
+      "Quero agendar uma demo",
+      "Como funciona a Zappigo?",
+      "Falar com o time comercial"
+    ],
     "footer": {
       "login": "Entrar",
       "signup": "Criar conta",

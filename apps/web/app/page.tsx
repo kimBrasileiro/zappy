@@ -1,20 +1,41 @@
+import type { Metadata } from 'next';
 import Script from 'next/script';
 import { prisma } from '@zappigo/db';
-import { CopySnippet } from './copy-snippet';
 import { MarketingHome } from './marketing-home';
 
 const BRAND_COLOR = '#2563eb';
+const WHATSAPP_GREEN = '#25D366';
 
 const CHAT_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
+const ICON_WHATSAPP =
+  '<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M12 2a10 10 0 0 0-8.66 15L2 22l5.14-1.31A10 10 0 1 0 12 2zm0 18.2a8.16 8.16 0 0 1-4.17-1.14l-.3-.18-3.05.78.82-2.97-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81s-.4-.12-.56.12-.63.81-.78.97-.28.19-.53.06a6.7 6.7 0 0 1-1.97-1.22 7.4 7.4 0 0 1-1.36-1.7c-.14-.25 0-.38.11-.5s.25-.29.37-.44a1.6 1.6 0 0 0 .25-.41.46.46 0 0 0 0-.44c-.06-.12-.56-1.35-.77-1.85s-.4-.42-.56-.43h-.48a.9.9 0 0 0-.66.31 2.76 2.76 0 0 0-.86 2.05 4.78 4.78 0 0 0 1 2.54 10.9 10.9 0 0 0 4.19 3.7c.58.25 1.04.4 1.4.51a3.37 3.37 0 0 0 1.54.1 2.52 2.52 0 0 0 1.65-1.16 2 2 0 0 0 .14-1.16c-.06-.1-.22-.16-.47-.28z"/></svg>';
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: { company?: string };
-}) {
-  // No ?company= at all → this is the Zappigo institutional site itself, not
-  // a customer-preview page. Test any company's widget by slug instead:
-  // /?company=sua-loja-teste.
+const DEFAULT_DESCRIPTION = 'Fale com a gente pelo chat ou pelo WhatsApp — respondemos rapidinho.';
+
+type PageProps = { searchParams: { company?: string } };
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const companySlug = searchParams.company?.trim();
+  if (!companySlug) return {};
+
+  const company = await prisma.company.findUnique({ where: { slug: companySlug } });
+  if (!company) return {};
+
+  const description = (company.config as { description?: string } | null)?.description || DEFAULT_DESCRIPTION;
+  return {
+    title: `${company.name} — atendimento via Zappigo`,
+    description,
+    openGraph: { title: company.name, description },
+  };
+}
+
+// Public homepage for companies with no website of their own — a ready-made
+// link (Google Maps, Instagram bio, business card) that gives every company
+// a real page with a working chat + WhatsApp button, whether or not they
+// have a site. The install <script> preview for companies that DO have a
+// site of their own lives on /dashboard/instalacao (logged-in only) — this
+// page is the public-facing counterpart, not a developer tool.
+export default async function HomePage({ searchParams }: PageProps) {
   const companySlug = searchParams.company?.trim();
   if (!companySlug) {
     return <MarketingHome />;
@@ -22,17 +43,12 @@ export default async function HomePage({
 
   const company = await prisma.company.findUnique({ where: { slug: companySlug } });
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
-
-  const snippet = [
-    `<script src="https://cdn.seudominio.com/widget.js"`,
-    `        data-company="${companySlug}"`,
-    `        data-company-name="${company?.name ?? companySlug}"`,
-    `        data-color="${BRAND_COLOR}"`,
-    whatsappNumber ? `        data-whatsapp="${whatsappNumber}"` : null,
-    `        async></script>`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+  const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
+  const waLink =
+    whatsappDigits && company
+      ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de falar com ${company.name}`)}`
+      : null;
+  const description = company ? (company.config as { description?: string } | null)?.description || DEFAULT_DESCRIPTION : null;
 
   return (
     <main
@@ -69,102 +85,46 @@ export default async function HomePage({
         <span style={{ color: '#999', fontSize: 13 }}>· atendimento via IA para o seu negócio</span>
       </header>
 
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '40px 24px 120px' }}>
-        <section style={{ marginBottom: 40 }}>
-          <span
-            style={{
-              display: 'inline-block',
-              background: '#eef2ff',
-              color: BRAND_COLOR,
-              fontSize: 12,
-              fontWeight: 600,
-              padding: '4px 10px',
-              borderRadius: 999,
-              marginBottom: 12,
-            }}
-          >
-            Preview do widget · empresa: <code>{companySlug}</code>
-          </span>
-          <h1 style={{ fontSize: 30, margin: '0 0 8px' }}>
-            {company ? company.name : 'Empresa não encontrada'}
-          </h1>
-          <p style={{ color: '#888', fontSize: 12.5, margin: '0 0 12px' }}>
-            Testando outra loja? Acesse <code>/?company=slug-da-sua-loja</code> (ex:{' '}
-            <a href="/?company=acme-demo" style={{ color: BRAND_COLOR }}>
-              /?company=acme-demo
-            </a>
-            ).
-          </p>
-          {company ? (
-            <p style={{ color: '#555', maxWidth: 560, lineHeight: 1.6 }}>
-              Esta página simula o site de um cliente com o widget de chat instalado. O botão no
-              canto inferior direito é o widget real, rodando a partir de{' '}
-              <code>public/widget.js</code> — as respostas vêm do Gemini de verdade via{' '}
-              <code>/api/chat</code>, e cada conversa vira um ticket real no Postgres.
-            </p>
-          ) : (
-            <p style={{ color: '#b91c1c', maxWidth: 560, lineHeight: 1.6 }}>
-              Nenhuma empresa cadastrada com o slug <code>{companySlug}</code>. Confira o link ou
-              cadastre uma empresa em <code>/onboarding</code>.
-            </p>
-          )}
-        </section>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '64px 24px 120px', textAlign: 'center' }}>
+        {company ? (
+          <>
+            <h1 style={{ fontSize: 32, margin: '0 0 16px' }}>{company.name}</h1>
+            <p style={{ color: '#555', fontSize: 16, lineHeight: 1.7, margin: '0 0 32px' }}>{description}</p>
 
-        {company && (
-          <section
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 380px)',
-              gap: 28,
-            }}
-          >
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: 16,
-                border: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                overflow: 'hidden',
-              }}
-            >
-              <div
+            <p style={{ color: '#888', fontSize: 14, marginBottom: 20 }}>
+              Clique no botão de chat no canto da tela, ou fale direto pelo WhatsApp:
+            </p>
+
+            {waLink && (
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener"
                 style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '10px 14px',
-                  background: '#f3f4f6',
-                  borderBottom: '1px solid rgba(0,0,0,0.06)',
+                  gap: 10,
+                  background: WHATSAPP_GREEN,
+                  color: '#fff',
+                  padding: '14px 28px',
+                  borderRadius: 999,
+                  fontWeight: 600,
+                  fontSize: 16,
+                  textDecoration: 'none',
                 }}
               >
-                {['#ff5f57', '#febc2e', '#28c840'].map((c) => (
-                  <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />
-                ))}
-                <span style={{ marginLeft: 10, fontSize: 11.5, color: '#999' }}>
-                  {company.name.toLowerCase().replace(/\s+/g, '')}.com.br
-                </span>
-              </div>
-              <div style={{ padding: 32, minHeight: 300 }}>
-                <h2 style={{ fontSize: 20, marginTop: 0 }}>Bem-vindo à {company.name}</h2>
-                <p style={{ color: '#555', lineHeight: 1.7 }}>
-                  Conteúdo de exemplo do site do cliente — o widget não interfere no CSS/JS desta
-                  página porque roda isolado dentro de um Shadow DOM.
-                </p>
-                <p style={{ color: '#555', lineHeight: 1.7 }}>
-                  Clique no botão de chat para abrir o painel, testar os quick-replies e enviar
-                  uma mensagem.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: 15, marginBottom: 8 }}>Instalação</h3>
-              <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-                Uma linha de <code>&lt;script&gt;</code>, sem mudanças no resto do site:
-              </p>
-              <CopySnippet snippet={snippet} />
-            </div>
-          </section>
+                <span dangerouslySetInnerHTML={{ __html: ICON_WHATSAPP }} />
+                Fale no WhatsApp
+              </a>
+            )}
+          </>
+        ) : (
+          <>
+            <h1 style={{ fontSize: 28, margin: '0 0 12px' }}>Empresa não encontrada</h1>
+            <p style={{ color: '#b91c1c', maxWidth: 480, margin: '0 auto', lineHeight: 1.6 }}>
+              Nenhuma empresa cadastrada com o slug <code>{companySlug}</code>. Confira o link.
+            </p>
+          </>
         )}
       </div>
 
@@ -174,7 +134,7 @@ export default async function HomePage({
           src="/widget.js"
           strategy="afterInteractive"
           data-company={companySlug}
-          data-company-name={company?.name ?? companySlug}
+          data-company-name={company.name}
           data-color={BRAND_COLOR}
           data-whatsapp={whatsappNumber}
         />

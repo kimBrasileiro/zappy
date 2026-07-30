@@ -3,7 +3,7 @@ import { prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 import { RefreshButton } from './refresh-button';
 import { CopySnippet } from '../copy-snippet';
-import { CompanyNameForm } from './company-name-form';
+import { CompanyProfileForm } from './company-name-form';
 
 export default async function DashboardHomePage() {
   const { companyId } = await requireSession();
@@ -13,7 +13,7 @@ export default async function DashboardHomePage() {
 
   const [company, ticketsByStatus, upcomingBookings, totalConfirmedBookings, activeServices, activeFaqs, quickReplies, recentTickets] =
     await Promise.all([
-      prisma.company.findUnique({ where: { id: companyId }, select: { name: true, slug: true, allowedDomains: true } }),
+      prisma.company.findUnique({ where: { id: companyId }, select: { name: true, slug: true, allowedDomains: true, config: true } }),
       prisma.ticket.groupBy({ by: ['status'], where: { companyId }, _count: true }),
       prisma.booking.count({
         where: { companyId, status: 'confirmed', scheduledAt: { gte: now, lte: weekFromNow } },
@@ -35,6 +35,8 @@ export default async function DashboardHomePage() {
   const inProgress = countByStatus['in_progress'] ?? 0;
   const totalConversations = ticketsByStatus.reduce((sum, t) => sum + t._count, 0);
 
+  const companyDescription = (company?.config as { description?: string } | null)?.description ?? '';
+
   // "Primeiros passos" — a getting-started checklist, not a permanent
   // fixture: once every step is done the section stops rendering at all
   // (see `allStepsDone` below) so it doesn't clutter the home page for
@@ -45,8 +47,12 @@ export default async function DashboardHomePage() {
     { label: 'Cadastre suas primeiras FAQs', href: '/dashboard/faq', done: activeFaqs > 0 },
     { label: 'Crie Quick Replies para respostas comuns', href: '/dashboard/quick-replies', done: quickReplies > 0 },
     { label: 'Instale o widget no site da sua empresa', href: '/dashboard/instalacao', done: hasDomain },
+    { label: 'Escreva uma descrição da sua empresa', href: '/dashboard', done: !!companyDescription },
   ];
   const allStepsDone = checklist.every((step) => step.done);
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const homepageLink = company ? `${appUrl}/?company=${company.slug}` : null;
 
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
   const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
@@ -75,12 +81,13 @@ export default async function DashboardHomePage() {
       </div>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Nome da empresa</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Nome e descrição da empresa</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-          Esse nome aparece pro cliente no botão de WhatsApp do widget (ex: "Olá, gostaria de
-          agendar serviços com {company?.name}") e é como o bot se identifica nas conversas.
+          O nome aparece pro cliente no botão de WhatsApp do widget (ex: "Olá, gostaria de
+          agendar serviços com {company?.name}") e é como o bot se identifica nas conversas. A
+          descrição aparece na sua página pública (veja abaixo).
         </p>
-        <CompanyNameForm defaultName={company?.name ?? ''} />
+        <CompanyProfileForm defaultName={company?.name ?? ''} defaultDescription={companyDescription} />
       </div>
 
       {!allStepsDone && (
@@ -133,6 +140,15 @@ export default async function DashboardHomePage() {
             <Link href="/dashboard/instalacao">Instalação</Link>.
           </p>
         )}
+      </div>
+
+      <div className="dash-card">
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Página pública da sua empresa</h3>
+        <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
+          Não tem site? Use esse link pronto — com o chat e o WhatsApp da sua empresa — no Google
+          Maps, na bio do Instagram ou onde quiser divulgar.
+        </p>
+        {homepageLink && <CopySnippet snippet={homepageLink} />}
       </div>
 
       <div className="dash-section-title">Atendimento</div>

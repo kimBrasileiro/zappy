@@ -1,10 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { prisma } from '@zappigo/db';
+import { Prisma, prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 
-export interface CompanyNameFormState {
+export interface CompanyProfileFormState {
   error?: string;
 }
 
@@ -12,16 +12,26 @@ export interface CompanyNameFormState {
 // falar com a <nome>") and as the fallback company-name match for a cold
 // WhatsApp first contact (see lib/bot/conversation.ts#matchCompanyByNameInText)
 // — keeping it accurate here is what keeps both of those working.
-export async function updateCompanyName(
-  _prevState: CompanyNameFormState,
+// description has no dedicated column — it lives in Company.config (same
+// free-form JSON blob orchestrator.ts already reads botName/extraInstructions
+// from) — shown on the public /?company=<slug> homepage (app/page.tsx).
+export async function updateCompanyProfile(
+  _prevState: CompanyProfileFormState,
   formData: FormData,
-): Promise<CompanyNameFormState> {
+): Promise<CompanyProfileFormState> {
   const { companyId } = await requireSession();
 
   const name = String(formData.get('name') ?? '').trim();
   if (!name) return { error: 'Nome é obrigatório.' };
+  const description = String(formData.get('description') ?? '').trim();
 
-  await prisma.company.update({ where: { id: companyId }, data: { name } });
+  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { config: true } });
+  const config = (company?.config as Record<string, unknown> | null) ?? {};
+
+  await prisma.company.update({
+    where: { id: companyId },
+    data: { name, config: { ...config, description } as Prisma.InputJsonValue },
+  });
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/instalacao');

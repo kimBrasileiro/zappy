@@ -48,6 +48,8 @@ export default async function InstalacaoPage() {
     ? `<a href="${waLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;background:${WHATSAPP_GREEN};color:#fff;padding:12px 22px;border-radius:999px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:600;font-size:15px;text-decoration:none;line-height:1;">${ICON_WHATSAPP}Fale no WhatsApp</a>`
     : null;
 
+  const homepageLink = `${appUrl}/?company=${company.slug}`;
+
   return (
     <>
       <h1 className="dash-h1">Instalação</h1>
@@ -55,6 +57,15 @@ export default async function InstalacaoPage() {
         Cole o script abaixo no site da sua empresa — ele já traz o chat e (se o número
         compartilhado estiver configurado) o botão de continuar no WhatsApp.
       </p>
+
+      <div className="dash-card">
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Não tem site? Use a página pública</h3>
+        <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
+          Uma página pronta, com o chat e o WhatsApp da sua empresa, sem precisar instalar nada —
+          cole esse link no Google Maps, na bio do Instagram ou onde quiser divulgar:
+        </p>
+        <CopySnippet snippet={homepageLink} />
+      </div>
 
       <div className="dash-card">
         <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Link direto do WhatsApp</h3>

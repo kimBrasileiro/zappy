@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { Prisma, prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 
@@ -20,9 +21,10 @@ export async function updateCompanyProfile(
   formData: FormData,
 ): Promise<CompanyProfileFormState> {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.home');
 
   const name = String(formData.get('name') ?? '').trim();
-  if (!name) return { error: 'Nome é obrigatório.' };
+  if (!name) return { error: t('errorNameRequired') };
   const description = String(formData.get('description') ?? '').trim();
 
   const company = await prisma.company.findUnique({ where: { id: companyId }, select: { config: true } });

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export function CopySnippet({ snippet }: { snippet: string }) {
+  const t = useTranslations('dashboard.common');
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -41,7 +43,7 @@ export function CopySnippet({ snippet }: { snippet: string }) {
           cursor: 'pointer',
         }}
       >
-        {copied ? 'Copiado!' : 'Copiar'}
+        {copied ? t('copied') : t('copy')}
       </button>
     </div>
   );

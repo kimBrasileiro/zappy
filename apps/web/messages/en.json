@@ -5,6 +5,12 @@
     "en": "EN"
   },
   "dashboard": {
+    "common": {
+      "signOut": "Sign out",
+      "refresh": "Refresh",
+      "copied": "Copied!",
+      "copy": "Copy"
+    },
     "nav": {
       "home": "Home",
       "inbox": "Inbox",
@@ -59,7 +65,12 @@
       "tableStatus": "Status",
       "tableUpdatedAt": "Updated at",
       "anonymous": "Anonymous",
-      "noConversations": "No conversations yet."
+      "noConversations": "No conversations yet.",
+      "companyNamePlaceholder": "Company name",
+      "companyDescriptionPlaceholder": "Short company description — shown on your public page (e.g. Pet shop with bathing, grooming, and vet visits in the X neighborhood)",
+      "saveButton": "Save",
+      "saving": "Saving...",
+      "errorNameRequired": "Name is required."
     },
     "faq": {
       "title": "FAQ",

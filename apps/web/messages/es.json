@@ -5,6 +5,12 @@
     "en": "EN"
   },
   "dashboard": {
+    "common": {
+      "signOut": "Salir",
+      "refresh": "Actualizar",
+      "copied": "¡Copiado!",
+      "copy": "Copiar"
+    },
     "nav": {
       "home": "Inicio",
       "inbox": "Bandeja de entrada",
@@ -59,7 +65,12 @@
       "tableStatus": "Estado",
       "tableUpdatedAt": "Actualizado el",
       "anonymous": "Anónimo",
-      "noConversations": "Todavía no hay conversaciones."
+      "noConversations": "Todavía no hay conversaciones.",
+      "companyNamePlaceholder": "Nombre de la empresa",
+      "companyDescriptionPlaceholder": "Descripción breve de la empresa — aparece en tu página pública (ej: Pet shop con baño, peluquería y consultas veterinarias en el barrio X)",
+      "saveButton": "Guardar",
+      "saving": "Guardando...",
+      "errorNameRequired": "El nombre es obligatorio."
     },
     "faq": {
       "title": "Preguntas frecuentes",

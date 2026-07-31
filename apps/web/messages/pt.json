@@ -89,11 +89,31 @@
     "features": {
       "sectionTitle": "Tudo que seu atendimento precisa",
       "items": [
-        { "icon": "whatsapp", "title": "WhatsApp incluso", "body": "Já vem com número compartilhado da Zappigo." },
-        { "icon": "chat", "title": "Chat no site 24h", "body": "Um assistente que responde a qualquer hora." },
-        { "icon": "calendar", "title": "Agendamento automático", "body": "O bot marca horários direto com o cliente." },
-        { "icon": "question", "title": "FAQ automático", "body": "Respostas prontas pro que você mais responde." },
-        { "icon": "headset", "title": "Handoff pra humano", "body": "Quando o bot não sabe, alguém do time assume." }
+        {
+          "icon": "whatsapp",
+          "title": "WhatsApp incluso",
+          "body": "Já vem com número compartilhado da Zappigo."
+        },
+        {
+          "icon": "chat",
+          "title": "Chat no site 24h",
+          "body": "Um assistente que responde a qualquer hora."
+        },
+        {
+          "icon": "calendar",
+          "title": "Agendamento automático",
+          "body": "O bot marca horários direto com o cliente."
+        },
+        {
+          "icon": "question",
+          "title": "FAQ automático",
+          "body": "Respostas prontas pro que você mais responde."
+        },
+        {
+          "icon": "headset",
+          "title": "Handoff pra humano",
+          "body": "Quando o bot não sabe, alguém do time assume."
+        }
       ]
     },
     "pricing": {
@@ -105,7 +125,6 @@
       "free": {
         "badge": "Lançamento",
         "title": "Zappigo Grátis",
-        "price": "R$ 0",
         "period": "/mês",
         "items": [
           "Dashboard de agendamentos, conversas e FAQ",
@@ -118,7 +137,6 @@
       "plans": [
         {
           "name": "Básico",
-          "price": "R$ 197",
           "period": "/mês",
           "items": [
             "Dashboard de agendamentos, conversas e FAQ",
@@ -130,7 +148,6 @@
         },
         {
           "name": "WhatsApp próprio",
-          "price": "R$ 397",
           "period": "/mês",
           "items": [
             "Tudo do plano Básico",
@@ -141,7 +158,6 @@
         },
         {
           "name": "Integração com seu sistema",
-          "price": "R$ 997",
           "period": "/mês",
           "items": [
             "Tudo do plano Básico",
@@ -156,9 +172,18 @@
       "sectionTitle": "Como funciona",
       "sectionSubtitle": "Sem instalação complicada, sem depender de time técnico.",
       "steps": [
-        { "title": "Cadastre sua empresa", "body": "Leva menos de dois minutos, sem burocracia e sem precisar de time técnico." },
-        { "title": "Configure atendimentos e perguntas frequentes", "body": "Cadastre os serviços que você oferece e as dúvidas que os clientes já te fazem todo dia." },
-        { "title": "Comece a atender no site e no WhatsApp", "body": "Ative o chat no seu site e use o número de WhatsApp já incluso — pronto pra conversar com seus clientes." }
+        {
+          "title": "Cadastre sua empresa",
+          "body": "Leva menos de dois minutos, sem burocracia e sem precisar de time técnico."
+        },
+        {
+          "title": "Configure atendimentos e perguntas frequentes",
+          "body": "Cadastre os serviços que você oferece e as dúvidas que os clientes já te fazem todo dia."
+        },
+        {
+          "title": "Comece a atender no site e no WhatsApp",
+          "body": "Ative o chat no seu site e use o número de WhatsApp já incluso — pronto pra conversar com seus clientes."
+        }
       ]
     },
     "faq": {
@@ -172,7 +197,7 @@
         {
           "question": "Quanto custa?",
           "answerFree": "Nada! Estamos no período de lançamento e a Zappigo está gratuita pra todo mundo, incluindo o widget de chat pro seu site e um número de WhatsApp compartilhado. Sem cartão, sem pegadinha.",
-          "answerPaid": "O plano básico custa R$ 197/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappigo. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa R$ 397/mês; se quiser conectar com um sistema de agendamento que você já usa, custa R$ 997/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar."
+          "answerPaid": "O plano básico custa {priceBasico}/mês e já inclui o widget de chat pro seu site e um número de WhatsApp compartilhado da Zappigo. Se você quiser um número de WhatsApp exclusivo da sua empresa, o plano custa {priceWhatsapp}/mês; se quiser conectar com um sistema de agendamento que você já usa, custa {priceIntegracao}/mês. Cada plano já inclui tudo do básico. Todo plano tem 7 dias grátis pra testar."
         },
         {
           "question": "Como funciona o agendamento automático?",
@@ -215,5 +240,15 @@
       "terms": "Termos de Uso",
       "privacy": "Privacidade"
     }
+  },
+  "companyHomepage": {
+    "tagline": "atendimento via IA para o seu negócio",
+    "metaTitleSuffix": "atendimento via Zappigo",
+    "defaultDescription": "Fale com a gente pelo chat ou pelo WhatsApp — respondemos rapidinho.",
+    "instructions": "Clique no botão de chat no canto da tela, ou fale direto pelo WhatsApp:",
+    "whatsappButton": "Fale no WhatsApp",
+    "whatsappGreeting": "Olá, gostaria de falar com {name}",
+    "notFoundTitle": "Empresa não encontrada",
+    "notFoundBody": "Nenhuma empresa cadastrada com o slug <code>{slug}</code>. Confira o link."
   }
 }

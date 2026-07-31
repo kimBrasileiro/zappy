@@ -1,6 +1,7 @@
 import Script from 'next/script';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { FREE_TIER_MODE } from '../lib/stripe/plans';
+import { PRICE_BASICO, PRICE_FREE, PRICE_INTEGRACAO, PRICING_CURRENCY_CODE, PRICE_WHATSAPP_PROPRIO } from '../lib/pricing';
 import { LocaleSwitcher } from './locale-switcher';
 
 const BRAND_COLOR = '#2563eb';
@@ -66,13 +67,32 @@ export async function MarketingHome() {
 
   const trustItems = t.raw('trustItems') as string[];
   const features = t.raw('features.items') as { icon: string; title: string; body: string }[];
-  const plans = t.raw('pricing.plans') as { name: string; price: string; period: string; items: string[]; cta: string }[];
+  const planMeta = t.raw('pricing.plans') as { name: string; period: string; items: string[]; cta: string }[];
   const freePlanItems = t.raw('pricing.free.items') as string[];
   const steps = t.raw('howItWorks.steps') as { title: string; body: string }[];
   const faqItems = t.raw('faq.items') as { question: string; answer: string; answerFree?: string; answerPaid?: string }[];
   const demoQuickReplies = (t.raw('demoQuickReplies') as string[]).join('|');
 
+  // t.raw() bypasses ICU interpolation (it hands back the literal string,
+  // placeholders and all) — the "quanto custa" answer's {priceBasico}/
+  // {priceWhatsapp}/{priceIntegracao} placeholders need substituting by
+  // hand with the same deployment-config prices used in the pricing
+  // section above, not hardcoded translated amounts.
+  for (const item of faqItems) {
+    if (item.answerPaid) {
+      item.answerPaid = item.answerPaid
+        .replace('{priceBasico}', PRICE_BASICO)
+        .replace('{priceWhatsapp}', PRICE_WHATSAPP_PROPRIO)
+        .replace('{priceIntegracao}', PRICE_INTEGRACAO);
+    }
+  }
+
+  // Prices are deployment config (lib/pricing.ts), not translated content —
+  // matched to planMeta by the same fixed order the message files always
+  // list plans in (Básico, WhatsApp próprio, Integração).
   const planHrefs = ['/signup', '/signup', '/signup'];
+  const planPrices = [PRICE_BASICO, PRICE_WHATSAPP_PROPRIO, PRICE_INTEGRACAO];
+  const plans = planMeta.map((plan, i) => ({ ...plan, price: planPrices[i]! }));
 
   const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
     '@context': 'https://schema.org',
@@ -82,12 +102,12 @@ export async function MarketingHome() {
     operatingSystem: 'Web',
     description: FREE_TIER_MODE ? t('faq.jsonLdDescriptionFree') : t('faq.jsonLdDescriptionPaid'),
     offers: FREE_TIER_MODE
-      ? [{ '@type': 'Offer', name: t('faq.jsonLdFreeOfferName'), price: '0', priceCurrency: 'BRL', url: '/signup' }]
+      ? [{ '@type': 'Offer', name: t('faq.jsonLdFreeOfferName'), price: '0', priceCurrency: PRICING_CURRENCY_CODE, url: '/signup' }]
       : plans.map((plan, i) => ({
           '@type': 'Offer',
           name: plan.name,
           price: plan.price.replace(/\D/g, ''),
-          priceCurrency: 'BRL',
+          priceCurrency: PRICING_CURRENCY_CODE,
           url: planHrefs[i],
         })),
   });
@@ -323,7 +343,7 @@ export async function MarketingHome() {
               </span>
               <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>{t('pricing.free.title')}</h3>
               <div style={{ marginBottom: 20 }}>
-                <span style={{ fontSize: 30, fontWeight: 700 }}>{t('pricing.free.price')}</span>
+                <span style={{ fontSize: 30, fontWeight: 700 }}>{PRICE_FREE}</span>
                 <span style={{ fontSize: 13.5, color: '#888' }}> {t('pricing.free.period')}</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', textAlign: 'left' }}>

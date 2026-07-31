@@ -14,8 +14,7 @@ export default function TermsPage() {
     <LegalPage title="Termos de Uso" lastUpdated="27 de julho de 2026">
       <p style={p}>
         Estes Termos de Uso (&quot;Termos&quot;) regem o uso da plataforma Zappigo (&quot;Zappigo&quot;,
-        &quot;nós&quot;), operada por <strong>KIM BRASILEIRO LEAL LTDA</strong>, CNPJ{' '}
-        <strong>63.020.695/0001-93</strong>, com sede em São Paulo/SP, por você
+        &quot;nós&quot;), com sede em São Paulo/SP, por você
         (&quot;Contratante&quot;) ao criar uma conta e usar nossos serviços de atendimento
         automatizado via inteligência artificial, incluindo chat no site, WhatsApp, agendamento
         automático e FAQ.
@@ -50,7 +49,7 @@ export default function TermsPage() {
         continuar usando a plataforma gratuitamente.
       </p>
       <p style={p}>
-        A KIM BRASILEIRO LEAL LTDA se reserva o direito, a seu exclusivo critério, de: (i) passar a
+        A Zappigo se reserva o direito, a seu exclusivo critério, de: (i) passar a
         cobrar pelo uso da plataforma, seja por meio de planos pagos com cobrança mensal recorrente
         processados pelo Stripe, seja por outro modelo de cobrança; e/ou (ii) suspender, encerrar ou
         modificar substancialmente a plataforma, no todo ou em parte, a qualquer momento. Qualquer
@@ -121,8 +120,7 @@ export default function TermsPage() {
 
       <h2 style={h2}>7. Propriedade intelectual</h2>
       <p style={p}>
-        A Zappigo e todo o seu software, marca e conteúdo são de propriedade da{' '}
-        <strong>KIM BRASILEIRO LEAL LTDA</strong>. O conteúdo que você cadastra (serviços, FAQs, dados de
+        A Zappigo e todo o seu software, marca e conteúdo são de nossa propriedade. O conteúdo que você cadastra (serviços, FAQs, dados de
         clientes) permanece de sua propriedade; você concede à Zappigo uma licença limitada para
         processá-lo exclusivamente para prestar o serviço contratado.
       </p>

@@ -13,8 +13,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Política de Privacidade" lastUpdated="28 de julho de 2026">
       <p style={p}>
-        A Zappigo, operada por <strong>KIM BRASILEIRO LEAL LTDA</strong>, CNPJ{' '}
-        <strong>63.020.695/0001-93</strong>, com sede em São Paulo/SP, é controladora dos dados
+        A Zappigo, com sede em São Paulo/SP, é controladora dos dados
         pessoais tratados conforme descrito nesta Política, em conformidade com a Lei Geral de
         Proteção de Dados (LGPD, Lei 13.709/2018).
       </p>

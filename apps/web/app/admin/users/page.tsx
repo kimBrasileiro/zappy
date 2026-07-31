@@ -1,10 +1,12 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSuperAdmin } from '../../../lib/admin-auth';
 import { toggleUserActive } from './actions';
 
 export default async function AdminUsersPage() {
   const { userId: callerId } = await requireSuperAdmin();
+  const t = await getTranslations('admin.users');
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
@@ -13,18 +15,18 @@ export default async function AdminUsersPage() {
 
   return (
     <>
-      <h1 className="dash-h1">Usuários</h1>
-      <p className="dash-subtitle">Todos os usuários cadastrados no sistema, de todas as empresas.</p>
+      <h1 className="dash-h1">{t('title')}</h1>
+      <p className="dash-subtitle">{t('subtitle')}</p>
 
       <table className="dash-table">
         <thead>
           <tr>
-            <th>Email</th>
-            <th>Nome</th>
-            <th>Empresa</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Criado em</th>
+            <th>{t('tableEmail')}</th>
+            <th>{t('tableName')}</th>
+            <th>{t('tableCompany')}</th>
+            <th>{t('tableRole')}</th>
+            <th>{t('tableStatus')}</th>
+            <th>{t('tableCreatedAt')}</th>
             <th></th>
           </tr>
         </thead>
@@ -43,12 +45,12 @@ export default async function AdminUsersPage() {
               <td>{user.createdAt.toLocaleString('pt-BR')}</td>
               <td style={{ display: 'flex', gap: 6 }}>
                 <Link href={`/admin/users/${user.id}`} className="dash-btn dash-btn-secondary">
-                  Editar
+                  {t('editButton')}
                 </Link>
                 {user.id !== callerId && (
                   <form action={toggleUserActive.bind(null, user.id)}>
                     <button type="submit" className={user.status === 'active' ? 'dash-btn dash-btn-danger' : 'dash-btn dash-btn-secondary'}>
-                      {user.status === 'active' ? 'Desativar' : 'Reativar'}
+                      {user.status === 'active' ? t('deactivateButton') : t('reactivateButton')}
                     </button>
                   </form>
                 )}
@@ -58,7 +60,7 @@ export default async function AdminUsersPage() {
           {users.length === 0 && (
             <tr>
               <td colSpan={7} style={{ color: '#999' }}>
-                Nenhum usuário ainda.
+                {t('noUsers')}
               </td>
             </tr>
           )}

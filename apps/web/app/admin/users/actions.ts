@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSuperAdmin } from '../../../lib/admin-auth';
 
@@ -15,12 +16,13 @@ export async function updateUser(
   formData: FormData,
 ): Promise<UserFormState> {
   await requireSuperAdmin();
+  const t = await getTranslations('admin.users');
 
   const name = String(formData.get('name') ?? '').trim();
   const role = String(formData.get('role') ?? '').trim();
 
-  if (!name) return { error: 'Nome é obrigatório.' };
-  if (!['admin', 'agent', 'viewer'].includes(role)) return { error: 'Role inválida.' };
+  if (!name) return { error: t('errorNameRequired') };
+  if (!['admin', 'agent', 'viewer'].includes(role)) return { error: t('errorInvalidRole') };
 
   await prisma.user.update({ where: { id: userId }, data: { name, role } });
 

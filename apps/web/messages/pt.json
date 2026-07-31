@@ -545,5 +545,76 @@
     "whatsappGreeting": "Olá, gostaria de falar com {name}",
     "notFoundTitle": "Empresa não encontrada",
     "notFoundBody": "Nenhuma empresa cadastrada com o slug <code>{slug}</code>. Confira o link."
+  },
+  "admin": {
+    "nav": {
+      "companies": "Empresas",
+      "users": "Usuários",
+      "usage": "Gastos de IA",
+      "health": "Status dos serviços",
+      "backToDashboard": "Ir para o Dashboard"
+    },
+    "companies": {
+      "title": "Empresas",
+      "subtitle": "Todas as empresas cadastradas no sistema.",
+      "tableName": "Nome",
+      "tableSlug": "Slug",
+      "tablePlan": "Plano",
+      "tableStatus": "Status",
+      "tableUsers": "Usuários",
+      "tableTickets": "Tickets",
+      "tableCreatedAt": "Criada em",
+      "noCompanies": "Nenhuma empresa ainda."
+    },
+    "health": {
+      "title": "Status dos serviços",
+      "subtitle": "Checagem ao vivo — cada carregamento desta página testa de verdade cada serviço, não é um cache.",
+      "statusOk": "OK",
+      "statusError": "Erro",
+      "statusNotConfigured": "Não configurado"
+    },
+    "usage": {
+      "title": "Gastos de IA",
+      "subtitle": "Consumo de Gemini por empresa neste mês (desde {date}). Cada empresa tem um teto mensal de mensagens automáticas — ao atingi-lo, a conversa é encaminhada para atendimento humano em vez de continuar consumindo IA.",
+      "totalCostLabel": "Gasto total estimado (mês)",
+      "totalMessagesLabel": "Mensagens de clientes (mês)",
+      "activeCompaniesLabel": "Empresas ativas",
+      "projectionSectionTitle": "Projeção por empresa (mantendo o plano grátis)",
+      "avgSpendLabel": "Gasto médio real por empresa (mês)",
+      "maxSpendLabel": "Teto de gasto por empresa (no limite de {limit} msgs/mês)",
+      "capExplanation": "Teto calculado a partir do custo médio real por mensagem deste mês{noMessagesNote}; é o pior caso já limitado pelo teto de mensagens acima, não uma projeção sem controle.",
+      "noMessagesNote": " (ainda sem mensagens este mês — usando uma estimativa medida em teste real)",
+      "tableCompany": "Empresa",
+      "tableMessagesLimit": "Mensagens / limite",
+      "tableQuotaUsage": "Uso do teto",
+      "tableTokens": "Tokens (entrada/saída)",
+      "tableCost": "Gasto estimado",
+      "quotaLimitReached": "Limite atingido",
+      "quotaNearLimit": "Perto do limite",
+      "quotaNormal": "Normal",
+      "noCompanies": "Nenhuma empresa ainda."
+    },
+    "users": {
+      "title": "Usuários",
+      "subtitle": "Todos os usuários cadastrados no sistema, de todas as empresas.",
+      "editTitle": "Editar usuário",
+      "tableEmail": "Email",
+      "tableName": "Nome",
+      "tableCompany": "Empresa",
+      "tableRole": "Role",
+      "tableStatus": "Status",
+      "tableCreatedAt": "Criado em",
+      "editButton": "Editar",
+      "deactivateButton": "Desativar",
+      "reactivateButton": "Reativar",
+      "noUsers": "Nenhum usuário ainda.",
+      "formEmailLabel": "Email",
+      "formNameLabel": "Nome",
+      "formRoleLabel": "Role",
+      "saveChanges": "Salvar alterações",
+      "saving": "Salvando...",
+      "errorNameRequired": "Nome é obrigatório.",
+      "errorInvalidRole": "Role inválida."
+    }
   }
 }

@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { currentMonthStart, DEFAULT_MONTHLY_MESSAGE_LIMIT, getMonthlyMessageLimit } from '../../../lib/bot/quota';
 
@@ -19,13 +20,14 @@ interface UsageMetadata {
 // customer-message volume exists, the page always prefers the live number.
 const FALLBACK_AVG_COST_PER_MESSAGE_USD = 0.0012;
 
-function quotaBadge(usedPct: number) {
-  if (usedPct >= 100) return { className: 'dash-badge dash-badge-canceled', label: 'Limite atingido' };
-  if (usedPct >= 80) return { className: 'dash-badge dash-badge-past_due', label: 'Perto do limite' };
-  return { className: 'dash-badge dash-badge-active', label: 'Normal' };
+function quotaBadge(usedPct: number, labels: { limitReached: string; nearLimit: string; normal: string }) {
+  if (usedPct >= 100) return { className: 'dash-badge dash-badge-canceled', label: labels.limitReached };
+  if (usedPct >= 80) return { className: 'dash-badge dash-badge-past_due', label: labels.nearLimit };
+  return { className: 'dash-badge dash-badge-active', label: labels.normal };
 }
 
 export default async function AdminUsagePage() {
+  const t = await getTranslations('admin.usage');
   const monthStart = currentMonthStart();
 
   const companies = await prisma.company.findMany({ orderBy: { name: 'asc' } });
@@ -82,60 +84,62 @@ export default async function AdminUsagePage() {
   const avgSpendPerActiveCompanyUsd = activeCompanyCount > 0 ? totalCostUsd / activeCompanyCount : 0;
   const maxSpendPerCompanyUsd = avgCostPerMessageUsd * DEFAULT_MONTHLY_MESSAGE_LIMIT;
 
+  const quotaLabels = {
+    limitReached: t('quotaLimitReached'),
+    nearLimit: t('quotaNearLimit'),
+    normal: t('quotaNormal'),
+  };
+
   return (
     <>
-      <h1 className="dash-h1">Gastos de IA</h1>
+      <h1 className="dash-h1">{t('title')}</h1>
       <p className="dash-subtitle">
-        Consumo de Gemini por empresa neste mês (desde {monthStart.toLocaleDateString('pt-BR')}). Cada empresa tem um teto
-        mensal de mensagens automáticas — ao atingi-lo, a conversa é encaminhada para atendimento humano em vez de
-        continuar consumindo IA.
+        {t('subtitle', { date: monthStart.toLocaleDateString('pt-BR') })}
       </p>
 
       <div className="dash-stat-grid">
         <div className="dash-stat-tile">
           <span className="dash-stat-value">US$ {totalCostUsd.toFixed(2)}</span>
-          <span className="dash-stat-label">Gasto total estimado (mês)</span>
+          <span className="dash-stat-label">{t('totalCostLabel')}</span>
         </div>
         <div className="dash-stat-tile">
           <span className="dash-stat-value">{totalMessages}</span>
-          <span className="dash-stat-label">Mensagens de clientes (mês)</span>
+          <span className="dash-stat-label">{t('totalMessagesLabel')}</span>
         </div>
         <div className="dash-stat-tile">
           <span className="dash-stat-value">{activeCompanyCount}</span>
-          <span className="dash-stat-label">Empresas ativas</span>
+          <span className="dash-stat-label">{t('activeCompaniesLabel')}</span>
         </div>
       </div>
 
-      <div className="dash-section-title">Projeção por empresa (mantendo o plano grátis)</div>
+      <div className="dash-section-title">{t('projectionSectionTitle')}</div>
       <div className="dash-stat-grid">
         <div className="dash-stat-tile">
           <span className="dash-stat-value">US$ {avgSpendPerActiveCompanyUsd.toFixed(2)}</span>
-          <span className="dash-stat-label">Gasto médio real por empresa (mês)</span>
+          <span className="dash-stat-label">{t('avgSpendLabel')}</span>
         </div>
         <div className="dash-stat-tile">
           <span className="dash-stat-value">US$ {maxSpendPerCompanyUsd.toFixed(2)}</span>
-          <span className="dash-stat-label">Teto de gasto por empresa (no limite de {DEFAULT_MONTHLY_MESSAGE_LIMIT} msgs/mês)</span>
+          <span className="dash-stat-label">{t('maxSpendLabel', { limit: DEFAULT_MONTHLY_MESSAGE_LIMIT })}</span>
         </div>
       </div>
       <p className="dash-subtitle" style={{ marginTop: '-0.5rem' }}>
-        Teto calculado a partir do custo médio real por mensagem deste mês
-        {totalMessages === 0 && ' (ainda sem mensagens este mês — usando uma estimativa medida em teste real)'}; é o pior
-        caso já limitado pelo teto de mensagens acima, não uma projeção sem controle.
+        {t('capExplanation', { noMessagesNote: totalMessages === 0 ? t('noMessagesNote') : '' })}
       </p>
 
       <table className="dash-table">
         <thead>
           <tr>
-            <th>Empresa</th>
-            <th>Mensagens / limite</th>
-            <th>Uso do teto</th>
-            <th>Tokens (entrada/saída)</th>
-            <th>Gasto estimado</th>
+            <th>{t('tableCompany')}</th>
+            <th>{t('tableMessagesLimit')}</th>
+            <th>{t('tableQuotaUsage')}</th>
+            <th>{t('tableTokens')}</th>
+            <th>{t('tableCost')}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(({ company, messages, limit, usedPct, costUsd, promptTokens, completionTokens }) => {
-            const badge = quotaBadge(usedPct);
+            const badge = quotaBadge(usedPct, quotaLabels);
             return (
               <tr key={company.id}>
                 <td>
@@ -160,7 +164,7 @@ export default async function AdminUsagePage() {
           {rows.length === 0 && (
             <tr>
               <td colSpan={5} style={{ color: '#999' }}>
-                Nenhuma empresa ainda.
+                {t('noCompanies')}
               </td>
             </tr>
           )}

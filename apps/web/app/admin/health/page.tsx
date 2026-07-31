@@ -1,11 +1,6 @@
+import { getTranslations } from 'next-intl/server';
 import { runHealthChecks } from '../../../lib/health/checks';
 import { RefreshButton } from '../../dashboard/refresh-button';
-
-const STATUS_LABEL: Record<string, string> = {
-  ok: 'OK',
-  error: 'Erro',
-  not_configured: 'Não configurado',
-};
 
 const STATUS_COLOR: Record<string, string> = {
   ok: '#166534',
@@ -20,16 +15,22 @@ const STATUS_BG: Record<string, string> = {
 };
 
 export default async function HealthPage() {
+  const t = await getTranslations('admin.health');
   const results = await runHealthChecks();
+
+  const statusLabel: Record<string, string> = {
+    ok: t('statusOk'),
+    error: t('statusError'),
+    not_configured: t('statusNotConfigured'),
+  };
 
   return (
     <>
       <div className="dash-toolbar">
         <div>
-          <h1 className="dash-h1">Status dos serviços</h1>
+          <h1 className="dash-h1">{t('title')}</h1>
           <p className="dash-subtitle" style={{ marginBottom: 0 }}>
-            Checagem ao vivo — cada carregamento desta página testa de verdade cada serviço, não é
-            um cache.
+            {t('subtitle')}
           </p>
         </div>
         <RefreshButton />
@@ -53,7 +54,7 @@ export default async function HealthPage() {
                   letterSpacing: 0.3,
                 }}
               >
-                {STATUS_LABEL[r.status]}
+                {statusLabel[r.status]}
               </span>
             </div>
             {r.detail && <p style={{ fontSize: 12.5, color: '#555', margin: '0 0 4px', lineHeight: 1.5 }}>{r.detail}</p>}

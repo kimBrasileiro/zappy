@@ -545,5 +545,76 @@
     "whatsappGreeting": "Hi, I'd like to talk to {name}",
     "notFoundTitle": "Company not found",
     "notFoundBody": "No company is registered with the slug <code>{slug}</code>. Check the link."
+  },
+  "admin": {
+    "nav": {
+      "companies": "Companies",
+      "users": "Users",
+      "usage": "AI spend",
+      "health": "Service status",
+      "backToDashboard": "Go to Dashboard"
+    },
+    "companies": {
+      "title": "Companies",
+      "subtitle": "All companies registered in the system.",
+      "tableName": "Name",
+      "tableSlug": "Slug",
+      "tablePlan": "Plan",
+      "tableStatus": "Status",
+      "tableUsers": "Users",
+      "tableTickets": "Tickets",
+      "tableCreatedAt": "Created at",
+      "noCompanies": "No companies yet."
+    },
+    "health": {
+      "title": "Service status",
+      "subtitle": "Live check — every load of this page actually tests each service, it's not cached.",
+      "statusOk": "OK",
+      "statusError": "Error",
+      "statusNotConfigured": "Not configured"
+    },
+    "usage": {
+      "title": "AI spend",
+      "subtitle": "Gemini usage per company this month (since {date}). Each company has a monthly cap on automated messages — once reached, the conversation is routed to a human agent instead of continuing to consume AI.",
+      "totalCostLabel": "Estimated total spend (month)",
+      "totalMessagesLabel": "Customer messages (month)",
+      "activeCompaniesLabel": "Active companies",
+      "projectionSectionTitle": "Per-company projection (staying on the free plan)",
+      "avgSpendLabel": "Real average spend per company (month)",
+      "maxSpendLabel": "Spend cap per company (at the {limit} msgs/month limit)",
+      "capExplanation": "Cap calculated from this month's real average cost per message{noMessagesNote}; it's the worst case already bounded by the message cap above, not an unconstrained projection.",
+      "noMessagesNote": " (no messages yet this month — using an estimate measured in a real test)",
+      "tableCompany": "Company",
+      "tableMessagesLimit": "Messages / limit",
+      "tableQuotaUsage": "Cap usage",
+      "tableTokens": "Tokens (in/out)",
+      "tableCost": "Estimated cost",
+      "quotaLimitReached": "Limit reached",
+      "quotaNearLimit": "Near limit",
+      "quotaNormal": "Normal",
+      "noCompanies": "No companies yet."
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "All users registered in the system, across every company.",
+      "editTitle": "Edit user",
+      "tableEmail": "Email",
+      "tableName": "Name",
+      "tableCompany": "Company",
+      "tableRole": "Role",
+      "tableStatus": "Status",
+      "tableCreatedAt": "Created at",
+      "editButton": "Edit",
+      "deactivateButton": "Deactivate",
+      "reactivateButton": "Reactivate",
+      "noUsers": "No users yet.",
+      "formEmailLabel": "Email",
+      "formNameLabel": "Name",
+      "formRoleLabel": "Role",
+      "saveChanges": "Save changes",
+      "saving": "Saving...",
+      "errorNameRequired": "Name is required.",
+      "errorInvalidRole": "Invalid role."
+    }
   }
 }

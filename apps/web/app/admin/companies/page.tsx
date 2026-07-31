@@ -1,6 +1,8 @@
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 
 export default async function AdminCompaniesPage() {
+  const t = await getTranslations('admin.companies');
   const companies = await prisma.company.findMany({
     orderBy: { createdAt: 'desc' },
     include: { _count: { select: { users: true, tickets: true } } },
@@ -8,19 +10,19 @@ export default async function AdminCompaniesPage() {
 
   return (
     <>
-      <h1 className="dash-h1">Empresas</h1>
-      <p className="dash-subtitle">Todas as empresas cadastradas no sistema.</p>
+      <h1 className="dash-h1">{t('title')}</h1>
+      <p className="dash-subtitle">{t('subtitle')}</p>
 
       <table className="dash-table">
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Slug</th>
-            <th>Plano</th>
-            <th>Status</th>
-            <th>Usuários</th>
-            <th>Tickets</th>
-            <th>Criada em</th>
+            <th>{t('tableName')}</th>
+            <th>{t('tableSlug')}</th>
+            <th>{t('tablePlan')}</th>
+            <th>{t('tableStatus')}</th>
+            <th>{t('tableUsers')}</th>
+            <th>{t('tableTickets')}</th>
+            <th>{t('tableCreatedAt')}</th>
           </tr>
         </thead>
         <tbody>
@@ -42,7 +44,7 @@ export default async function AdminCompaniesPage() {
           {companies.length === 0 && (
             <tr>
               <td colSpan={7} style={{ color: '#999' }}>
-                Nenhuma empresa ainda.
+                {t('noCompanies')}
               </td>
             </tr>
           )}

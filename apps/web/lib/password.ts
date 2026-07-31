@@ -22,16 +22,32 @@ const BLOCKLIST = new Set([
 // Better Auth ever sees the password.
 export const MIN_PASSWORD_LENGTH = 10;
 
-export function validatePassword(password: string, email: string): string | null {
+export interface PasswordValidationMessages {
+  tooShort: string;
+  needsLetterAndNumber: string;
+  tooCommon: string;
+}
+
+const DEFAULT_MESSAGES: PasswordValidationMessages = {
+  tooShort: `A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+  needsLetterAndNumber: 'A senha precisa ter pelo menos uma letra e um número.',
+  tooCommon: 'Essa senha é fácil demais de adivinhar — escolhe outra.',
+};
+
+export function validatePassword(
+  password: string,
+  email: string,
+  messages: PasswordValidationMessages = DEFAULT_MESSAGES,
+): string | null {
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return `A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`;
+    return messages.tooShort;
   }
   if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-    return 'A senha precisa ter pelo menos uma letra e um número.';
+    return messages.needsLetterAndNumber;
   }
   const normalized = password.toLowerCase();
   if (BLOCKLIST.has(normalized) || normalized === email.toLowerCase().split('@')[0]) {
-    return 'Essa senha é fácil demais de adivinhar — escolhe outra.';
+    return messages.tooCommon;
   }
   return null;
 }

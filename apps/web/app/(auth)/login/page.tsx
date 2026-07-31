@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { authClient } from '../../../lib/auth-client';
 import { authStyles as s } from '../auth-styles';
 
@@ -16,6 +17,7 @@ const GOOGLE_ICON = (
 );
 
 export default function LoginPage() {
+  const t = useTranslations('auth');
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -43,10 +45,10 @@ export default function LoginPage() {
 
     if (signInError) {
       if (signInError.code === 'EMAIL_NOT_VERIFIED') {
-        setError('Você precisa confirmar seu email antes de entrar — verifica sua caixa de entrada.');
+        setError(t('errorEmailNotVerified'));
         setUnverifiedEmail(email);
       } else {
-        setError(signInError.message ?? 'Email ou senha inválidos.');
+        setError(signInError.message ?? t('errorInvalidCredentials'));
       }
       return;
     }
@@ -72,7 +74,7 @@ export default function LoginPage() {
       callbackURL: '/dashboard',
     });
     if (signInError) {
-      setGoogleError(signInError.message ?? 'Não foi possível entrar com o Google. Tenta de novo.');
+      setGoogleError(signInError.message ?? t('errorGoogleLoginFailed'));
       setGooglePending(false);
     }
   }
@@ -80,7 +82,7 @@ export default function LoginPage() {
   return (
     <main style={s.main}>
       <form onSubmit={handleSubmit} style={s.card}>
-        <h1 style={s.title}>Entrar</h1>
+        <h1 style={s.title}>{t('loginTitle')}</h1>
 
         {error && <div style={s.error}>{error}</div>}
         {unverifiedEmail && (
@@ -91,37 +93,37 @@ export default function LoginPage() {
             style={{ ...s.googleButton, marginBottom: 12 }}
           >
             {resendState === 'sent'
-              ? 'Email reenviado — confira sua caixa de entrada'
+              ? t('resendVerificationSent')
               : resendState === 'sending'
-                ? 'Reenviando...'
-                : 'Reenviar email de confirmação'}
+                ? t('resendVerificationSending')
+                : t('resendVerificationButton')}
           </button>
         )}
 
         <label style={s.label}>
-          Email
+          {t('emailLabel')}
           <input name="email" type="email" required style={s.input} />
         </label>
         <label style={s.label}>
-          Senha
+          {t('passwordLabel')}
           <input name="password" type="password" required style={s.input} />
         </label>
 
         <button type="submit" disabled={pending} style={s.button}>
-          {pending ? 'Entrando...' : 'Entrar'}
+          {pending ? t('loggingIn') : t('loginButton')}
         </button>
 
-        <div style={s.divider}>ou</div>
+        <div style={s.divider}>{t('orDivider')}</div>
 
         {googleError && <div style={s.error}>{googleError}</div>}
 
         <button type="button" onClick={handleGoogle} disabled={googlePending} style={s.googleButton}>
           {GOOGLE_ICON}
-          {googlePending ? 'Redirecionando...' : 'Entrar com Google'}
+          {googlePending ? t('googleRedirecting') : t('loginWithGoogle')}
         </button>
 
         <p style={s.footerText}>
-          Não tem conta? <Link href="/signup">Criar conta</Link>
+          {t('noAccountYet')} <Link href="/signup">{t('createAccountLink')}</Link>
         </p>
       </form>
     </main>

@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { auth } from '../../lib/auth';
 import { generateUniqueSlug } from '../../lib/slug';
@@ -26,13 +27,14 @@ export async function completeOnboarding(
 ): Promise<OnboardingState> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect('/login');
+  const t = await getTranslations('auth');
 
   const companyName = String(formData.get('companyName') ?? '').trim();
   if (!companyName) {
-    return { error: 'Digite o nome da sua empresa.' };
+    return { error: t('errorCompanyNameRequired') };
   }
   if (formData.get('terms') !== 'on') {
-    return { error: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade pra continuar.' };
+    return { error: t('errorMustAcceptTerms') };
   }
 
   const stripeEnabled = isStripeConfigured();

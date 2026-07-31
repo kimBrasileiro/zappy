@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { auth } from '../../../lib/auth';
 import { generateUniqueSlug } from '../../../lib/slug';
@@ -27,6 +28,7 @@ export interface SignUpState {
 }
 
 export async function signUp(_prevState: SignUpState, formData: FormData): Promise<SignUpState> {
+  const t = await getTranslations('auth');
   const companyName = String(formData.get('companyName') ?? '').trim();
   const name = String(formData.get('name') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
@@ -36,14 +38,18 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   const acceptedTerms = formData.get('terms') === 'on';
 
   if (!companyName || !name || !email || !password) {
-    return { error: 'Preenche todos os campos.' };
+    return { error: t('errorFillAllFields') };
   }
-  const passwordError = validatePassword(password, email);
+  const passwordError = validatePassword(password, email, {
+    tooShort: t('passwordTooShort'),
+    needsLetterAndNumber: t('passwordNeedsLetterAndNumber'),
+    tooCommon: t('passwordTooCommon'),
+  });
   if (passwordError) {
     return { error: passwordError };
   }
   if (!acceptedTerms) {
-    return { error: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade pra continuar.' };
+    return { error: t('errorMustAcceptTerms') };
   }
 
   const stripeEnabled = isStripeConfigured();
@@ -74,7 +80,7 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     // Roll back the just-created company so a failed signup (e.g. email
     // already registered) doesn't leave an orphaned, user-less company row.
     await prisma.company.delete({ where: { id: company.id } });
-    const message = err instanceof Error ? err.message : 'Não foi possível criar a conta.';
+    const message = err instanceof Error ? err.message : t('errorAccountCreationFailed');
     return { error: message };
   }
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { signUp, type SignUpState } from './actions';
 import { authClient } from '../../../lib/auth-client';
 import { authStyles as s } from '../auth-styles';
@@ -21,18 +22,27 @@ const GOOGLE_ICON = (
 );
 
 function SubmitButton() {
+  const t = useTranslations('auth');
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending} style={s.button}>
-      {pending ? 'Criando conta...' : 'Criar conta'}
+      {pending ? t('creatingAccount') : t('createAccountButton')}
     </button>
   );
 }
 
 export default function SignUpPage() {
+  const t = useTranslations('auth');
+  const tb = useTranslations('dashboard.billing');
   const [state, formAction] = useFormState(signUp, initialState);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
+
+  const planLabels: Record<string, string> = {
+    basico: tb('planBasico'),
+    whatsapp_proprio: tb('planWhatsappProprio'),
+    integracao: tb('planIntegracao'),
+  };
 
   async function handleGoogle() {
     setGoogleError(null);
@@ -49,7 +59,7 @@ export default function SignUpPage() {
       callbackURL: '/dashboard',
     });
     if (signInError) {
-      setGoogleError(signInError.message ?? 'Não foi possível continuar com o Google. Tenta de novo.');
+      setGoogleError(signInError.message ?? t('errorGoogleSignupFailed'));
       setGooglePending(false);
     }
   }
@@ -58,10 +68,9 @@ export default function SignUpPage() {
     return (
       <main style={s.main}>
         <div style={s.card}>
-          <h1 style={s.title}>Confirme seu email</h1>
+          <h1 style={s.title}>{t('verifyEmailTitle')}</h1>
           <p style={s.subtitle}>
-            Sua conta foi criada. Mandamos um link de confirmação pro seu email — clica nele pra
-            acessar o dashboard.
+            {t('verifyEmailBody')}
           </p>
         </div>
       </main>
@@ -72,8 +81,8 @@ export default function SignUpPage() {
     return (
       <main style={s.main}>
         <div style={s.card}>
-          <h1 style={s.title}>Só mais um passo</h1>
-          <p style={s.subtitle}>7 dias grátis — seu cartão só é cobrado quando o trial acabar.</p>
+          <h1 style={s.title}>{t('oneMoreStepTitle')}</h1>
+          <p style={s.subtitle}>{t('trialSubtitle')}</p>
           <PaymentStep clientSecret={state.clientSecret} />
         </div>
       </main>
@@ -83,42 +92,42 @@ export default function SignUpPage() {
   return (
     <main style={s.main}>
       <form action={formAction} style={s.card}>
-        <h1 style={s.title}>Criar sua conta</h1>
-        <p style={s.subtitle}>Isso cria a sua empresa e o seu usuário administrador.</p>
+        <h1 style={s.title}>{t('signupTitle')}</h1>
+        <p style={s.subtitle}>{t('signupSubtitle')}</p>
 
         {state?.error && <div style={s.error}>{state.error}</div>}
 
         <label style={s.label}>
-          Nome da empresa
-          <input name="companyName" required style={s.input} placeholder="Acme Corp" />
+          {t('companyNameLabel')}
+          <input name="companyName" required style={s.input} placeholder={t('companyNamePlaceholder')} />
         </label>
         <label style={s.label}>
-          Seu nome
-          <input name="name" required style={s.input} placeholder="Maria Silva" />
+          {t('yourNameLabel')}
+          <input name="name" required style={s.input} placeholder={t('yourNamePlaceholder')} />
         </label>
         <label style={s.label}>
-          Email
-          <input name="email" type="email" required style={s.input} placeholder="voce@empresa.com" />
+          {t('emailLabel')}
+          <input name="email" type="email" required style={s.input} placeholder={t('emailPlaceholder')} />
         </label>
         <label style={s.label}>
-          Telefone <span style={{ fontWeight: 400, color: '#999' }}>(opcional)</span>
-          <input name="phone" type="tel" style={s.input} placeholder="11 98765-4321" />
+          {t('phoneLabel')} <span style={{ fontWeight: 400, color: '#999' }}>{t('phoneOptional')}</span>
+          <input name="phone" type="tel" style={s.input} placeholder={t('phonePlaceholder')} />
         </label>
         <label style={s.label}>
-          Senha
+          {t('passwordLabel')}
           <input name="password" type="password" required minLength={10} style={s.input} />
           <span style={{ fontSize: 11.5, color: '#999', fontWeight: 400 }}>
-            Mínimo de 10 caracteres, com pelo menos uma letra e um número.
+            {t('passwordHint')}
           </span>
         </label>
 
         {stripeConfiguredOnClient && (
           <div style={s.label}>
-            Plano (7 dias grátis)
+            {t('planSectionLabel')}
             {PLANS.map((p, i) => (
               <label key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 400 }}>
                 <input type="radio" name="plan" value={p.key} defaultChecked={i === 0} />
-                {p.label} — {p.price}
+                {planLabels[p.key] ?? p.label} — {p.price}{tb('perMonthSuffix')}
               </label>
             ))}
           </div>
@@ -127,13 +136,13 @@ export default function SignUpPage() {
         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#555' }}>
           <input type="checkbox" name="terms" required style={{ marginTop: 2 }} />
           <span>
-            Li e concordo com os{' '}
+            {t('termsPrefix')}{' '}
             <Link href="/terms" target="_blank" style={{ color: '#2563eb' }}>
-              Termos de Uso
+              {t('termsLink')}
             </Link>{' '}
-            e a{' '}
+            {t('andConnector')}{' '}
             <Link href="/privacy" target="_blank" style={{ color: '#2563eb' }}>
-              Política de Privacidade
+              {t('privacyLink')}
             </Link>
             .
           </span>
@@ -141,17 +150,17 @@ export default function SignUpPage() {
 
         <SubmitButton />
 
-        <div style={s.divider}>ou</div>
+        <div style={s.divider}>{t('orDivider')}</div>
 
         {googleError && <div style={s.error}>{googleError}</div>}
 
         <button type="button" onClick={handleGoogle} disabled={googlePending} style={s.googleButton}>
           {GOOGLE_ICON}
-          {googlePending ? 'Redirecionando...' : 'Cadastrar com Google'}
+          {googlePending ? t('googleRedirecting') : t('signupWithGoogle')}
         </button>
 
         <p style={s.footerText}>
-          Já tem conta? <Link href="/login">Entrar</Link>
+          {t('alreadyHaveAccount')} <Link href="/login">{t('loginLink')}</Link>
         </p>
       </form>
     </main>

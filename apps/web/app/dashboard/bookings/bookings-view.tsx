@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Booking, Customer, Service } from '@zappigo/db';
 import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
 import { BookingsCalendar } from './bookings-calendar';
@@ -12,13 +13,6 @@ const STATUS_BADGE: Record<string, string> = {
   completed: 'dash-badge-open',
   cancelled: 'dash-badge-closed',
   no_show: 'dash-badge-canceled',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  confirmed: 'confirmado',
-  completed: 'compareceu',
-  cancelled: 'cancelado',
-  no_show: 'faltou',
 };
 
 function formatPrice(cents: number): string {
@@ -36,7 +30,15 @@ function formatScheduledAt(date: Date): string {
 }
 
 export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRelations[]; emptyLabel: string }) {
+  const t = useTranslations('dashboard.bookings');
   const [view, setView] = useState<'list' | 'calendar'>('list');
+
+  const statusLabel: Record<string, string> = {
+    confirmed: t('statusConfirmed'),
+    completed: t('statusCompleted'),
+    cancelled: t('statusCancelled'),
+    no_show: t('statusNoShow'),
+  };
 
   return (
     <>
@@ -46,14 +48,14 @@ export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRe
           className={view === 'list' ? 'dash-btn' : 'dash-btn dash-btn-secondary'}
           onClick={() => setView('list')}
         >
-          Lista
+          {t('viewList')}
         </button>
         <button
           type="button"
           className={view === 'calendar' ? 'dash-btn' : 'dash-btn dash-btn-secondary'}
           onClick={() => setView('calendar')}
         >
-          Calendário
+          {t('viewCalendar')}
         </button>
       </div>
 
@@ -63,13 +65,13 @@ export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRe
         <table className="dash-table">
           <thead>
             <tr>
-              <th>Serviço</th>
-              <th>Cliente</th>
-              <th>Telefone</th>
-              <th>Data/hora</th>
-              <th>Duração</th>
-              <th>Preço</th>
-              <th>Status</th>
+              <th>{t('tableService')}</th>
+              <th>{t('tableCustomer')}</th>
+              <th>{t('tablePhone')}</th>
+              <th>{t('tableDateTime')}</th>
+              <th>{t('tableDuration')}</th>
+              <th>{t('tablePrice')}</th>
+              <th>{t('tableStatus')}</th>
               <th></th>
             </tr>
           </thead>
@@ -77,32 +79,32 @@ export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRe
             {bookings.map((booking) => (
               <tr key={booking.id}>
                 <td>{booking.service.name}</td>
-                <td>{booking.customer?.name ?? booking.customer?.email ?? booking.customer?.externalId ?? 'Anônimo'}</td>
+                <td>{booking.customer?.name ?? booking.customer?.email ?? booking.customer?.externalId ?? t('anonymous')}</td>
                 <td>{booking.customer?.phone ?? '—'}</td>
                 <td>{formatScheduledAt(booking.scheduledAt)}</td>
                 <td>{booking.durationMinutes} min</td>
                 <td>{formatPrice(booking.priceCents)}</td>
                 <td>
                   <span className={`dash-badge ${STATUS_BADGE[booking.status] ?? 'dash-badge-closed'}`}>
-                    {STATUS_LABEL[booking.status] ?? booking.status}
+                    {statusLabel[booking.status] ?? booking.status}
                   </span>
                 </td>
                 <td>
                   {booking.status === 'confirmed' && (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <form action={markBookingAttended.bind(null, booking.id)}>
-                        <button type="submit" className="dash-btn dash-btn-secondary" title="Marcar que o cliente compareceu">
-                          Compareceu
+                        <button type="submit" className="dash-btn dash-btn-secondary" title={t('attendedTitle')}>
+                          {t('attendedButton')}
                         </button>
                       </form>
                       <form action={markBookingNoShow.bind(null, booking.id)}>
-                        <button type="submit" className="dash-btn dash-btn-secondary" title="Marcar que o cliente faltou">
-                          Faltou
+                        <button type="submit" className="dash-btn dash-btn-secondary" title={t('noShowTitle')}>
+                          {t('noShowButton')}
                         </button>
                       </form>
                       <form action={cancelBooking.bind(null, booking.id)}>
                         <button type="submit" className="dash-btn dash-btn-danger">
-                          Cancelar
+                          {t('cancelButton')}
                         </button>
                       </form>
                     </div>

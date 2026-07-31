@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { prisma, Prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import type { BusinessHours } from './service-form';
@@ -93,6 +94,7 @@ export async function createService(
   formData: FormData,
 ): Promise<ServiceFormState> {
   const { companyId, userId } = await requireSession();
+  const t = await getTranslations('dashboard.services');
 
   const name = String(formData.get('name') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim() || null;
@@ -105,9 +107,9 @@ export async function createService(
   const cancellationFeeCents = parseCancellationFeeCents(formData);
   const staffNames = parseStaffNames(formData);
 
-  if (!name) return { error: 'Nome é obrigatório.' };
-  if (durationMinutes === null) return { error: 'Duração inválida.' };
-  if (priceCents === null) return { error: 'Preço inválido.' };
+  if (!name) return { error: t('errorNameRequired') };
+  if (durationMinutes === null) return { error: t('errorInvalidDuration') };
+  if (priceCents === null) return { error: t('errorInvalidPrice') };
 
   await prisma.service.create({
     data: {
@@ -136,9 +138,10 @@ export async function updateService(
   formData: FormData,
 ): Promise<ServiceFormState> {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.services');
 
   const service = await prisma.service.findUnique({ where: { id: serviceId } });
-  if (!service || service.companyId !== companyId) return { error: 'Serviço não encontrado.' };
+  if (!service || service.companyId !== companyId) return { error: t('errorServiceNotFound') };
 
   const name = String(formData.get('name') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim() || null;
@@ -151,9 +154,9 @@ export async function updateService(
   const cancellationFeeCents = parseCancellationFeeCents(formData);
   const staffNames = parseStaffNames(formData);
 
-  if (!name) return { error: 'Nome é obrigatório.' };
-  if (durationMinutes === null) return { error: 'Duração inválida.' };
-  if (priceCents === null) return { error: 'Preço inválido.' };
+  if (!name) return { error: t('errorNameRequired') };
+  if (durationMinutes === null) return { error: t('errorInvalidDuration') };
+  if (priceCents === null) return { error: t('errorInvalidPrice') };
 
   await prisma.service.update({
     where: { id: serviceId },
@@ -212,16 +215,17 @@ export async function addStaffAbsence(
   formData: FormData,
 ): Promise<StaffAbsenceFormState> {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.services');
   const service = await prisma.service.findUnique({ where: { id: serviceId } });
-  if (!service || service.companyId !== companyId) return { error: 'Serviço não encontrado.' };
+  if (!service || service.companyId !== companyId) return { error: t('errorServiceNotFound') };
 
   const staffName = String(formData.get('staffName') ?? '').trim();
   const dateRaw = String(formData.get('date') ?? '').trim();
   if (!staffName || !service.staffNames.includes(staffName)) {
-    return { error: 'Escolha uma pessoa da equipe desse serviço.' };
+    return { error: t('errorChooseStaff') };
   }
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateRaw);
-  if (!match) return { error: 'Escolha uma data válida.' };
+  if (!match) return { error: t('errorChooseDate') };
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
 
   try {

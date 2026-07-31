@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { RefreshButton } from '../refresh-button';
@@ -6,6 +7,7 @@ import { AutoRefresh } from './auto-refresh';
 
 export default async function InboxPage() {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.inbox');
 
   const tickets = await prisma.ticket.findMany({
     where: { companyId, status: { in: ['waiting_human', 'in_progress'] } },
@@ -19,9 +21,9 @@ export default async function InboxPage() {
       <AutoRefresh />
       <div className="dash-toolbar">
         <div>
-          <h1 className="dash-h1">Inbox</h1>
+          <h1 className="dash-h1">{t('title')}</h1>
           <p className="dash-subtitle" style={{ marginBottom: 0 }}>
-            Conversas que precisam de um atendente — escaladas pelo bot ou já assumidas por alguém do time.
+            {t('subtitle')}
           </p>
         </div>
         <RefreshButton />
@@ -30,10 +32,10 @@ export default async function InboxPage() {
       <table className="dash-table">
         <thead>
           <tr>
-            <th>Cliente</th>
-            <th>Canal</th>
-            <th>Status</th>
-            <th>Atualizado em</th>
+            <th>{t('tableCustomer')}</th>
+            <th>{t('tableChannel')}</th>
+            <th>{t('tableStatus')}</th>
+            <th>{t('tableUpdatedAt')}</th>
           </tr>
         </thead>
         <tbody>
@@ -41,7 +43,7 @@ export default async function InboxPage() {
             <tr key={ticket.id}>
               <td>
                 <Link href={`/dashboard/conversations/${ticket.id}`}>
-                  {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? 'Anônimo'}
+                  {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? t('anonymous')}
                 </Link>
               </td>
               <td>{ticket.channel}</td>
@@ -54,7 +56,7 @@ export default async function InboxPage() {
           {tickets.length === 0 && (
             <tr>
               <td colSpan={4} style={{ color: '#999' }}>
-                Nenhuma conversa esperando atendimento humano no momento.
+                {t('noTickets')}
               </td>
             </tr>
           )}

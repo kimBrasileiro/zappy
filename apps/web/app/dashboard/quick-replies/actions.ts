@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 
@@ -14,13 +15,14 @@ export async function createTemplate(
   formData: FormData,
 ): Promise<TemplateFormState> {
   const { companyId, userId } = await requireSession();
+  const t = await getTranslations('dashboard.quickReplies');
 
   const name = String(formData.get('name') ?? '').trim();
   const content = String(formData.get('content') ?? '').trim();
   const shortcut = String(formData.get('shortcut') ?? '').trim() || null;
   const category = String(formData.get('category') ?? '').trim() || null;
 
-  if (!name || !content) return { error: 'Nome e conteúdo são obrigatórios.' };
+  if (!name || !content) return { error: t('errorRequired') };
 
   await prisma.responseTemplate.create({
     data: { companyId, name, content, shortcut, category, createdBy: userId },
@@ -36,15 +38,16 @@ export async function updateTemplate(
   formData: FormData,
 ): Promise<TemplateFormState> {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.quickReplies');
 
   const template = await prisma.responseTemplate.findUnique({ where: { id: templateId } });
-  if (!template || template.companyId !== companyId) return { error: 'Template não encontrado.' };
+  if (!template || template.companyId !== companyId) return { error: t('errorNotFound') };
 
   const name = String(formData.get('name') ?? '').trim();
   const content = String(formData.get('content') ?? '').trim();
   const shortcut = String(formData.get('shortcut') ?? '').trim() || null;
   const category = String(formData.get('category') ?? '').trim() || null;
-  if (!name || !content) return { error: 'Nome e conteúdo são obrigatórios.' };
+  if (!name || !content) return { error: t('errorRequired') };
 
   await prisma.responseTemplate.update({
     where: { id: templateId },

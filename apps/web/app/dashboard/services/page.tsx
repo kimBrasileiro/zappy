@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { createService, deleteService, toggleServiceActive } from './actions';
@@ -16,6 +17,7 @@ function formatPrice(cents: number): string {
 
 export default async function ServicesPage() {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.services');
 
   const services = await prisma.service.findMany({
     where: { companyId },
@@ -26,27 +28,26 @@ export default async function ServicesPage() {
     <>
       <div className="dash-toolbar">
         <div>
-          <h1 className="dash-h1">Serviços</h1>
+          <h1 className="dash-h1">{t('title')}</h1>
           <p className="dash-subtitle" style={{ marginBottom: 0 }}>
-            Serviços que os clientes podem agendar pelo chat — duração e preço aparecem pro bot na
-            hora de oferecer horários.
+            {t('subtitle')}
           </p>
         </div>
         <RefreshButton />
       </div>
 
       <div className="dash-card">
-        <ServiceForm action={createService} submitLabel="Criar serviço" />
+        <ServiceForm action={createService} submitLabel={t('createLabel')} />
       </div>
 
       <table className="dash-table">
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Duração</th>
-            <th>Preço</th>
-            <th>Agendamento</th>
-            <th>Status</th>
+            <th>{t('tableName')}</th>
+            <th>{t('tableDuration')}</th>
+            <th>{t('tablePrice')}</th>
+            <th>{t('tableBookingMode')}</th>
+            <th>{t('tableStatus')}</th>
             <th></th>
           </tr>
         </thead>
@@ -57,39 +58,39 @@ export default async function ServicesPage() {
                 <Link href={`/dashboard/services/${service.id}`}>{service.name}</Link>
                 {service.is24h && (
                   <span className="dash-badge dash-badge-in_progress" style={{ marginLeft: 8 }}>
-                    24h
+                    {t('badge24h')}
                   </span>
                 )}
                 {service.cancellationNoticeHours > 0 && (
                   <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                    Cancelamento até {service.cancellationNoticeHours}h antes
+                    {t('cancellationNotice', { hours: service.cancellationNoticeHours })}
                     {service.cancellationFeeCents > 0 &&
-                      ` — multa de ${formatPrice(service.cancellationFeeCents)}`}
+                      t('cancellationFeeNote', { fee: formatPrice(service.cancellationFeeCents) })}
                   </div>
                 )}
                 {service.staffNames.length > 0 && (
                   <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                    Equipe: {service.staffNames.join(', ')}
+                    {t('staffLabel', { names: service.staffNames.join(', ') })}
                   </div>
                 )}
               </td>
               <td>{formatDuration(service.durationMinutes)}</td>
               <td>{formatPrice(service.priceCents)}</td>
-              <td>{service.bookingMode === 'manual' ? 'Pré-agendamento' : 'Automático'}</td>
+              <td>{service.bookingMode === 'manual' ? t('bookingModeManual') : t('bookingModeAuto')}</td>
               <td>
                 <span className={service.active ? 'dash-badge dash-badge-in_progress' : 'dash-badge dash-badge-closed'}>
-                  {service.active ? 'ativo' : 'inativo'}
+                  {service.active ? t('statusActive') : t('statusInactive')}
                 </span>
               </td>
               <td style={{ display: 'flex', gap: 6 }}>
                 <form action={toggleServiceActive.bind(null, service.id)}>
                   <button type="submit" className="dash-btn dash-btn-secondary">
-                    {service.active ? 'Desativar' : 'Ativar'}
+                    {service.active ? t('deactivate') : t('activate')}
                   </button>
                 </form>
                 <form action={deleteService.bind(null, service.id)}>
                   <button type="submit" className="dash-btn dash-btn-danger">
-                    Excluir
+                    {t('delete')}
                   </button>
                 </form>
               </td>
@@ -98,7 +99,7 @@ export default async function ServicesPage() {
           {services.length === 0 && (
             <tr>
               <td colSpan={6} style={{ color: '#999' }}>
-                Nenhum serviço ainda.
+                {t('noServices')}
               </td>
             </tr>
           )}

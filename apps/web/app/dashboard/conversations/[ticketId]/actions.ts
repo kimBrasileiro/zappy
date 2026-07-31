@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { sendWhatsAppMessage, toWhatsAppPhone } from '../../../../lib/whatsapp/client';
@@ -15,16 +16,17 @@ export async function sendAgentReply(
   formData: FormData,
 ): Promise<ReplyState> {
   const { companyId, userId } = await requireSession();
+  const t = await getTranslations('dashboard.conversations');
 
   const content = String(formData.get('content') ?? '').trim();
-  if (!content) return { error: 'Escreve uma mensagem antes de enviar.' };
+  if (!content) return { error: t('errorEmptyMessage') };
 
   const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, include: { customer: true } });
   if (!ticket || ticket.companyId !== companyId) {
     // Same spirit as the orchestrator's G7 — never act on a ticket that
     // doesn't belong to the caller's company, even if the id lookup alone
     // would have returned something.
-    return { error: 'Ticket não encontrado.' };
+    return { error: t('errorTicketNotFound') };
   }
 
   await prisma.message.create({

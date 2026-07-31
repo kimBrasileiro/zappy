@@ -4,10 +4,18 @@ import { useMemo, useState } from 'react';
 import { Calendar, dateFnsLocalizer, type Event } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 import type { Booking, Customer, Service } from '@zappigo/db';
 import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
 import { toBrazilWallClock } from '../../../lib/timezone';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+// The calendar grid itself (month/week names, "next"/"today" chrome) stays
+// Brazil-locale/pt-BR — same scope cut as scheduledAt formatting throughout
+// this codebase (see lib/timezone.ts): no per-company/per-viewer timezone or
+// calendar-locale support exists yet, so this widget's own chrome isn't part
+// of the pt/es/en UI switcher. The booking action buttons and status labels
+// below it are.
 
 type BookingWithRelations = Booking & { service: Service; customer: Customer | null };
 
@@ -41,13 +49,6 @@ const STATUS_COLOR: Record<string, string> = {
   no_show: '#dc2626',
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  confirmed: 'confirmado',
-  completed: 'compareceu',
-  cancelled: 'cancelado',
-  no_show: 'faltou',
-};
-
 function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
@@ -68,20 +69,28 @@ function toWallClockLocalDate(d: Date): Date {
 type BookingEvent = Event & { resource: BookingWithRelations };
 
 export function BookingsCalendar({ bookings }: { bookings: BookingWithRelations[] }) {
+  const t = useTranslations('dashboard.bookings');
   const [selected, setSelected] = useState<BookingWithRelations | null>(null);
+
+  const statusLabel: Record<string, string> = {
+    confirmed: t('statusConfirmed'),
+    completed: t('statusCompleted'),
+    cancelled: t('statusCancelled'),
+    no_show: t('statusNoShow'),
+  };
 
   const events = useMemo<BookingEvent[]>(
     () =>
       bookings.map((booking) => {
         const start = toWallClockLocalDate(booking.scheduledAt);
         return {
-          title: `${booking.service.name} — ${booking.customer?.name ?? 'Anônimo'}`,
+          title: `${booking.service.name} — ${booking.customer?.name ?? t('anonymous')}`,
           start,
           end: new Date(start.getTime() + booking.durationMinutes * 60_000),
           resource: booking,
         };
       }),
-    [bookings],
+    [bookings, t],
   );
 
   return (
@@ -110,11 +119,11 @@ export function BookingsCalendar({ bookings }: { bookings: BookingWithRelations[
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
               <h3 style={{ margin: 0, fontSize: 16 }}>{selected.service.name}</h3>
               <span className={`dash-badge dash-badge-${selected.status === 'confirmed' ? 'in_progress' : selected.status === 'completed' ? 'open' : selected.status === 'no_show' ? 'canceled' : 'closed'}`}>
-                {STATUS_LABEL[selected.status] ?? selected.status}
+                {statusLabel[selected.status] ?? selected.status}
               </span>
             </div>
             <p style={{ margin: '0 0 4px', fontSize: 13.5, color: '#444' }}>
-              {selected.customer?.name ?? selected.customer?.email ?? selected.customer?.externalId ?? 'Anônimo'}
+              {selected.customer?.name ?? selected.customer?.email ?? selected.customer?.externalId ?? t('anonymous')}
               {selected.customer?.phone ? ` — ${selected.customer.phone}` : ''}
             </p>
             <p style={{ margin: '0 0 4px', fontSize: 13.5, color: '#444' }}>
@@ -123,13 +132,13 @@ export function BookingsCalendar({ bookings }: { bookings: BookingWithRelations[
             {selected.status === 'confirmed' && (
               <div style={{ display: 'flex', gap: 6, marginTop: 16 }}>
                 <form action={async () => { await markBookingAttended(selected.id); setSelected(null); }}>
-                  <button type="submit" className="dash-btn dash-btn-secondary">Compareceu</button>
+                  <button type="submit" className="dash-btn dash-btn-secondary">{t('attendedButton')}</button>
                 </form>
                 <form action={async () => { await markBookingNoShow(selected.id); setSelected(null); }}>
-                  <button type="submit" className="dash-btn dash-btn-secondary">Faltou</button>
+                  <button type="submit" className="dash-btn dash-btn-secondary">{t('noShowButton')}</button>
                 </form>
                 <form action={async () => { await cancelBooking(selected.id); setSelected(null); }}>
-                  <button type="submit" className="dash-btn dash-btn-danger">Cancelar</button>
+                  <button type="submit" className="dash-btn dash-btn-danger">{t('cancelButton')}</button>
                 </form>
               </div>
             )}

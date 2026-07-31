@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { prisma, type Prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { RefreshButton } from '../refresh-button';
@@ -10,6 +11,7 @@ export default async function BookingsPage({
   searchParams: { q?: string; date?: string };
 }) {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.bookings');
   const q = searchParams.q?.trim();
   const date = searchParams.date?.trim();
 
@@ -45,9 +47,9 @@ export default async function BookingsPage({
     <>
       <div className="dash-toolbar">
         <div>
-          <h1 className="dash-h1">Agendamentos</h1>
+          <h1 className="dash-h1">{t('title')}</h1>
           <p className="dash-subtitle" style={{ marginBottom: 0 }}>
-            Todos os agendamentos criados pelo bot (ou manualmente), mais recentes primeiro.
+            {t('subtitle')}
           </p>
         </div>
         <RefreshButton />
@@ -55,26 +57,26 @@ export default async function BookingsPage({
 
       <form method="get" className="dash-card" style={{ display: 'flex', gap: 10, alignItems: 'flex-end', padding: '16px 20px', marginBottom: 20 }}>
         <label className="dash-form-row" style={{ flex: 1, marginBottom: 0 }}>
-          Nome ou telefone
-          <input type="text" name="q" defaultValue={q} placeholder="Ex: Maria ou 11 98765-4321" />
+          {t('searchLabel')}
+          <input type="text" name="q" defaultValue={q} placeholder={t('searchPlaceholder')} />
         </label>
         <label className="dash-form-row" style={{ marginBottom: 0 }}>
-          Data
+          {t('dateLabel')}
           <input type="date" name="date" defaultValue={date} />
         </label>
         <button type="submit" className="dash-btn">
-          Buscar
+          {t('searchButton')}
         </button>
         {(q || date) && (
           <a href="/dashboard/bookings" className="dash-btn dash-btn-secondary" style={{ textDecoration: 'none' }}>
-            Limpar
+            {t('clearButton')}
           </a>
         )}
       </form>
 
       <BookingsView
         bookings={bookings}
-        emptyLabel={q || date ? 'Nenhum agendamento encontrado com esse filtro.' : 'Nenhum agendamento ainda.'}
+        emptyLabel={q || date ? t('emptyFiltered') : t('emptyDefault')}
       />
     </>
   );

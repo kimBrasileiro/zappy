@@ -2,20 +2,23 @@
 
 import { useRef } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import { sendAgentReply, type ReplyState } from './actions';
 
 const initialState: ReplyState = {};
 
 function SendButton() {
+  const t = useTranslations('dashboard.conversations');
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="dash-btn" disabled={pending}>
-      {pending ? 'Enviando...' : 'Enviar'}
+      {pending ? t('sending') : t('sendButton')}
     </button>
   );
 }
 
 export function ReplyForm({ ticketId }: { ticketId: string }) {
+  const t = useTranslations('dashboard.conversations');
   const action = sendAgentReply.bind(null, ticketId);
   const [state, formAction] = useFormState(action, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -37,7 +40,7 @@ export function ReplyForm({ ticketId }: { ticketId: string }) {
         name="content"
         required
         rows={3}
-        placeholder="Escreva sua resposta para o cliente..."
+        placeholder={t('replyPlaceholder')}
         style={{ border: '1px solid #ddd', borderRadius: 8, padding: 10, fontSize: 13.5, fontFamily: 'inherit' }}
       />
       <div>

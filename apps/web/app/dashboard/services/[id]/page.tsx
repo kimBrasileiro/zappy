@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { addStaffAbsence, removeStaffAbsence, updateService } from '../actions';
@@ -11,6 +12,7 @@ function formatDate(date: Date): string {
 
 export default async function EditServicePage({ params }: { params: { id: string } }) {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.services');
 
   const service = await prisma.service.findUnique({ where: { id: params.id } });
   if (!service || service.companyId !== companyId) notFound();
@@ -25,7 +27,7 @@ export default async function EditServicePage({ params }: { params: { id: string
 
   return (
     <>
-      <h1 className="dash-h1">Editar serviço</h1>
+      <h1 className="dash-h1">{t('editTitle')}</h1>
       <div className="dash-card">
         <ServiceForm
           action={updateService.bind(null, service.id)}
@@ -41,17 +43,15 @@ export default async function EditServicePage({ params }: { params: { id: string
             cancellationFeeCents: service.cancellationFeeCents,
             staffNames: service.staffNames,
           }}
-          submitLabel="Salvar alterações"
+          submitLabel={t('saveChanges')}
         />
       </div>
 
       {service.staffNames.length > 0 && (
         <div className="dash-card">
-          <h3 style={{ fontSize: 14, margin: '0 0 4px' }}>Ausências da equipe</h3>
+          <h3 style={{ fontSize: 14, margin: '0 0 4px' }}>{t('absencesTitle')}</h3>
           <p style={{ fontSize: 12, color: '#777', margin: '0 0 14px', lineHeight: 1.5 }}>
-            Marque um dia em que uma pessoa não vai atender (folga, falta, férias). Nesse dia, o
-            dashboard e o chat de IA param de oferecer horários com essa pessoa — se ela for a
-            única da equipe, o sistema avisa o cliente que não há horário disponível.
+            {t('absencesBody')}
           </p>
           <StaffAbsenceForm action={addStaffAbsence.bind(null, service.id)} staffNames={service.staffNames} />
 
@@ -59,8 +59,8 @@ export default async function EditServicePage({ params }: { params: { id: string
             <table className="dash-table" style={{ marginTop: 16 }}>
               <thead>
                 <tr>
-                  <th>Pessoa</th>
-                  <th>Dia</th>
+                  <th>{t('tablePerson')}</th>
+                  <th>{t('tableDay')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -72,7 +72,7 @@ export default async function EditServicePage({ params }: { params: { id: string
                     <td>
                       <form action={removeStaffAbsence.bind(null, service.id, absence.id)}>
                         <button type="submit" className="dash-btn dash-btn-danger">
-                          Remover
+                          {t('remove')}
                         </button>
                       </form>
                     </td>
@@ -81,7 +81,7 @@ export default async function EditServicePage({ params }: { params: { id: string
               </tbody>
             </table>
           ) : (
-            <p style={{ color: '#999', fontSize: 13, marginTop: 16 }}>Nenhuma ausência marcada.</p>
+            <p style={{ color: '#999', fontSize: 13, marginTop: 16 }}>{t('noAbsences')}</p>
           )}
         </div>
       )}

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { createTemplate, deleteTemplate, toggleTemplateActive } from './actions';
@@ -7,6 +8,7 @@ import { RefreshButton } from '../refresh-button';
 
 export default async function QuickRepliesPage() {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.quickReplies');
 
   const templates = await prisma.responseTemplate.findMany({
     where: { companyId },
@@ -17,25 +19,25 @@ export default async function QuickRepliesPage() {
     <>
       <div className="dash-toolbar">
         <div>
-          <h1 className="dash-h1">Quick Replies</h1>
+          <h1 className="dash-h1">{t('title')}</h1>
           <p className="dash-subtitle" style={{ marginBottom: 0 }}>
-            Respostas rápidas que sua equipe usa no dia a dia.
+            {t('subtitle')}
           </p>
         </div>
         <RefreshButton />
       </div>
 
       <div className="dash-card">
-        <TemplateForm action={createTemplate} submitLabel="Criar quick reply" />
+        <TemplateForm action={createTemplate} submitLabel={t('createLabel')} />
       </div>
 
       <table className="dash-table">
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Atalho</th>
-            <th>Categoria</th>
-            <th>Status</th>
+            <th>{t('tableName')}</th>
+            <th>{t('tableShortcut')}</th>
+            <th>{t('tableCategory')}</th>
+            <th>{t('tableStatus')}</th>
             <th></th>
           </tr>
         </thead>
@@ -49,18 +51,18 @@ export default async function QuickRepliesPage() {
               <td>{template.category ?? '—'}</td>
               <td>
                 <span className={template.active ? 'dash-badge dash-badge-in_progress' : 'dash-badge dash-badge-closed'}>
-                  {template.active ? 'ativo' : 'inativo'}
+                  {template.active ? t('statusActive') : t('statusInactive')}
                 </span>
               </td>
               <td style={{ display: 'flex', gap: 6 }}>
                 <form action={toggleTemplateActive.bind(null, template.id)}>
                   <button type="submit" className="dash-btn dash-btn-secondary">
-                    {template.active ? 'Desativar' : 'Ativar'}
+                    {template.active ? t('deactivate') : t('activate')}
                   </button>
                 </form>
                 <form action={deleteTemplate.bind(null, template.id)}>
                   <button type="submit" className="dash-btn dash-btn-danger">
-                    Excluir
+                    {t('delete')}
                   </button>
                 </form>
               </td>
@@ -69,7 +71,7 @@ export default async function QuickRepliesPage() {
           {templates.length === 0 && (
             <tr>
               <td colSpan={5} style={{ color: '#999' }}>
-                Nenhum quick reply ainda.
+                {t('noTemplates')}
               </td>
             </tr>
           )}

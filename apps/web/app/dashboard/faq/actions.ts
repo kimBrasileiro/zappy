@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 
@@ -14,11 +15,12 @@ export async function createFaq(
   formData: FormData,
 ): Promise<FaqFormState> {
   const { companyId, userId } = await requireSession();
+  const t = await getTranslations('dashboard.faq');
 
   const question = String(formData.get('question') ?? '').trim();
   const answer = String(formData.get('answer') ?? '').trim();
 
-  if (!question || !answer) return { error: 'Pergunta e resposta são obrigatórias.' };
+  if (!question || !answer) return { error: t('errorRequired') };
 
   await prisma.faq.create({
     data: { companyId, question, answer, createdBy: userId },
@@ -34,13 +36,14 @@ export async function updateFaq(
   formData: FormData,
 ): Promise<FaqFormState> {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.faq');
 
   const faq = await prisma.faq.findUnique({ where: { id: faqId } });
-  if (!faq || faq.companyId !== companyId) return { error: 'FAQ não encontrada.' };
+  if (!faq || faq.companyId !== companyId) return { error: t('errorNotFound') };
 
   const question = String(formData.get('question') ?? '').trim();
   const answer = String(formData.get('answer') ?? '').trim();
-  if (!question || !answer) return { error: 'Pergunta e resposta são obrigatórias.' };
+  if (!question || !answer) return { error: t('errorRequired') };
 
   await prisma.faq.update({ where: { id: faqId }, data: { question, answer } });
 

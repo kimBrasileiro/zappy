@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { getStripe, isPlanKey, priceIdForPlan } from '../../../lib/stripe/client';
@@ -55,18 +56,19 @@ export interface ChangePlanState {
 
 export async function changePlan(_prevState: ChangePlanState, formData: FormData): Promise<ChangePlanState> {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.billing');
 
   const planRaw = String(formData.get('plan') ?? '');
   if (!isPlanKey(planRaw)) {
-    return { error: 'Plano inválido.' };
+    return { error: t('errorInvalidPlan') };
   }
   if (formData.get('confirm') !== 'on') {
-    return { error: 'Confirma a troca de plano e o aceite dos Termos pra continuar.' };
+    return { error: t('errorMustConfirm') };
   }
 
   const company = await getCompanyWithSubscription(companyId);
   if (!company) {
-    return { error: 'Nenhuma assinatura ativa pra alterar.' };
+    return { error: t('errorNoActiveSubscription') };
   }
 
   if (company.plan === planRaw) {
@@ -77,19 +79,19 @@ export async function changePlan(_prevState: ChangePlanState, formData: FormData
   // already relying on (e.g. loses their own WhatsApp number), so it goes
   // through support instead of a single click on the dashboard.
   if (planRank(planRaw) < planRank(company.plan)) {
-    return { error: 'Downgrade de plano não é feito por aqui — fale com o suporte.' };
+    return { error: t('errorDowngradeNotSupported') };
   }
 
   const priceId = priceIdForPlan(planRaw);
   if (!priceId) {
-    return { error: 'Esse plano ainda não está disponível — fale com o suporte.' };
+    return { error: t('errorPlanUnavailable') };
   }
 
   const stripe = getStripe();
   const subscription = await stripe.subscriptions.retrieve(company.stripeSubscriptionId!);
   const itemId = subscription.items.data[0]?.id;
   if (!itemId) {
-    return { error: 'Não foi possível localizar sua assinatura no Stripe — fale com o suporte.' };
+    return { error: t('errorSubscriptionNotFound') };
   }
 
   // Prorated immediately (upgrade: charged now for the difference; downgrade:

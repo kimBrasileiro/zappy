@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { getTranslations } from 'next-intl/server';
 
 const BRAND_COLOR = '#2563eb';
 
-export function LegalPage({
+export async function LegalPage({
   title,
   lastUpdated,
   children,
@@ -12,6 +13,8 @@ export function LegalPage({
   lastUpdated: string;
   children: ReactNode;
 }) {
+  const t = await getTranslations('legal');
+
   return (
     <main
       style={{
@@ -24,11 +27,11 @@ export function LegalPage({
       }}
     >
       <Link href="/" style={{ color: BRAND_COLOR, fontSize: 13.5, textDecoration: 'none' }}>
-        ← Voltar pra Zappigo
+        {t('backLink')}
       </Link>
 
       <h1 style={{ fontSize: 30, margin: '20px 0 4px' }}>{title}</h1>
-      <p style={{ color: '#888', fontSize: 13, margin: '0 0 28px' }}>Última atualização: {lastUpdated}</p>
+      <p style={{ color: '#888', fontSize: 13, margin: '0 0 28px' }}>{t('lastUpdatedPrefix')} {lastUpdated}</p>
 
       {/* Not legal advice — a placeholder-filled starting point, not a
           substitute for review by an actual lawyer before this touches real
@@ -45,9 +48,7 @@ export function LegalPage({
           marginBottom: 32,
         }}
       >
-        ⚠️ Modelo de referência para servir de ponto de partida — ainda não foi revisado por um
-        advogado. Preencha os campos entre colchetes com os dados reais da empresa e passe por
-        revisão jurídica antes de usar com cobranças reais.
+        {t('disclaimer')}
       </div>
 
       <div style={{ fontSize: 14.5, color: '#333' }}>{children}</div>

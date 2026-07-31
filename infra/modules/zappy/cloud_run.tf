@@ -14,6 +14,13 @@ locals {
       RESEND_FROM_EMAIL                  = var.resend_from_email
       WHATSAPP_CLOUD_API_PHONE_NUMBER_ID = var.whatsapp_phone_number_id
       WHATSAPP_CLOUD_API_NUMBER          = var.whatsapp_number
+      DEFAULT_LOCALE                     = var.default_locale
+      PRICING_CURRENCY_SYMBOL            = var.pricing_currency_symbol
+      PRICING_CURRENCY_CODE              = var.pricing_currency_code
+      PRICING_AMOUNT_FREE                = var.pricing_amount_free
+      PRICING_AMOUNT_BASICO              = var.pricing_amount_basico
+      PRICING_AMOUNT_WHATSAPP_PROPRIO    = var.pricing_amount_whatsapp_proprio
+      PRICING_AMOUNT_INTEGRACAO          = var.pricing_amount_integracao
     } : k => v if v != ""
   }
 }

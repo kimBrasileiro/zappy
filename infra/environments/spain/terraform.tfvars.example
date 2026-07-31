@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+
+project_id = "your-new-gcp-project-id"
+
+# Set once you know it — either zappigo.es (Cloudflare-fronted, same
+# pattern as zappigo.com.br) or the cloud_run_url output after a first
+# apply. See ../../README.md#chicken-and-egg-app-url.
+# app_url = "https://zappigo.es"
+
+# Leave stripe_publishable_key unset for the free-tier launch — matches
+# zappigo.com.br's own launch strategy. Set a pk_live_... EUR key later.
+
+# google_client_id       = "....apps.googleusercontent.com"      # new OAuth client in THIS project
+# google_calendar_client_id = "....apps.googleusercontent.com"   # separate OAuth client, same project
+
+# whatsapp_phone_number_id = "1195368413663977"
+# whatsapp_number          = "+34666240157"

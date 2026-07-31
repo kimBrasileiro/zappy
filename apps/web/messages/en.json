@@ -357,6 +357,27 @@
       "connectButton": "Connect Google Calendar"
     }
   },
+  "metadata": {
+    "titleFree": "Zappigo — Free AI WhatsApp Scheduling",
+    "titlePaid": "Zappigo — AI-Powered WhatsApp Scheduling",
+    "descriptionFree": "Free AI-powered WhatsApp scheduling: an assistant that books appointments and supports your customers, answering questions automatically on your site and on WhatsApp — no card, no monthly fee.",
+    "descriptionPaid": "AI-powered WhatsApp scheduling: an assistant that books appointments and supports your customers, answering questions automatically on your site and on WhatsApp — with handoff to a human agent when needed.",
+    "keywords": [
+      "whatsapp scheduling system",
+      "whatsapp booking",
+      "appointment scheduling system",
+      "automatic scheduling",
+      "online booking",
+      "whatsapp support",
+      "whatsapp customer service",
+      "support chatbot",
+      "virtual support assistant",
+      "automatic FAQ",
+      "AI chat for businesses"
+    ],
+    "keywordsFree": ["free whatsapp scheduling", "free appointment scheduling system"],
+    "ogLocale": "en_US"
+  },
   "marketing": {
     "nav": {
       "resources": "Features",

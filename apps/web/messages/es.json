@@ -357,6 +357,27 @@
       "connectButton": "Conectar Google Calendar"
     }
   },
+  "metadata": {
+    "titleFree": "Zappigo — Agenda por WhatsApp Gratis con IA",
+    "titlePaid": "Zappigo — Sistema de Citas por WhatsApp con IA",
+    "descriptionFree": "Sistema de citas por WhatsApp gratis, con IA: un asistente que agenda horarios y brinda atención y soporte a tus clientes, respondiendo dudas automáticamente, en tu sitio web y en WhatsApp — sin tarjeta, sin mensualidad.",
+    "descriptionPaid": "Sistema de citas por WhatsApp con IA: un asistente que agenda horarios y brinda atención y soporte a tus clientes, respondiendo dudas automáticamente, en tu sitio web y en WhatsApp — con traspaso a atención humana cuando haga falta.",
+    "keywords": [
+      "sistema de citas por whatsapp",
+      "agenda por whatsapp",
+      "sistema de citas",
+      "agenda automática",
+      "citas online",
+      "soporte por whatsapp",
+      "atención por whatsapp",
+      "chatbot de atención",
+      "asistente virtual de atención",
+      "FAQ automático",
+      "chat con IA para empresas"
+    ],
+    "keywordsFree": ["agenda por whatsapp gratis", "sistema de citas gratis"],
+    "ogLocale": "es_ES"
+  },
   "marketing": {
     "nav": {
       "resources": "Funciones",

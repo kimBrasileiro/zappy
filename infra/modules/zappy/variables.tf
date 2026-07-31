@@ -122,6 +122,50 @@ variable "whatsapp_number" {
   default     = ""
 }
 
+# --- Deployment-level locale/pricing (see apps/web/i18n/default-locale.ts,
+# apps/web/lib/pricing.ts) — what lets a separately deployed instance (e.g.
+# a Spain deployment on its own project/domain) default to Spanish and show
+# EUR pricing site-wide, without any app code change. Empty defaults
+# reproduce this codebase's original pt-BR/BRL behavior exactly.
+
+variable "default_locale" {
+  description = "'pt', 'es', or 'en' — first-time-visitor default before any explicit NEXT_LOCALE cookie switch. Empty = 'pt'."
+  type        = string
+  default     = ""
+}
+
+variable "pricing_currency_symbol" {
+  description = "Currency symbol shown on pricing displays, e.g. \"€\". Empty = \"R$\"."
+  type        = string
+  default     = ""
+}
+
+variable "pricing_currency_code" {
+  description = "ISO currency code used for Intl currency formatting (dashboard billing, etc), e.g. \"EUR\". Empty = \"BRL\"."
+  type        = string
+  default     = ""
+}
+
+variable "pricing_amount_free" {
+  type    = string
+  default = ""
+}
+
+variable "pricing_amount_basico" {
+  type    = string
+  default = ""
+}
+
+variable "pricing_amount_whatsapp_proprio" {
+  type    = string
+  default = ""
+}
+
+variable "pricing_amount_integracao" {
+  type    = string
+  default = ""
+}
+
 # --- Cloud Run sizing (kept small on purpose — see ../../README.md#cost) --
 
 variable "min_instances" {

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { CopySnippet } from '../../copy-snippet';
@@ -19,12 +21,14 @@ function formatWhatsAppNumber(raw: string): string {
 
 export default async function InstalacaoPage() {
   const { companyId } = await requireSession();
+  const t = await getTranslations('dashboard.installation');
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) return null;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
   const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
+  const whatsappGreeting = t('whatsappGreeting', { name: company.name });
 
   const snippet = [
     `<script src="${appUrl}/widget.js"`,
@@ -38,165 +42,140 @@ export default async function InstalacaoPage() {
     .join('\n');
 
   const waLink = whatsappDigits
-    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá, gostaria de agendar serviços com ${company.name}`)}`
+    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(whatsappGreeting)}`
     : null;
 
   // Self-contained: inline styles + inline SVG icon, no external CSS/JS —
   // has to render correctly dropped into any arbitrary third-party site,
   // the same bar the chat <script> snippet below already meets.
   const waButtonSnippet = waLink
-    ? `<a href="${waLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;background:${WHATSAPP_GREEN};color:#fff;padding:12px 22px;border-radius:999px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:600;font-size:15px;text-decoration:none;line-height:1;">${ICON_WHATSAPP}Fale no WhatsApp</a>`
+    ? `<a href="${waLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;background:${WHATSAPP_GREEN};color:#fff;padding:12px 22px;border-radius:999px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:600;font-size:15px;text-decoration:none;line-height:1;">${ICON_WHATSAPP}${t('whatsappButtonLabel')}</a>`
     : null;
 
   const homepageLink = `${appUrl}/?company=${company.slug}`;
 
+  const richTags = {
+    b: (chunks: ReactNode) => <b>{chunks}</b>,
+    code: (chunks: ReactNode) => <code>{chunks}</code>,
+  };
+
   return (
     <>
-      <h1 className="dash-h1">Instalação</h1>
+      <h1 className="dash-h1">{t('title')}</h1>
       <p className="dash-subtitle">
-        Cole o script abaixo no site da sua empresa — ele já traz o chat e (se o número
-        compartilhado estiver configurado) o botão de continuar no WhatsApp.
+        {t('subtitle')}
       </p>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Não tem site? Use a página pública</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('homepageCardTitle')}</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-          Uma página pronta, com o chat e o WhatsApp da sua empresa, sem precisar instalar nada —
-          cole esse link no Google Maps, na bio do Instagram ou onde quiser divulgar:
+          {t('homepageCardBody')}
         </p>
         <CopySnippet snippet={homepageLink} />
       </div>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Link direto do WhatsApp</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('whatsappLinkCardTitle')}</h3>
         {waLink ? (
           <>
             <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-              Copie e cole esse link no site da sua empresa ou na ficha do Google Maps (campo de
-              site/agendamento) — o jeito mais fácil de deixar seus clientes agendando
-              automaticamente pelo WhatsApp, sem precisar instalar nada:
+              {t('whatsappLinkBody')}
             </p>
             <CopySnippet snippet={waLink} />
 
             <p style={{ color: '#666', fontSize: 13, margin: '16px 0 6px' }}>
-              Pra qualquer lugar onde não dá pra usar um link clicável (ex: falar de viva voz,
-              cartão de visita, bio do Instagram), passe o número e essa frase exata pro cliente
-              mandar:
+              {t('whatsappNoLinkIntro')}
             </p>
             <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 6px' }}>
               {formatWhatsAppNumber(whatsappNumber ?? '')}
             </p>
-            <CopySnippet snippet={`Olá, gostaria de agendar serviços com ${company.name}`} />
+            <CopySnippet snippet={whatsappGreeting} />
             <p style={{ color: '#999', fontSize: 12, margin: '8px 0 0' }}>
-              O número é compartilhado entre várias empresas — é essa frase exata (com o nome da
-              sua empresa) que garante que o assistente saiba que é com você que o cliente quer
-              falar.
+              {t('whatsappSharedNote')}
             </p>
           </>
         ) : (
           <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
-            O número compartilhado de WhatsApp da Zappigo ainda não foi configurado nesta
-            instância — assim que estiver, o link aparece aqui automaticamente.
+            {t('whatsappNotConfiguredLink')}
           </p>
         )}
       </div>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Botão do WhatsApp</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('whatsappButtonCardTitle')}</h3>
         {waButtonSnippet ? (
           <>
             <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-              Prefere um botão pronto, com ícone, em vez de um link puro? Cole esse HTML em
-              qualquer lugar do seu site — funciona sozinho, sem depender de nenhum CSS ou script
-              seu:
+              {t('whatsappButtonBody')}
             </p>
             <div style={{ marginBottom: 14 }} dangerouslySetInnerHTML={{ __html: waButtonSnippet }} />
             <CopySnippet snippet={waButtonSnippet} />
           </>
         ) : (
           <p style={{ color: '#999', fontSize: 13, margin: 0 }}>
-            O número compartilhado de WhatsApp da Zappigo ainda não foi configurado nesta
-            instância — assim que estiver, o botão aparece aqui automaticamente.
+            {t('whatsappNotConfiguredButton')}
           </p>
         )}
       </div>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Script do chat</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('chatScriptCardTitle')}</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-          Uma linha de <code>&lt;script&gt;</code>, sem mudanças no resto do site — cole antes do
-          fechamento de <code>&lt;/body&gt;</code>. Nunca mexeu com isso? Veja abaixo como fazer
-          conforme onde seu site foi feito:
+          {t.rich('chatScriptBody', richTags)}
         </p>
         <CopySnippet snippet={snippet} />
 
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <details>
             <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
-              Meu site é WordPress
+              {t('wordpressSummary')}
             </summary>
             <ol style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0', paddingLeft: 20 }}>
-              <li>
-                No menu do WordPress, instale o plugin gratuito <b>Insert Headers and Footers</b>{' '}
-                (Plugins → Adicionar novo → busque pelo nome).
-              </li>
-              <li>Depois de ativado, vá em Configurações → Insert Headers and Footers.</li>
-              <li>Cole o script no campo &quot;Scripts in Footer&quot; e clique em Salvar.</li>
+              <li>{t.rich('wordpressStep1', richTags)}</li>
+              <li>{t('wordpressStep2')}</li>
+              <li>{t('wordpressStep3')}</li>
             </ol>
           </details>
 
           <details>
             <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
-              Meu site é Wix
+              {t('wixSummary')}
             </summary>
             <ol style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0', paddingLeft: 20 }}>
-              <li>No editor do Wix, vá em Configurações → Custom Code (Código personalizado).</li>
-              <li>Clique em &quot;Adicionar código personalizado&quot; e cole o script.</li>
-              <li>
-                Em &quot;Adicionar código para&quot;, escolha <b>Todas as páginas</b>, e em
-                &quot;Posição no código&quot;, escolha <b>Body - end</b>.
-              </li>
-              <li>Salve e publique o site.</li>
+              <li>{t('wixStep1')}</li>
+              <li>{t('wixStep2')}</li>
+              <li>{t.rich('wixStep3', richTags)}</li>
+              <li>{t('wixStep4')}</li>
             </ol>
             <p style={{ fontSize: 12.5, color: '#999', margin: '8px 0 0' }}>
-              Custom Code só está disponível em planos pagos do Wix — no plano grátis, peça ajuda
-              pelo contato abaixo.
+              {t('wixNote')}
             </p>
           </details>
 
           <details>
             <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
-              Meu site foi feito por uma agência ou freelancer
+              {t('agencySummary')}
             </summary>
             <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0' }}>
-              Encaminhe o script acima pra quem cuida do seu site e peça pra colar logo antes do
-              fechamento de <code>&lt;/body&gt;</code> — é uma instrução que qualquer desenvolvedor
-              reconhece na hora, geralmente leva menos de 5 minutos.
+              {t.rich('agencyBody', richTags)}
             </p>
           </details>
 
           <details>
             <summary style={{ cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
-              Meu site é feito no Google Sites ou não sei onde colar
+              {t('googleSitesSummary')}
             </summary>
             <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: '10px 0 0' }}>
-              O Google Sites não permite colar scripts personalizados — nesse caso, use o{' '}
-              <b>Link direto do WhatsApp</b> ou o <b>Botão do WhatsApp</b> no topo desta página, que
-              funcionam em qualquer lugar (Google Sites, Instagram, WhatsApp, onde quiser colar um
-              link). Se preferir, escreva pra suporte@zappigo.com.br que a gente ajuda a instalar.
+              {t.rich('googleSitesBody', richTags)}
             </p>
           </details>
         </div>
       </div>
 
       <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>Domínios permitidos</h3>
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('domainsCardTitle')}</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
-          Um domínio por linha (ex: <code>meusite.com.br</code>), sem <code>https://</code> nem{' '}
-          <code>www.</code> — qualquer um dos dois é aceito automaticamente. Enquanto essa lista
-          estiver vazia, o script funciona em qualquer site (útil pra testar); assim que você
-          adicionar pelo menos um domínio, só eles (e esta página de preview) poderão usar o chat
-          como sua empresa.
+          {t.rich('domainsBody', richTags)}
         </p>
         <DomainsForm defaultDomains={company.allowedDomains} />
       </div>

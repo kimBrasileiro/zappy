@@ -1,11 +1,13 @@
+import { getTranslations } from 'next-intl/server';
 import { SupportForm } from './support-form';
 
-export default function SuportePage() {
+export default async function SuportePage() {
+  const t = await getTranslations('dashboard.support');
   return (
     <>
-      <h1 className="dash-h1">Suporte</h1>
+      <h1 className="dash-h1">{t('title')}</h1>
       <p className="dash-subtitle">
-        Encontrou um bug, tem uma dúvida ou uma sugestão? Manda pra gente aqui.
+        {t('subtitle')}
       </p>
 
       <div className="dash-card">

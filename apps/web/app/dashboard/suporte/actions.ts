@@ -1,5 +1,6 @@
 'use server';
 
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { sendEmail } from '../../../lib/email/resend';
@@ -10,6 +11,10 @@ export interface SupportFormState {
   sent?: boolean;
 }
 
+// Portuguese-only, deliberately not part of the pt/es/en UI switcher — this
+// is transactional email content (see lib/notifications.ts's own scope
+// note), not dashboard UI. sendSupportMessage's own returned `error` below
+// IS dashboard UI and goes through t() instead.
 const CATEGORY_LABELS: Record<string, string> = {
   bug: 'Bug / problema técnico',
   duvida: 'Dúvida',
@@ -22,10 +27,11 @@ export async function sendSupportMessage(
   formData: FormData,
 ): Promise<SupportFormState> {
   const { companyId, userId } = await requireSession();
+  const t = await getTranslations('dashboard.support');
 
   const category = String(formData.get('category') ?? 'outro');
   const message = String(formData.get('message') ?? '').trim();
-  if (!message) return { error: 'Escreve uma mensagem antes de enviar.' };
+  if (!message) return { error: t('errorEmptyMessage') };
 
   const [company, user] = await Promise.all([
     prisma.company.findUnique({ where: { id: companyId }, select: { name: true, slug: true } }),

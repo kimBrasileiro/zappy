@@ -1,15 +1,17 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import { updateAllowedDomains, type DomainsFormState } from './actions';
 
 const initialState: DomainsFormState = {};
 
 function SaveButton() {
+  const t = useTranslations('dashboard.installation');
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="dash-btn" disabled={pending}>
-      {pending ? 'Salvando...' : 'Salvar domínios'}
+      {pending ? t('saving') : t('saveDomains')}
     </button>
   );
 }

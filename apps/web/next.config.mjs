@@ -43,16 +43,24 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      // zappigo.com.br sits behind a Cloudflare Worker reverse proxy in
-      // front of this Cloud Run service (southamerica-east1 doesn't support
-      // Cloud Run domain mappings — see infra/README.md#custom-domain), so
-      // the request the app actually receives still has Host set to the raw
-      // *.run.app hostname while Origin is zappigo.com.br. Next.js's default
-      // Server Actions CSRF check compares those and rejects the mismatch
-      // ("Invalid Server Actions request") — this is the documented escape
-      // hatch, not a security loosening: it's still an explicit allowlist,
-      // just one that accounts for the proxy in front.
-      allowedOrigins: ['zappigo.com.br', 'www.zappigo.com.br'],
+      // Every deployment (zappigo.com.br, zappigo.es, ...) sits behind its
+      // own Cloudflare Worker reverse proxy in front of its Cloud Run
+      // service (no region here supports Cloud Run domain mappings — see
+      // infra/README.md#custom-domain), so the request the app actually
+      // receives still has Host set to the raw *.run.app hostname while
+      // Origin is the real public domain. Next.js's default Server Actions
+      // CSRF check compares those and rejects the mismatch ("Invalid Server
+      // Actions request") — this is the documented escape hatch, not a
+      // security loosening: it's still an explicit allowlist, just derived
+      // from this deployment's own NEXT_PUBLIC_APP_URL (available at build
+      // time, see Dockerfile) instead of one deployment's domain hardcoded
+      // for all of them.
+      allowedOrigins: (() => {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+        if (!appUrl) return ['zappigo.com.br', 'www.zappigo.com.br', 'zappigo.es', 'www.zappigo.es'];
+        const host = new URL(appUrl).hostname;
+        return host.startsWith('www.') ? [host, host.slice(4)] : [host, `www.${host}`];
+      })(),
     },
   },
 };

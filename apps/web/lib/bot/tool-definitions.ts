@@ -17,7 +17,7 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
   {
     name: 'check_availability',
     description:
-      'Verifica quais horários estão disponíveis para agendar um serviço numa data específica. Retorna até 3 horários de manhã e até 3 de tarde.',
+      'Verifica quais horários estão disponíveis para agendar um serviço numa data específica. Retorna até 3 horários de manhã e até 3 de tarde como sugestão, e — se o cliente já pediu um horário específico — o resultado exato desse horário em requestedTimeResult.',
     parameters: {
       type: 'object',
       properties: {
@@ -34,6 +34,11 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
           type: 'string',
           description:
             'Opcional. Só existe pra serviços cujo list_services trouxe "staffOptions" (equipe com mais de uma pessoa). Se o cliente já disse qual profissional prefere, passe o nome aqui pra ver só os horários dele(a). Se o cliente disse "tanto faz", NÃO preencha esse campo — os horários retornados já consideram qualquer pessoa da equipe livre.',
+        },
+        time: {
+          type: 'string',
+          description:
+            'Opcional, formato HH:MM (24h). Preencha SEMPRE que o cliente já tiver dito um horário específico (ex: "10h", "14:30") — o resultado vem em requestedTimeResult.available, checado de verdade, não apenas "apareceu na lista de sugestões". NUNCA diga que um horário pedido pelo cliente está indisponível só porque ele não apareceu em morningSlots/afternoonSlots — essas listas são só até 3 sugestões cada, um horário pode estar livre e mesmo assim não estar nelas.',
         },
       },
       required: ['serviceName', 'date'],
@@ -125,6 +130,7 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
           String(args.serviceName ?? ''),
           String(args.date ?? ''),
           args.staffName ? String(args.staffName) : undefined,
+          args.time ? String(args.time) : undefined,
         ),
       );
     case 'create_booking':

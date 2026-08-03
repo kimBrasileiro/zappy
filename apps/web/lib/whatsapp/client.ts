@@ -226,22 +226,40 @@ export async function downloadMedia(mediaId: string): Promise<{ base64: string; 
   }
 }
 
+// This deployment's own country code (WHATSAPP_DEFAULT_COUNTRY_CODE env var,
+// e.g. "34" for the Spain deployment) — what a customer typing a phone
+// number into the web widget's booking form is assumed to have omitted.
+// Empty/unset falls back to "55" (Brazil), matching this codebase's
+// original single-market behavior.
+function defaultCountryCode(): string {
+  return process.env.WHATSAPP_DEFAULT_COUNTRY_CODE || '55';
+}
+
 // services.ts#normalizePhone already normalizes customer-provided phone
 // numbers to 10-11 local digits (no country code) for the booking flow.
-// WhatsApp's inbound "from" always includes the 55 country code (e.g.
-// "5511987654321") — stripped here so the SAME person is recognized as one
-// Customer record whether they arrive via the web widget or WhatsApp.
+// WhatsApp's inbound "from" always includes a country code (e.g.
+// "5511987654321", or "34666240157" on the Spain deployment) — stripped
+// here so the SAME person is recognized as one Customer record whether they
+// arrive via the web widget or WhatsApp. Only strips THIS deployment's own
+// country code — a customer messaging from a different country entirely
+// keeps their full international number, which still works fine as a
+// unique identifier, just isn't "local" formatted.
 export function toLocalPhone(waFrom: string): string {
   const digits = waFrom.replace(/\D/g, '');
-  return digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
+  const cc = defaultCountryCode();
+  return digits.startsWith(cc) && digits.length > 11 ? digits.slice(cc.length) : digits;
 }
 
 // Inverse of toLocalPhone — services.ts#createBooking only ever has the
 // 10-11 digit local format the customer typed into the web widget (never a
 // country code, even when the booking itself came in over WhatsApp), but
 // sending a message via the Cloud API needs the full number Meta expects.
-// Brazil-only, matching normalizePhone's existing assumption.
+// Assumes the widget-typed number is local to THIS deployment's own market
+// (see defaultCountryCode above) — correct for the common case (a company's
+// own customers are overwhelmingly local to wherever that company operates),
+// same assumption normalizePhone already makes about digit count.
 export function toWhatsAppPhone(localPhone: string): string {
   const digits = localPhone.replace(/\D/g, '');
-  return digits.startsWith('55') ? digits : `55${digits}`;
+  const cc = defaultCountryCode();
+  return digits.startsWith(cc) ? digits : `${cc}${digits}`;
 }

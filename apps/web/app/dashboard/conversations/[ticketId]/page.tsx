@@ -1,14 +1,17 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
+import { formatRelativeTime } from '../../../../lib/format-time';
+import { Avatar } from '../../avatar';
 import { ReplyForm } from './reply-form';
 import { resolveTicket } from './actions';
 import { RefreshButton } from '../../refresh-button';
 
 export default async function TicketDetailPage({ params }: { params: { ticketId: string } }) {
   const { companyId } = await requireSession();
-  const t = await getTranslations('dashboard.conversations');
+  const [t, locale] = await Promise.all([getTranslations('dashboard.conversations'), getLocale()]);
 
   const ticket = await prisma.ticket.findUnique({
     where: { id: params.ticketId },
@@ -33,14 +36,18 @@ export default async function TicketDetailPage({ params }: { params: { ticketId:
     system: t('senderSystem'),
   };
 
+  const displayName = ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? t('anonymous');
+
   return (
     <>
+      <Link href="/dashboard/inbox" className="dash-back-link">
+        ← {t('backToInbox')}
+      </Link>
+
       <div className="dash-toolbar">
         <div>
-          <h1 className="dash-h1">
-            {ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? t('anonymous')}
-          </h1>
-          <p className="dash-subtitle" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 0 }}>
+          <h1 className="dash-h1">{displayName}</h1>
+          <div className="dash-subtitle" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 0 }}>
             {ticket.channel} · <span className={`dash-badge dash-badge-${ticket.status}`}>{ticket.status}</span>
             {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
               <form action={resolveTicket.bind(null, ticket.id)}>
@@ -49,24 +56,59 @@ export default async function TicketDetailPage({ params }: { params: { ticketId:
                 </button>
               </form>
             )}
-          </p>
+          </div>
         </div>
         <RefreshButton />
       </div>
 
-      <div className="dash-thread">
-        {messages.map((m) => (
-          <div key={m.id} className={`dash-bubble dash-bubble-${m.senderType}`}>
-            <div className="dash-bubble-meta">
-              {m.senderType === 'agent' ? (agentNameById.get(m.senderId ?? '') ?? t('senderAgentFallback')) : senderLabel[m.senderType]}
-            </div>
-            {m.content}
+      <div className="dash-conversation-layout">
+        <div className="dash-conversation-main">
+          <div className="dash-thread">
+            {messages.map((m) => {
+              const label = m.senderType === 'agent' ? (agentNameById.get(m.senderId ?? '') ?? t('senderAgentFallback')) : senderLabel[m.senderType];
+              return (
+                <div key={m.id} className={`dash-bubble-row dash-bubble-row-${m.senderType}`}>
+                  <Avatar name={m.senderType === 'customer' ? displayName : label} seed={m.senderId ?? m.senderType} className="dash-bubble-avatar" size={26} />
+                  <div>
+                    <div className="dash-bubble-meta">
+                      <span>{label}</span>
+                      <span>{formatRelativeTime(m.createdAt, locale)}</span>
+                    </div>
+                    <div className={`dash-bubble dash-bubble-${m.senderType}`}>{m.content}</div>
+                  </div>
+                </div>
+              );
+            })}
+            {messages.length === 0 && <p style={{ color: '#999' }}>{t('noMessages')}</p>}
           </div>
-        ))}
-        {messages.length === 0 && <p style={{ color: '#999' }}>{t('noMessages')}</p>}
-      </div>
 
-      <ReplyForm ticketId={ticket.id} />
+          <ReplyForm ticketId={ticket.id} />
+        </div>
+
+        <div className="dash-customer-panel dash-card">
+          <div className="dash-section-title" style={{ margin: '0 0 14px' }}>
+            {t('customerPanelTitle')}
+          </div>
+          <div className="dash-customer-panel-row">
+            <span className="dash-customer-panel-label">{t('channelLabel')}</span>
+            <span className="dash-customer-panel-value">{ticket.channel}</span>
+          </div>
+          <div className="dash-customer-panel-row">
+            <span className="dash-customer-panel-label">{t('phoneLabel')}</span>
+            <span className="dash-customer-panel-value">{ticket.customer?.phone ?? t('noPhone')}</span>
+          </div>
+          <div className="dash-customer-panel-row">
+            <span className="dash-customer-panel-label">{t('emailLabel')}</span>
+            <span className="dash-customer-panel-value">{ticket.customer?.email ?? t('noEmail')}</span>
+          </div>
+          {ticket.customer?.createdAt && (
+            <div className="dash-customer-panel-row">
+              <span className="dash-customer-panel-label">{t('customerSince')}</span>
+              <span className="dash-customer-panel-value">{formatRelativeTime(ticket.customer.createdAt, locale)}</span>
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 }

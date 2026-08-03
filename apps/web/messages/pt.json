@@ -125,7 +125,10 @@
       "tableStatus": "Status",
       "tableUpdatedAt": "Atualizado em",
       "anonymous": "Anônimo",
-      "noTickets": "Nenhuma conversa esperando atendimento humano no momento."
+      "noTickets": "Nenhuma conversa esperando atendimento humano no momento.",
+      "noResults": "Nenhuma conversa encontrada para essa busca.",
+      "searchPlaceholder": "Buscar por nome, email ou telefone...",
+      "lastMessageEmpty": "Sem mensagens ainda"
     },
     "conversations": {
       "title": "Conversas",
@@ -143,6 +146,14 @@
       "senderSystem": "Sistema",
       "senderAgentFallback": "Agente",
       "noMessages": "Nenhuma mensagem ainda.",
+      "backToInbox": "Voltar para o Inbox",
+      "customerPanelTitle": "Sobre o cliente",
+      "channelLabel": "Canal",
+      "phoneLabel": "Telefone",
+      "emailLabel": "Email",
+      "noPhone": "Sem telefone cadastrado",
+      "noEmail": "Sem email cadastrado",
+      "customerSince": "Cliente desde",
       "replyPlaceholder": "Escreva sua resposta para o cliente...",
       "sendButton": "Enviar",
       "sending": "Enviando...",

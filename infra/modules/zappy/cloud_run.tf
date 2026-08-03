@@ -14,6 +14,7 @@ locals {
       RESEND_FROM_EMAIL                  = var.resend_from_email
       WHATSAPP_CLOUD_API_PHONE_NUMBER_ID = var.whatsapp_phone_number_id
       WHATSAPP_CLOUD_API_NUMBER          = var.whatsapp_number
+      WHATSAPP_DEFAULT_COUNTRY_CODE      = var.whatsapp_default_country_code
       DEFAULT_LOCALE                     = var.default_locale
       PRICING_CURRENCY_SYMBOL            = var.pricing_currency_symbol
       PRICING_CURRENCY_CODE              = var.pricing_currency_code

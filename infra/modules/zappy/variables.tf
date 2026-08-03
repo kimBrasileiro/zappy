@@ -122,6 +122,20 @@ variable "whatsapp_number" {
   default     = ""
 }
 
+variable "whatsapp_default_country_code" {
+  description = <<-EOT
+    Country calling code (digits only, no "+") assumed for phone numbers
+    that don't carry one of their own — i.e. what a customer types into the
+    web widget's booking form (see lib/whatsapp/client.ts#toLocalPhone/
+    toWhatsAppPhone). Empty = "55" (Brazil), matching this codebase's
+    original behavior. Set to "34" for a Spain deployment so widget-typed
+    local numbers round-trip to valid wa.me numbers instead of getting a
+    Brazilian country code wrongly prepended.
+  EOT
+  type        = string
+  default     = ""
+}
+
 # --- Deployment-level locale/pricing (see apps/web/i18n/default-locale.ts,
 # apps/web/lib/pricing.ts) — what lets a separately deployed instance (e.g.
 # a Spain deployment on its own project/domain) default to Spanish and show

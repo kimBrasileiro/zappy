@@ -31,18 +31,11 @@ export function ReplyForm({ ticketId }: { ticketId: string }) {
         formRef.current?.reset();
       }}
       className="dash-card"
-      style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
     >
-      {state?.error && (
-        <div style={{ color: '#b91c1c', fontSize: 13 }}>{state.error}</div>
-      )}
-      <textarea
-        name="content"
-        required
-        rows={3}
-        placeholder={t('replyPlaceholder')}
-        style={{ border: '1px solid #ddd', borderRadius: 8, padding: 10, fontSize: 13.5, fontFamily: 'inherit' }}
-      />
+      {state?.error && <div className="dash-form-error">{state.error}</div>}
+      <div className="dash-form-row">
+        <textarea name="content" required rows={3} placeholder={t('replyPlaceholder')} />
+      </div>
       <div>
         <SendButton />
       </div>

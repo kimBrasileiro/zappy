@@ -146,6 +146,7 @@ export async function checkAvailability(
   serviceName: string,
   date: string,
   staffName?: string,
+  time?: string,
 ) {
   const service = await resolveService(companyId, serviceName);
   if (!service) {
@@ -312,6 +313,49 @@ export async function checkAvailability(
 
   const stepMinutes = service.durationMinutes;
   const now = Date.now();
+
+  // Single source of truth for "is this exact start time actually free" —
+  // used both by the requested-time check below AND the preview-grid loop,
+  // so they can never disagree with each other the way the old duplicated
+  // logic silently could (see requestedTime handling: a customer asking for
+  // a specific time that just didn't happen to be one of the top-3 preview
+  // slots used to get told "unavailable" even when it was genuinely free,
+  // because nothing ever actually checked *that* time — it just never made
+  // it into the capped list).
+  const evaluateSlot = (t: number): { ok: boolean; staffAvailable?: string[] } => {
+    if (t < now) return { ok: false }; // no slots in the past
+    if (t < openTime.getTime() || t + stepMinutes * 60_000 > closeTime.getTime()) return { ok: false };
+    if (conflictsWithCalendar(t, stepMinutes)) return { ok: false };
+
+    if (hasStaffConcept(service)) {
+      const free = eligibleStaff.filter(
+        (name) => !existing.some((b) => b.staffName === name && overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes)),
+      );
+      if (free.length === 0) return { ok: false };
+      return { ok: true, staffAvailable: !requestedStaff ? free : undefined };
+    }
+    const conflict = existing.some((b) => overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes));
+    return { ok: !conflict };
+  };
+
+  // If the customer named a specific time ("10h"), check that exact minute
+  // on its own merits instead of only ever offering whatever happened to
+  // land in the capped preview list below — see evaluateSlot's comment.
+  let requestedTimeResult: { time: string; available: boolean; iso?: string; staffAvailable?: string[] } | undefined;
+  if (time?.trim()) {
+    const match = time.trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      const requestedMs = brazilWallClockToUtc(year!, month! - 1, day!, Number(match[1]), Number(match[2])).getTime();
+      const result = evaluateSlot(requestedMs);
+      requestedTimeResult = {
+        time: `${match[1]!.padStart(2, '0')}:${match[2]}`,
+        available: result.ok,
+        ...(result.ok ? { iso: new Date(requestedMs).toISOString() } : {}),
+        ...(result.staffAvailable ? { staffAvailable: result.staffAvailable } : {}),
+      };
+    }
+  }
+
   // Appointments always START on a round grid (:00/:15/:30/:45), independent
   // of how long the service itself takes — advancing by stepMinutes instead
   // (the old behavior) drifted onto non-round times for any service whose
@@ -335,27 +379,9 @@ export async function checkAvailability(
     t + stepMinutes * 60_000 <= closeTime.getTime();
     t += gridMs
   ) {
-    if (t < now) continue; // no slots in the past
-    if (conflictsWithCalendar(t, stepMinutes)) continue;
-
-    // No staff roster: one shared conflict pool for the whole service,
-    // exactly the pre-staff behavior. With a roster: the slot survives as
-    // long as at least one eligible staff member is free at that time —
-    // different staff can legitimately hold overlapping bookings.
-    let staffAvailable: string[] | undefined;
-    if (hasStaffConcept(service)) {
-      const free = eligibleStaff.filter(
-        (name) => !existing.some((b) => b.staffName === name && overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes)),
-      );
-      if (free.length === 0) continue;
-      // Only surfaced when the customer didn't already pin a specific
-      // person — once requestedStaff is set, eligibleStaff is just that one
-      // name and repeating it back adds nothing.
-      if (!requestedStaff) staffAvailable = free;
-    } else {
-      const conflict = existing.some((b) => overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes));
-      if (conflict) continue;
-    }
+    const evaluation = evaluateSlot(t);
+    if (!evaluation.ok) continue;
+    const staffAvailable = evaluation.staffAvailable;
 
     const d = new Date(t);
     const wallClock = toBrazilWallClock(d);
@@ -377,11 +403,12 @@ export async function checkAvailability(
       date,
       morningSlots: [],
       afternoonSlots: [],
+      ...(requestedTimeResult ? { requestedTimeResult } : {}),
       message: `Não há horários livres pra "${service.name}" no dia ${date} — todos os horários do dia já estão reservados. Sugira ao cliente escolher outra data.`,
     };
   }
 
-  return { serviceName: service.name, date, morningSlots, afternoonSlots };
+  return { serviceName: service.name, date, morningSlots, afternoonSlots, ...(requestedTimeResult ? { requestedTimeResult } : {}) };
 }
 
 export async function createBooking(

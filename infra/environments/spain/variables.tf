@@ -69,6 +69,11 @@ variable "whatsapp_number" {
   default = ""
 }
 
+variable "whatsapp_default_country_code" {
+  type    = string
+  default = "34"
+}
+
 # --- Locale/pricing (see modules/zappy/variables.tf) ----------------------
 
 variable "default_locale" {

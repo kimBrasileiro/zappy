@@ -59,6 +59,7 @@ model Company {
   faqs               Faq[]
   whatsappRoutes     WhatsAppRoute[]
   staffAbsences      StaffAbsence[]
+  leads              Lead[]
 
   @@map("companies")
 }

@@ -30,6 +30,7 @@ model Ticket {
   assignedToUser  User?     @relation("TicketAssignedTo", fields: [assignedTo], references: [id])
   messages        Message[]
   bookings        Booking[]
+  leads           Lead[]
 
   // Phase 2: crmDealId, csatScore, csatSubmittedAt, slaCategory attach here
   // without a destructive migration.

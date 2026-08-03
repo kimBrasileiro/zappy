@@ -199,6 +199,53 @@ export async function suggestQuickReplies(userMessage: string, botMessage: strin
   }
 }
 
+const MODERATION_SYSTEM_PROMPT =
+  'Você modera mensagens que um atendente humano de uma empresa vai enviar a um cliente via WhatsApp ' +
+  'Business API, verificando se a mensagem arrisca banimento do número pela Meta. Responda BLOCK se a mensagem:\n' +
+  '- Menciona álcool, tabaco/cigarro, drogas, apostas/jogos de azar ou armas de qualquer forma — venda, ' +
+  'promoção, ou até só confirmar que a empresa oferece algo do tipo. A Zappigo não atende negócios desses ' +
+  'segmentos, então qualquer menção é tratada como fora de política, mesmo respondendo uma pergunta legítima ' +
+  'do cliente.\n' +
+  '- Contém conteúdo adulto/sexual explícito.\n' +
+  '- É claramente uma mensagem promocional/de marketing em massa (oferta, desconto, campanha) em vez de ' +
+  'uma resposta de atendimento a esse cliente específico.\n' +
+  '- Contém assédio, discurso de ódio ou ameaça.\n' +
+  'Uma resposta normal de atendimento — agendamento, dúvida, suporte, confirmação, até mencionar preço de ' +
+  'um serviço que o próprio cliente perguntou sobre — deve SEMPRE receber ALLOW, desde que não toque nas ' +
+  'categorias acima. Na dúvida sobre tom promocional (fora das categorias proibidas), responda ALLOW: o ' +
+  'custo de um falso bloqueio é maior que deixar passar uma mensagem limítrofe. Responda com EXATAMENTE uma ' +
+  'palavra, ALLOW ou BLOCK — nada mais.';
+
+// Blocking gate in front of every agent-composed WhatsApp send (see
+// dashboard/conversations/[ticketId]/actions.ts#sendAgentReply) — the one
+// place a human, not this bot's own system-prompt-constrained replies, can
+// put arbitrary text on the wire. Fails OPEN (allows the send) on any
+// error/timeout/malformed response, same reasoning as suggestQuickReplies
+// and the Google Calendar freebusy check in services.ts: a moderation
+// hiccup must degrade to "no extra check this one time," never to "support
+// can't talk to customers right now." The reason is deliberately not
+// returned to the caller — this is why threat/spam/opt-in classification
+// live in the system prompt above, not a UI-surfaced string.
+export async function moderateAgentReply(text: string): Promise<boolean> {
+  try {
+    const response = await getClient().chat.completions.create({
+      model: PRIMARY_GEMINI_MODEL,
+      messages: [
+        { role: 'system', content: MODERATION_SYSTEM_PROMPT },
+        { role: 'user', content: text },
+      ],
+      stream: false,
+      reasoning_effort: 'none', // see streamGeminiCompletion — same empty-response issue applies here
+    } as unknown as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
+
+    const raw = response.choices[0]?.message?.content?.trim().toUpperCase() ?? 'ALLOW';
+    return !raw.startsWith('BLOCK');
+  } catch (err) {
+    console.error('[gemini] moderateAgentReply failed, allowing by default', err);
+    return true;
+  }
+}
+
 const TRANSCRIBE_SYSTEM_PROMPT =
   'Transcreva o áudio a seguir literalmente, palavra por palavra, no idioma original em que a pessoa ' +
   'está falando. Responda APENAS com a transcrição em texto puro — sem aspas, sem comentário, sem ' +

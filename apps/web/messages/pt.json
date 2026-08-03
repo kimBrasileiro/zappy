@@ -19,6 +19,7 @@
       "quickReplies": "Quick Replies",
       "services": "Serviços",
       "bookings": "Agendamentos",
+      "leads": "Leads",
       "installation": "Instalação",
       "integrations": "Integrações",
       "support": "Suporte"
@@ -158,7 +159,9 @@
       "sendButton": "Enviar",
       "sending": "Enviando...",
       "errorEmptyMessage": "Escreve uma mensagem antes de enviar.",
-      "errorTicketNotFound": "Ticket não encontrado."
+      "errorTicketNotFound": "Ticket não encontrado.",
+      "errorRateLimited": "Muitas mensagens enviadas em pouco tempo — espera um instante e tenta de novo.",
+      "errorModerationBlocked": "Essa mensagem parece violar as políticas do WhatsApp Business e não foi enviada. Revise o conteúdo antes de tentar de novo."
     },
     "services": {
       "title": "Serviços",
@@ -264,6 +267,19 @@
       "noShowButton": "Faltou",
       "noShowTitle": "Marcar que o cliente faltou",
       "cancelButton": "Cancelar"
+    },
+    "leads": {
+      "title": "Leads",
+      "subtitle": "Clientes que perguntaram sobre um serviço mas nunca fecharam o agendamento — gerado sob demanda, não ao vivo.",
+      "generateButton": "Gerar Relatório",
+      "generating": "Gerando...",
+      "generatedAt": "Gerado em: {date}",
+      "neverGenerated": "Relatório ainda não gerado.",
+      "emptyBeforeGeneration": "Clique em \"Gerar Relatório\" pra ver seus leads.",
+      "noLeads": "Nenhum lead no momento — todo mundo que perguntou sobre um serviço já agendou, ou ninguém perguntou ainda.",
+      "leadsCountLabel": "Leads em aberto",
+      "totalPotentialLabel": "Receita potencial em aberto",
+      "noContact": "Sem contato"
     },
     "billing": {
       "title": "Assinatura",
@@ -584,7 +600,22 @@
       "users": "Usuários",
       "usage": "Gastos de IA",
       "health": "Status dos serviços",
+      "moderation": "Moderação",
       "backToDashboard": "Ir para o Dashboard"
+    },
+    "moderation": {
+      "title": "Moderação",
+      "subtitle": "Respostas de atendentes bloqueadas antes de sair pelo WhatsApp — por política de conteúdo ou por limite de envio. Use pra identificar clientes que estão arriscando o número compartilhado.",
+      "tableCompany": "Empresa",
+      "tableAgent": "Atendente",
+      "tableType": "Tipo",
+      "tableContent": "Conteúdo bloqueado",
+      "tableCreatedAt": "Quando",
+      "typeModeration": "Política de conteúdo",
+      "typeRateLimit": "Limite de envio",
+      "unknownCompany": "Empresa desconhecida",
+      "unknownAgent": "Atendente desconhecido",
+      "noBlocks": "Nenhuma mensagem bloqueada até agora."
     },
     "companies": {
       "title": "Empresas",

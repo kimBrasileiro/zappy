@@ -19,6 +19,7 @@
       "quickReplies": "Quick Replies",
       "services": "Services",
       "bookings": "Bookings",
+      "leads": "Leads",
       "installation": "Installation",
       "integrations": "Integrations",
       "support": "Support"
@@ -158,7 +159,9 @@
       "sendButton": "Send",
       "sending": "Sending...",
       "errorEmptyMessage": "Write a message before sending.",
-      "errorTicketNotFound": "Ticket not found."
+      "errorTicketNotFound": "Ticket not found.",
+      "errorRateLimited": "Too many messages sent in a short time — wait a moment and try again.",
+      "errorModerationBlocked": "This message looks like it violates WhatsApp Business policies and wasn't sent. Review the content before trying again."
     },
     "services": {
       "title": "Services",
@@ -264,6 +267,19 @@
       "noShowButton": "No-show",
       "noShowTitle": "Mark that the customer didn't show up",
       "cancelButton": "Cancel"
+    },
+    "leads": {
+      "title": "Leads",
+      "subtitle": "Customers who asked about a service but never completed a booking — generated on demand, not live.",
+      "generateButton": "Generate Report",
+      "generating": "Generating...",
+      "generatedAt": "Generated at: {date}",
+      "neverGenerated": "Report not generated yet.",
+      "emptyBeforeGeneration": "Click \"Generate Report\" to see your leads.",
+      "noLeads": "No open leads right now — everyone who asked about a service already booked, or nobody's asked yet.",
+      "leadsCountLabel": "Open leads",
+      "totalPotentialLabel": "Open potential revenue",
+      "noContact": "No contact info"
     },
     "billing": {
       "title": "Subscription",
@@ -584,7 +600,22 @@
       "users": "Users",
       "usage": "AI spend",
       "health": "Service status",
+      "moderation": "Moderation",
       "backToDashboard": "Go to Dashboard"
+    },
+    "moderation": {
+      "title": "Moderation",
+      "subtitle": "Agent replies blocked before going out over WhatsApp — either by content policy or send-rate limit. Use this to spot clients putting the shared number at risk.",
+      "tableCompany": "Company",
+      "tableAgent": "Agent",
+      "tableType": "Type",
+      "tableContent": "Blocked content",
+      "tableCreatedAt": "When",
+      "typeModeration": "Content policy",
+      "typeRateLimit": "Send rate limit",
+      "unknownCompany": "Unknown company",
+      "unknownAgent": "Unknown agent",
+      "noBlocks": "No blocked messages yet."
     },
     "companies": {
       "title": "Companies",

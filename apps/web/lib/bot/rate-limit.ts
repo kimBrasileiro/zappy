@@ -42,3 +42,26 @@ export function checkBookingRateLimit(companyId: string, phone: string): { allow
   }
   return { allowed: true };
 }
+
+// Same dual-layer shape as checkBookingRateLimit above, applied to
+// human-agent-composed WhatsApp sends (dashboard/conversations/[ticketId]/
+// actions.ts#sendAgentReply) — a WABA ban-risk guardrail, not a UX one. The
+// per-agent window catches one runaway agent/browser bug/script; the
+// per-company window catches the same risk aggregated across an entire
+// team, which the per-agent check alone can't see. Thresholds are set well
+// above realistic human typing speed (no support agent sends 10 distinct
+// WhatsApp replies inside one minute) so normal usage is never throttled.
+const AGENT_OUTBOUND_WINDOW_MS = 60_000;
+const MAX_OUTBOUND_PER_AGENT_PER_MINUTE = 10;
+const COMPANY_OUTBOUND_WINDOW_MS = 60 * 60_000;
+const MAX_OUTBOUND_PER_COMPANY_PER_HOUR = 200;
+
+export function checkOutboundRateLimit(companyId: string, agentUserId: string): { allowed: boolean; reason?: string } {
+  if (!slidingWindowCheck(`outbound-agent:${companyId}:${agentUserId}`, AGENT_OUTBOUND_WINDOW_MS, MAX_OUTBOUND_PER_AGENT_PER_MINUTE)) {
+    return { allowed: false, reason: 'too_many_agent_sends' };
+  }
+  if (!slidingWindowCheck(`outbound-company:${companyId}`, COMPANY_OUTBOUND_WINDOW_MS, MAX_OUTBOUND_PER_COMPANY_PER_HOUR)) {
+    return { allowed: false, reason: 'too_many_company_sends' };
+  }
+  return { allowed: true };
+}

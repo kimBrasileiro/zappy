@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import OpenAI from 'openai';
 import { prisma } from '@zappigo/db';
 import { orchestrate, OrchestratorBlockedError } from '@zappigo/web/lib/bot/orchestrator';
+import { moderateAgentReply } from '@zappigo/web/lib/ai/gemini';
 
 interface SeedBooking {
   scheduledAtOffsetHours: number;
@@ -44,7 +45,11 @@ interface ScenarioTurn {
   expectQuickRepliesPattern?: string;
 }
 
-interface Scenario {
+interface ConversationScenario {
+  // Omitted = 'conversation', the original (and still the common) shape:
+  // a scripted customer conversation run through orchestrate(). See
+  // ModerationScenario below for the other kind this runner supports.
+  type?: 'conversation';
   name: string;
   description: string;
   // Per-request language override (see OrchestrateInput.language) — applied
@@ -71,6 +76,22 @@ interface Scenario {
   // the judge call entirely — for scenarios fully covered by expectBlocked.
   successCriteria: string;
 }
+
+// A single moderateAgentReply() classification check — this is a totally
+// different code path than a customer conversation (dashboard agent reply
+// → lib/ai/gemini.ts#moderateAgentReply, never touches orchestrate() at
+// all), so it gets its own scenario shape and its own runner instead of
+// being forced through the conversation turn machinery above. No DB setup
+// needed: moderateAgentReply takes raw text with no company/ticket context.
+interface ModerationScenario {
+  type: 'moderation';
+  name: string;
+  description: string;
+  agentReplyText: string;
+  expectAllowed: boolean;
+}
+
+type Scenario = ConversationScenario | ModerationScenario;
 
 const SCENARIOS_DIR = join(__dirname, 'scenarios');
 // Fixed rather than per-turn/per-scenario — every scenario in this suite is
@@ -141,7 +162,7 @@ async function collect(input: Parameters<typeof orchestrate>[0]) {
   }
 }
 
-async function setupScenario(scenario: Scenario) {
+async function setupScenario(scenario: ConversationScenario) {
   const company = await prisma.company.create({
     data: {
       name: `Eval ${scenario.name}`,
@@ -207,7 +228,19 @@ async function cleanupScenario(companyId: string) {
   await prisma.company.delete({ where: { id: companyId } });
 }
 
-async function runScenario(scenario: Scenario): Promise<{ name: string; passed: boolean; details: string[] }> {
+async function runModerationScenario(scenario: ModerationScenario): Promise<{ name: string; passed: boolean; details: string[] }> {
+  const allowed = await moderateAgentReply(scenario.agentReplyText);
+  const passed = allowed === scenario.expectAllowed;
+  const verdict = allowed ? 'ALLOW' : 'BLOCK';
+  const expected = scenario.expectAllowed ? 'ALLOW' : 'BLOCK';
+  return {
+    name: scenario.name,
+    passed,
+    details: [`${passed ? '✓' : '✗'} moderateAgentReply verdict: ${verdict} (expected ${expected}) — "${scenario.agentReplyText.slice(0, 70)}"`],
+  };
+}
+
+async function runScenario(scenario: ConversationScenario): Promise<{ name: string; passed: boolean; details: string[] }> {
   const company = await setupScenario(scenario);
   const details: string[] = [];
   let allPassed = true;
@@ -344,7 +377,7 @@ async function main() {
   const results: { name: string; passed: boolean; details: string[] }[] = [];
   for (const scenario of scenarios) {
     process.stdout.write(`▶ ${scenario.name}... `);
-    const result = await runScenario(scenario);
+    const result = scenario.type === 'moderation' ? await runModerationScenario(scenario) : await runScenario(scenario);
     console.log(result.passed ? 'PASS' : 'FAIL');
     for (const line of result.details) console.log(`    ${line}`);
     results.push(result);

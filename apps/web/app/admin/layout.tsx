@@ -24,6 +24,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <Link className="dash-nav-link" href="/admin/health">
           {t('health')}
         </Link>
+        <Link className="dash-nav-link" href="/admin/moderation">
+          {t('moderation')}
+        </Link>
         <div className="dash-nav-spacer" />
         <Link className="dash-nav-link" href="/dashboard">
           {t('backToDashboard')}

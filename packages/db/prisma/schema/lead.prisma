@@ -1,0 +1,31 @@
+// Snapshot table, not a live view — see lib/leads/leads-query.ts. Every row
+// here is written by one full regeneration pass (delete all for the company,
+// recompute, insert), triggered only by the dashboard's "Gerar Relatório"
+// button. A lead is any ticket whose metadata.bookingDraft (see
+// lib/bot/ticket-metadata.ts) is still set — the customer asked
+// check_availability about a real service/date and never completed
+// create_booking. Customer contact fields and price are snapshotted at
+// generation time on purpose, so the report stays internally consistent
+// even if the customer's info or the service's price changes later.
+model Lead {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String   @map("company_id") @db.Uuid
+  ticketId      String   @map("ticket_id") @db.Uuid
+  customerId    String?  @map("customer_id") @db.Uuid
+  serviceName   String   @map("service_name")
+  priceCents    Int?     @map("price_cents") // Service.priceCents at generation time; null if that service was renamed/deleted since
+  draftDate     String   @map("draft_date") // YYYY-MM-DD the customer was checking availability for
+  channel       String
+  customerName  String?  @map("customer_name")
+  customerPhone String?  @map("customer_phone")
+  customerEmail String?  @map("customer_email")
+  lastMessageAt DateTime @map("last_message_at") @db.Timestamptz(6)
+  generatedAt   DateTime @default(now()) @map("generated_at") @db.Timestamptz(6)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ticket  Ticket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, ticketId])
+  @@index([companyId, generatedAt])
+  @@map("leads")
+}

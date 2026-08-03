@@ -5,6 +5,8 @@ import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { sendWhatsAppMessage, toWhatsAppPhone } from '../../../../lib/whatsapp/client';
+import { moderateAgentReply } from '../../../../lib/ai/gemini';
+import { checkOutboundRateLimit } from '../../../../lib/bot/rate-limit';
 
 export interface ReplyState {
   error?: string;
@@ -27,6 +29,47 @@ export async function sendAgentReply(
     // doesn't belong to the caller's company, even if the id lookup alone
     // would have returned something.
     return { error: t('errorTicketNotFound') };
+  }
+
+  // WABA ban-risk guardrails — only meaningful for actual outbound WhatsApp
+  // sends (site_chat has no Meta policy surface at all), so scoped to that
+  // channel. Checked BEFORE the Message row is created, not just before the
+  // WhatsApp API call: a blocked reply shouldn't get persisted into the
+  // thread looking like it went out. Every block is logged to AuditLog
+  // (companyId + userId + the actual blocked content) so the Zappigo team
+  // can see, per client, who's repeatedly triggering these — see
+  // /admin/moderation. Not shown to the client's own dashboard; this is
+  // Zappigo's own visibility into which of ITS customers risk the WABA.
+  if (ticket.channel === 'whatsapp') {
+    const rateLimit = checkOutboundRateLimit(companyId, userId);
+    if (!rateLimit.allowed) {
+      await prisma.auditLog.create({
+        data: {
+          companyId,
+          userId,
+          action: 'agent_reply.blocked_rate_limit',
+          resourceType: 'ticket',
+          resourceId: ticketId,
+          after: { content, reason: rateLimit.reason },
+        },
+      });
+      return { error: t('errorRateLimited') };
+    }
+
+    const moderationAllowed = await moderateAgentReply(content);
+    if (!moderationAllowed) {
+      await prisma.auditLog.create({
+        data: {
+          companyId,
+          userId,
+          action: 'agent_reply.blocked_moderation',
+          resourceType: 'ticket',
+          resourceId: ticketId,
+          after: { content },
+        },
+      });
+      return { error: t('errorModerationBlocked') };
+    }
   }
 
   await prisma.message.create({

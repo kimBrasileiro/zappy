@@ -16,6 +16,7 @@ locals {
       WHATSAPP_CLOUD_API_NUMBER          = var.whatsapp_number
       WHATSAPP_DEFAULT_COUNTRY_CODE      = var.whatsapp_default_country_code
       DEFAULT_LOCALE                     = var.default_locale
+      DEFAULT_TIMEZONE                   = var.default_timezone
       PRICING_CURRENCY_SYMBOL            = var.pricing_currency_symbol
       PRICING_CURRENCY_CODE              = var.pricing_currency_code
       PRICING_AMOUNT_FREE                = var.pricing_amount_free

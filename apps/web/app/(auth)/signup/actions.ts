@@ -12,6 +12,7 @@ import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } f
 import { TERMS_VERSION } from '../../../lib/legal';
 import { validatePassword } from '../../../lib/password';
 import { notifyNewSignup } from '../../../lib/notifications';
+import { isBusinessType } from '../../../lib/business-types';
 
 export interface SignUpState {
   error?: string;
@@ -30,6 +31,8 @@ export interface SignUpState {
 export async function signUp(_prevState: SignUpState, formData: FormData): Promise<SignUpState> {
   const t = await getTranslations('auth');
   const companyName = String(formData.get('companyName') ?? '').trim();
+  const businessTypeRaw = String(formData.get('businessType') ?? '');
+  const businessType = isBusinessType(businessTypeRaw) ? businessTypeRaw : null;
   const name = String(formData.get('name') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
   const phone = String(formData.get('phone') ?? '').trim() || null;
@@ -37,7 +40,7 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   const planRaw = String(formData.get('plan') ?? 'basico');
   const acceptedTerms = formData.get('terms') === 'on';
 
-  if (!companyName || !name || !email || !password) {
+  if (!companyName || !businessType || !name || !email || !password) {
     return { error: t('errorFillAllFields') };
   }
   const passwordError = validatePassword(password, email, {
@@ -60,6 +63,7 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
     data: {
       name: companyName,
       slug,
+      businessType,
       plan: stripeEnabled ? plan : 'starter',
       status: 'active',
       // This deployment's own default language (see i18n/default-locale.ts)

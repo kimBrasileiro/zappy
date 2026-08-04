@@ -1,6 +1,6 @@
 import { prisma } from '@zappigo/db';
 import { sendEmail } from './email/resend';
-import { formatBrazilDateTime } from './timezone';
+import { formatDateTime, getDeploymentTimezone } from './format-time';
 import { sendWhatsAppMessage, toWhatsAppPhone } from './whatsapp/client';
 import { SUPER_ADMIN_EMAIL } from './admin-auth';
 
@@ -26,7 +26,7 @@ export async function notifyBookingCreated(params: {
   requiresManualConfirmation: boolean;
 }): Promise<void> {
   const company = await getActiveAdminEmails(params.companyId);
-  const when = formatBrazilDateTime(params.scheduledAt);
+  const when = formatDateTime(params.scheduledAt, 'pt-BR', getDeploymentTimezone());
 
   if (company?.emails.length) {
     await sendEmail(
@@ -53,7 +53,7 @@ export async function notifyBookingCancelled(params: {
   const company = await getActiveAdminEmails(params.companyId);
   if (!company?.emails.length) return;
 
-  const when = formatBrazilDateTime(params.scheduledAt);
+  const when = formatDateTime(params.scheduledAt, 'pt-BR', getDeploymentTimezone());
   await sendEmail(
     company.emails,
     `Agendamento cancelado — ${params.serviceName}`,

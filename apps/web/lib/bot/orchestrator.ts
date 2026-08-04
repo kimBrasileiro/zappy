@@ -33,7 +33,7 @@ import {
 import { BUSINESS_TOOLS, executeBusinessTool } from './tool-definitions';
 import type { TicketMetadata } from './ticket-metadata';
 import { normalizeTimePhrases } from './time-normalizer';
-import { toBrazilWallClock } from '../timezone';
+import { getDeploymentTimezone, toWallClock } from '../format-time';
 import { currentMonthStart, getMonthlyMessageLimit } from './quota';
 
 export class OrchestratorBlockedError extends Error {
@@ -247,15 +247,16 @@ export async function* orchestrate(
   const language = LANGUAGE_NAMES[languageCode] ?? languageCode;
   const config = company.config as { botName?: string; extraInstructions?: string } | null;
   const botName = config?.botName ?? 'Assistente';
-  // Brazil-local "today" (see lib/timezone.ts) — consistent with
-  // services.ts treating businessHours/slots as America/Sao_Paulo
-  // wall-clock. Matters near UTC midnight (21:00-23:59 Brazil time): raw
-  // UTC would already say "tomorrow" for several real hours of the
-  // business's actual today.
+  // This deployment's own local "today" (see lib/format-time.ts) — consistent
+  // with services.ts treating businessHours/slots in the same timezone.
+  // Matters near UTC midnight (21:00-23:59 local time for a UTC-3 or UTC+1
+  // deployment): raw UTC would already say "tomorrow" for several real hours
+  // of the business's actual today.
   const today = new Date();
-  const todayBrazil = toBrazilWallClock(today);
-  const todayIso = `${todayBrazil.year}-${String(todayBrazil.month0 + 1).padStart(2, '0')}-${String(todayBrazil.day).padStart(2, '0')}`;
-  const todayWeekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' }).format(today);
+  const deploymentTimezone = getDeploymentTimezone();
+  const todayLocal = toWallClock(deploymentTimezone, today);
+  const todayIso = `${todayLocal.year}-${String(todayLocal.month0 + 1).padStart(2, '0')}-${String(todayLocal.day).padStart(2, '0')}`;
+  const todayWeekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: deploymentTimezone }).format(today);
   const systemPrompt = [
     `Você é ${botName}, o assistente de suporte da empresa ${company.name}.`,
     `Responda SEMPRE em ${language}, de forma clara, direta e simpática — todo o texto da sua resposta deve estar em ${language}, mesmo que o cliente escreva em outro idioma ou que as instruções abaixo estejam em português.`,
@@ -485,6 +486,7 @@ export async function* orchestrate(
               month: '2-digit',
               hour: '2-digit',
               minute: '2-digit',
+              timeZone: getDeploymentTimezone(),
             })}`,
         );
       } catch {

@@ -429,6 +429,30 @@
       "Listo en minutos, sin necesitar equipo técnico",
       "WhatsApp ya incluido, sin número aparte que comprar"
     ],
+    "niches": {
+      "sectionTitle": "Hecho para tu tipo de negocio",
+      "sectionSubtitle": "Los servicios, los horarios y la forma de conversar ya vienen pensados para tu rubro.",
+      "items": [
+        {
+          "icon": "scissors",
+          "tag": "Peluquería / Barbería",
+          "headline": "Mientras tú cortas, Zappigo agenda.",
+          "body": "Responde, agenda y confirma la cita sola mientras atiendes a quien ya está en el sillón."
+        },
+        {
+          "icon": "paw",
+          "tag": "Pet Shop",
+          "headline": "Tus manos están ocupadas con las mascotas. Las de Zappigo, no.",
+          "body": "Nunca más pierdas un baño y corte porque no tuviste tiempo de mirar el móvil."
+        },
+        {
+          "icon": "sparkle",
+          "tag": "Estética / Masajes",
+          "headline": "Tu clienta agenda, reprograma y confirma sola.",
+          "body": "Tú solo recibes la agenda lista — sin intercambiar mensajes para encontrar un horario."
+        }
+      ]
+    },
     "features": {
       "sectionTitle": "Todo lo que tu atención al cliente necesita",
       "items": [
@@ -446,6 +470,16 @@
           "icon": "calendar",
           "title": "Citas automáticas",
           "body": "El bot agenda horarios directo con el cliente."
+        },
+        {
+          "icon": "googlecalendar",
+          "title": "Sincroniza con Google Calendar",
+          "body": "Se conecta a tu Google Calendar automáticamente — nunca más un horario duplicado."
+        },
+        {
+          "icon": "audio",
+          "title": "Entiende audios de WhatsApp",
+          "body": "Tu cliente manda un audio preguntando el precio o el horario, y Zappigo lo escucha y responde al instante."
         },
         {
           "icon": "question",
@@ -622,6 +656,7 @@
       "subtitle": "Todas las empresas registradas en el sistema.",
       "tableName": "Nombre",
       "tableSlug": "Slug",
+      "tableBusinessType": "Tipo de negocio",
       "tablePlan": "Plan",
       "tableStatus": "Estado",
       "tableUsers": "Usuarios",
@@ -707,6 +742,13 @@
     "createAccountButton": "Crear cuenta",
     "companyNameLabel": "Nombre de la empresa",
     "companyNamePlaceholder": "Acme Corp",
+    "businessTypeLabel": "Tipo de negocio",
+    "businessTypePlaceholder": "Selecciona...",
+    "businessTypeSalaoBeleza": "Peluquería",
+    "businessTypeBarbearia": "Barbería",
+    "businessTypePetShop": "Pet shop",
+    "businessTypeEsteticaMassagem": "Estética / Masajes",
+    "businessTypeOutro": "Otro",
     "yourNameLabel": "Tu nombre",
     "yourNamePlaceholder": "María Pérez",
     "emailPlaceholder": "tu@empresa.com",

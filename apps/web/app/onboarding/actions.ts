@@ -11,6 +11,7 @@ import { getDeploymentDefaultLocale } from '../../i18n/default-locale';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../lib/stripe/client';
 import { TERMS_VERSION } from '../../lib/legal';
 import { notifyNewSignup } from '../../lib/notifications';
+import { isBusinessType } from '../../lib/business-types';
 
 export interface OnboardingState {
   error?: string;
@@ -33,6 +34,11 @@ export async function completeOnboarding(
   if (!companyName) {
     return { error: t('errorCompanyNameRequired') };
   }
+  const businessTypeRaw = String(formData.get('businessType') ?? '');
+  const businessType = isBusinessType(businessTypeRaw) ? businessTypeRaw : null;
+  if (!businessType) {
+    return { error: t('errorFillAllFields') };
+  }
   if (formData.get('terms') !== 'on') {
     return { error: t('errorMustAcceptTerms') };
   }
@@ -46,6 +52,7 @@ export async function completeOnboarding(
     data: {
       name: companyName,
       slug,
+      businessType,
       plan: stripeEnabled ? plan : 'starter',
       status: 'active',
       // See signup/actions.ts's identical field for why.

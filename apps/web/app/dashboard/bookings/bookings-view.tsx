@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import type { Booking, Customer, Service } from '@zappigo/db';
 import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
 import { BookingsCalendar } from './bookings-calendar';
+import { formatDateTime } from '../../../lib/format-time';
 
 type BookingWithRelations = Booking & { service: Service; customer: Customer | null };
 
@@ -19,17 +20,17 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// Business hours/availability are computed treating scheduledAt as
-// America/Sao_Paulo wall-clock (see lib/timezone.ts and checkAvailability
-// in lib/bot/services.ts) — displaying it in the viewer's own browser
-// timezone here would show a different hour than what was actually offered
-// to and confirmed by the customer. Must stay Brazil-local until real
-// per-company timezone support exists.
-function formatScheduledAt(date: Date): string {
-  return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-}
-
-export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRelations[]; emptyLabel: string }) {
+export function BookingsView({
+  bookings,
+  emptyLabel,
+  locale,
+  timeZone,
+}: {
+  bookings: BookingWithRelations[];
+  emptyLabel: string;
+  locale: string;
+  timeZone: string;
+}) {
   const t = useTranslations('dashboard.bookings');
   const [view, setView] = useState<'list' | 'calendar'>('list');
 
@@ -60,7 +61,7 @@ export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRe
       </div>
 
       {view === 'calendar' ? (
-        <BookingsCalendar bookings={bookings} />
+        <BookingsCalendar bookings={bookings} timeZone={timeZone} />
       ) : (
         <table className="dash-table">
           <thead>
@@ -81,7 +82,7 @@ export function BookingsView({ bookings, emptyLabel }: { bookings: BookingWithRe
                 <td>{booking.service.name}</td>
                 <td>{booking.customer?.name ?? booking.customer?.email ?? booking.customer?.externalId ?? t('anonymous')}</td>
                 <td>{booking.customer?.phone ?? '—'}</td>
-                <td>{formatScheduledAt(booking.scheduledAt)}</td>
+                <td>{formatDateTime(booking.scheduledAt, locale, timeZone)}</td>
                 <td>{booking.durationMinutes} min</td>
                 <td>{formatPrice(booking.priceCents)}</td>
                 <td>

@@ -7,15 +7,14 @@ import { ptBR } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
 import type { Booking, Customer, Service } from '@zappigo/db';
 import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
-import { toBrazilWallClock } from '../../../lib/timezone';
+import { toWallClock } from '../../../lib/format-time';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 // The calendar grid itself (month/week names, "next"/"today" chrome) stays
-// Brazil-locale/pt-BR — same scope cut as scheduledAt formatting throughout
-// this codebase (see lib/timezone.ts): no per-company/per-viewer timezone or
-// calendar-locale support exists yet, so this widget's own chrome isn't part
-// of the pt/es/en UI switcher. The booking action buttons and status labels
-// below it are.
+// pt-BR-locale — same scope cut as scheduledAt formatting throughout this
+// codebase (see lib/format-time.ts): no per-viewer calendar-locale support
+// exists yet, so this widget's own chrome isn't part of the pt/es/en UI
+// switcher. The booking action buttons and status labels below it are.
 
 type BookingWithRelations = Booking & { service: Service; customer: Customer | null };
 
@@ -53,22 +52,22 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// scheduledAt is stored and always treated as America/Sao_Paulo wall-clock
-// time throughout this codebase (see lib/timezone.ts and checkAvailability
-// in lib/bot/services.ts) — no real per-company timezone support exists
-// yet. react-big-calendar renders whatever LOCAL time a Date reports, so
-// feeding it scheduledAt directly would silently shift every event by the
-// viewer's browser offset. This builds a Date that encodes the same
-// Brazil-local Y/M/D/H/M as local-time fields, so e.g. 09:00 always
-// displays as 09:00 regardless of who's viewing it.
-function toWallClockLocalDate(d: Date): Date {
-  const brazil = toBrazilWallClock(d);
-  return new Date(brazil.year, brazil.month0, brazil.day, brazil.hour, brazil.minute);
+// scheduledAt is stored and always treated as this deployment's own local
+// wall-clock time throughout this codebase (see lib/format-time.ts and
+// checkAvailability in lib/bot/services.ts) — no real per-company timezone
+// support exists yet. react-big-calendar renders whatever LOCAL time a Date
+// reports, so feeding it scheduledAt directly would silently shift every
+// event by the viewer's browser offset. This builds a Date that encodes the
+// same deployment-local Y/M/D/H/M as local-time fields, so e.g. 09:00
+// always displays as 09:00 regardless of who's viewing it.
+function toWallClockLocalDate(d: Date, timeZone: string): Date {
+  const local = toWallClock(timeZone, d);
+  return new Date(local.year, local.month0, local.day, local.hour, local.minute);
 }
 
 type BookingEvent = Event & { resource: BookingWithRelations };
 
-export function BookingsCalendar({ bookings }: { bookings: BookingWithRelations[] }) {
+export function BookingsCalendar({ bookings, timeZone }: { bookings: BookingWithRelations[]; timeZone: string }) {
   const t = useTranslations('dashboard.bookings');
   const [selected, setSelected] = useState<BookingWithRelations | null>(null);
 
@@ -82,7 +81,7 @@ export function BookingsCalendar({ bookings }: { bookings: BookingWithRelations[
   const events = useMemo<BookingEvent[]>(
     () =>
       bookings.map((booking) => {
-        const start = toWallClockLocalDate(booking.scheduledAt);
+        const start = toWallClockLocalDate(booking.scheduledAt, timeZone);
         return {
           title: `${booking.service.name} — ${booking.customer?.name ?? t('anonymous')}`,
           start,
@@ -90,7 +89,7 @@ export function BookingsCalendar({ bookings }: { bookings: BookingWithRelations[
           resource: booking,
         };
       }),
-    [bookings, t],
+    [bookings, t, timeZone],
   );
 
   return (
@@ -127,7 +126,7 @@ export function BookingsCalendar({ bookings }: { bookings: BookingWithRelations[
               {selected.customer?.phone ? ` — ${selected.customer.phone}` : ''}
             </p>
             <p style={{ margin: '0 0 4px', fontSize: 13.5, color: '#444' }}>
-              {toWallClockLocalDate(selected.scheduledAt).toLocaleString('pt-BR')} · {selected.durationMinutes} min · {formatPrice(selected.priceCents)}
+              {toWallClockLocalDate(selected.scheduledAt, timeZone).toLocaleString('pt-BR')} · {selected.durationMinutes} min · {formatPrice(selected.priceCents)}
             </p>
             {selected.status === 'confirmed' && (
               <div style={{ display: 'flex', gap: 6, marginTop: 16 }}>

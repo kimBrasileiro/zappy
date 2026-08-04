@@ -81,6 +81,11 @@ variable "default_locale" {
   default = "es"
 }
 
+variable "default_timezone" {
+  type    = string
+  default = "Europe/Madrid"
+}
+
 variable "pricing_currency_symbol" {
   # ASCII on purpose — the real € character got silently mangled into "?"
   # somewhere in the Terraform-on-Windows -> GCP transmission chain when

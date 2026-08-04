@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { getStripe, isStripeConfigured } from '../../../lib/stripe/client';
@@ -6,6 +6,7 @@ import { PLANS, FREE_TIER_MODE } from '../../../lib/stripe/plans';
 import { PRICING_CURRENCY_CODE } from '../../../lib/pricing';
 import { cancelSubscription, reactivateSubscription } from './actions';
 import { ChangePlanForm } from './change-plan-form';
+import { formatDate } from '../../../lib/format-time';
 
 function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: PRICING_CURRENCY_CODE });
@@ -14,6 +15,7 @@ function formatPrice(cents: number): string {
 export default async function BillingPage() {
   const { companyId } = await requireSession();
   const t = await getTranslations('dashboard.billing');
+  const locale = await getLocale();
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) return null;
 
@@ -90,9 +92,9 @@ export default async function BillingPage() {
   const interval = price?.recurring?.interval === 'month' ? t('perMonthSuffix') : '';
 
   const currentPlanLabel = planLabels[company.plan] ?? PLANS.find((p) => p.key === company.plan)?.label ?? company.plan;
-  const periodEndDate = new Date(subscription.current_period_end * 1000).toLocaleDateString('pt-BR');
+  const periodEndDate = formatDate(new Date(subscription.current_period_end * 1000), locale);
   const trialEndDate = subscription.trial_end
-    ? new Date(subscription.trial_end * 1000).toLocaleDateString('pt-BR')
+    ? formatDate(new Date(subscription.trial_end * 1000), locale)
     : null;
 
   return (

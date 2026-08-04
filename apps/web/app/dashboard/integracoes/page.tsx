@@ -1,7 +1,8 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { disconnectGoogleCalendar } from './actions';
+import { formatDate } from '../../../lib/format-time';
 
 export default async function IntegracoesPage({
   searchParams,
@@ -10,6 +11,7 @@ export default async function IntegracoesPage({
 }) {
   const { companyId } = await requireSession();
   const t = await getTranslations('dashboard.integrations');
+  const locale = await getLocale();
   const company = await prisma.company.findUnique({
     where: { id: companyId },
     select: {
@@ -59,7 +61,7 @@ export default async function IntegracoesPage({
               {t('connectedAsPrefix')} <strong>{company.googleCalendarConnectedEmail}</strong>
               {company.googleCalendarConnectedAt && (
                 <span style={{ color: '#999' }}>
-                  {t('connectedSince', { date: company.googleCalendarConnectedAt.toLocaleDateString('pt-BR') })}
+                  {t('connectedSince', { date: formatDate(company.googleCalendarConnectedAt, locale) })}
                 </span>
               )}
               .

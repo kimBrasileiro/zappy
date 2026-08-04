@@ -46,6 +46,12 @@ model Company {
   googleCalendarRefreshTokenEncrypted String?   @map("google_calendar_refresh_token_encrypted")
   googleCalendarConnectedEmail        String?   @map("google_calendar_connected_email")
   googleCalendarConnectedAt           DateTime? @map("google_calendar_connected_at") @db.Timestamptz(6)
+  // Self-reported at signup/onboarding (see lib/business-types.ts for the
+  // fixed set of keys) — nullable only because every company created before
+  // this field existed has no value to backfill; new signups always set it.
+  // Exists purely for GTM segmentation (admin/companies, future reporting),
+  // not read anywhere in the bot/booking logic itself.
+  businessType           String?  @map("business_type")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 

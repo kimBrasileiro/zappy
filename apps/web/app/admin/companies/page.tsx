@@ -1,12 +1,23 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
+import { formatDateTime } from '../../../lib/format-time';
 
 export default async function AdminCompaniesPage() {
   const t = await getTranslations('admin.companies');
+  const ta = await getTranslations('auth');
+  const locale = await getLocale();
   const companies = await prisma.company.findMany({
     orderBy: { createdAt: 'desc' },
     include: { _count: { select: { users: true, tickets: true } } },
   });
+
+  const businessTypeLabels: Record<string, string> = {
+    salao_beleza: ta('businessTypeSalaoBeleza'),
+    barbearia: ta('businessTypeBarbearia'),
+    pet_shop: ta('businessTypePetShop'),
+    estetica_massagem: ta('businessTypeEsteticaMassagem'),
+    outro: ta('businessTypeOutro'),
+  };
 
   return (
     <>
@@ -18,6 +29,7 @@ export default async function AdminCompaniesPage() {
           <tr>
             <th>{t('tableName')}</th>
             <th>{t('tableSlug')}</th>
+            <th>{t('tableBusinessType')}</th>
             <th>{t('tablePlan')}</th>
             <th>{t('tableStatus')}</th>
             <th>{t('tableUsers')}</th>
@@ -30,6 +42,7 @@ export default async function AdminCompaniesPage() {
             <tr key={company.id}>
               <td>{company.name}</td>
               <td>{company.slug}</td>
+              <td>{company.businessType ? (businessTypeLabels[company.businessType] ?? company.businessType) : '—'}</td>
               <td>{company.plan}</td>
               <td>
                 <span className={company.status === 'active' ? 'dash-badge dash-badge-in_progress' : 'dash-badge dash-badge-closed'}>
@@ -38,12 +51,12 @@ export default async function AdminCompaniesPage() {
               </td>
               <td>{company._count.users}</td>
               <td>{company._count.tickets}</td>
-              <td>{company.createdAt.toLocaleString('pt-BR')}</td>
+              <td>{formatDateTime(company.createdAt, locale)}</td>
             </tr>
           ))}
           {companies.length === 0 && (
             <tr>
-              <td colSpan={7} style={{ color: '#999' }}>
+              <td colSpan={8} style={{ color: '#999' }}>
                 {t('noCompanies')}
               </td>
             </tr>

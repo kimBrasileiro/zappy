@@ -36,6 +36,7 @@ module "zappy" {
   whatsapp_default_country_code = var.whatsapp_default_country_code
 
   default_locale                  = var.default_locale
+  default_timezone                = var.default_timezone
   pricing_currency_symbol         = var.pricing_currency_symbol
   pricing_currency_code           = var.pricing_currency_code
   pricing_amount_free             = var.pricing_amount_free

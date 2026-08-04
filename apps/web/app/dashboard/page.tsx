@@ -1,14 +1,16 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../lib/auth-server';
 import { RefreshButton } from './refresh-button';
 import { CopySnippet } from '../copy-snippet';
 import { CompanyProfileForm } from './company-name-form';
+import { formatDateTime } from '../../lib/format-time';
 
 export default async function DashboardHomePage() {
   const { companyId } = await requireSession();
   const t = await getTranslations('dashboard.home');
+  const locale = await getLocale();
 
   const now = new Date();
   const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60_000);
@@ -204,7 +206,7 @@ export default async function DashboardHomePage() {
               <td>
                 <span className={`dash-badge dash-badge-${ticket.status}`}>{ticket.status}</span>
               </td>
-              <td>{ticket.updatedAt.toLocaleString('pt-BR')}</td>
+              <td>{formatDateTime(ticket.updatedAt, locale)}</td>
             </tr>
           ))}
           {recentTickets.length === 0 && (

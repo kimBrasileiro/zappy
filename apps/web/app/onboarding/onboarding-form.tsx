@@ -7,6 +7,7 @@ import { completeOnboarding, type OnboardingState } from './actions';
 import { authStyles as s } from '../(auth)/auth-styles';
 import { PaymentStep } from '../../lib/stripe/payment-step';
 import { PLANS, stripeConfiguredOnClient } from '../../lib/stripe/plans';
+import { BUSINESS_TYPES } from '../../lib/business-types';
 
 const initialState: OnboardingState = {};
 
@@ -30,6 +31,13 @@ export function OnboardingForm() {
     whatsapp_proprio: tb('planWhatsappProprio'),
     integracao: tb('planIntegracao'),
   };
+  const businessTypeLabels: Record<string, string> = {
+    salao_beleza: t('businessTypeSalaoBeleza'),
+    barbearia: t('businessTypeBarbearia'),
+    pet_shop: t('businessTypePetShop'),
+    estetica_massagem: t('businessTypeEsteticaMassagem'),
+    outro: t('businessTypeOutro'),
+  };
 
   if (state?.clientSecret) {
     return (
@@ -51,6 +59,20 @@ export function OnboardingForm() {
       <label style={s.label}>
         {t('companyNameLabel')}
         <input name="companyName" required style={s.input} placeholder={t('companyNamePlaceholder')} />
+      </label>
+
+      <label style={s.label}>
+        {t('businessTypeLabel')}
+        <select name="businessType" required defaultValue="" style={s.input}>
+          <option value="" disabled>
+            {t('businessTypePlaceholder')}
+          </option>
+          {BUSINESS_TYPES.map((key) => (
+            <option key={key} value={key}>
+              {businessTypeLabels[key]}
+            </option>
+          ))}
+        </select>
       </label>
 
       {stripeConfiguredOnClient && (

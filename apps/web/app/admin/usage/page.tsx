@@ -94,7 +94,7 @@ export default async function AdminUsagePage() {
     <>
       <h1 className="dash-h1">{t('title')}</h1>
       <p className="dash-subtitle">
-        {t('subtitle', { date: monthStart.toLocaleDateString('pt-BR') })}
+        {t('subtitle', { date: monthStart.toLocaleDateString('pt-BR', { timeZone: 'UTC' }) })}
       </p>
 
       <div className="dash-stat-grid">

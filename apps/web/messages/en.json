@@ -429,6 +429,30 @@
       "Live in minutes, no technical team needed",
       "WhatsApp already included, no separate number to buy"
     ],
+    "niches": {
+      "sectionTitle": "Built for your kind of business",
+      "sectionSubtitle": "The services, hours, and tone are already tailored to your segment.",
+      "items": [
+        {
+          "icon": "scissors",
+          "tag": "Hair salon / Barbershop",
+          "headline": "While you cut, Zappigo books.",
+          "body": "Replies, schedules, and confirms on its own while you take care of the customer already in the chair."
+        },
+        {
+          "icon": "paw",
+          "tag": "Pet Shop",
+          "headline": "Your hands are busy with the pets. Zappigo's aren't.",
+          "body": "Never miss another bath-and-groom booking because there was no time to check the phone."
+        },
+        {
+          "icon": "sparkle",
+          "tag": "Aesthetics / Massage",
+          "headline": "Your client books, reschedules, and confirms on her own.",
+          "body": "You just get a ready-made schedule — no back-and-forth messages to find a time."
+        }
+      ]
+    },
     "features": {
       "sectionTitle": "Everything your customer support needs",
       "items": [
@@ -446,6 +470,16 @@
           "icon": "calendar",
           "title": "Automatic scheduling",
           "body": "The bot books appointments directly with the customer."
+        },
+        {
+          "icon": "googlecalendar",
+          "title": "Syncs with Google Calendar",
+          "body": "Connects to your Google Calendar automatically — never a double-booked slot again."
+        },
+        {
+          "icon": "audio",
+          "title": "Understands WhatsApp voice notes",
+          "body": "Your customer sends a voice note asking about price or time, and Zappigo listens and replies right away."
         },
         {
           "icon": "question",
@@ -622,6 +656,7 @@
       "subtitle": "All companies registered in the system.",
       "tableName": "Name",
       "tableSlug": "Slug",
+      "tableBusinessType": "Business type",
       "tablePlan": "Plan",
       "tableStatus": "Status",
       "tableUsers": "Users",
@@ -707,6 +742,13 @@
     "createAccountButton": "Create account",
     "companyNameLabel": "Company name",
     "companyNamePlaceholder": "Acme Corp",
+    "businessTypeLabel": "Business type",
+    "businessTypePlaceholder": "Select...",
+    "businessTypeSalaoBeleza": "Hair salon",
+    "businessTypeBarbearia": "Barbershop",
+    "businessTypePetShop": "Pet shop",
+    "businessTypeEsteticaMassagem": "Aesthetics / Massage",
+    "businessTypeOutro": "Other",
     "yourNameLabel": "Your name",
     "yourNamePlaceholder": "Maria Silva",
     "emailPlaceholder": "you@company.com",

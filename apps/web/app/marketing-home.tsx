@@ -12,6 +12,11 @@ const ICON_CALENDAR = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3
 const ICON_HEADSET = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13v-1a8 8 0 0 1 16 0v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="2" y="13" width="5" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="17" y="13" width="5" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M19 20v1a2 2 0 0 1-2 2h-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICON_QUESTION = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>`;
 const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_SYNC = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_MIC = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M9 22h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const ICON_SCISSORS = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="18" r="2.5" stroke="currentColor" stroke-width="2"/><path d="M20 5 8 13m12 6L8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const ICON_PAW = `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><ellipse cx="6.5" cy="10" rx="2" ry="2.6"/><ellipse cx="11" cy="6.5" rx="2" ry="2.6"/><ellipse cx="16" cy="6.5" rx="2" ry="2.6"/><ellipse cx="19.5" cy="10.5" rx="2" ry="2.6"/><path d="M12 12.5c-3.4 0-6.4 2.4-6.4 5.4a3.1 3.1 0 0 0 3.1 3.1c1.1 0 1.7-.4 2.6-.8.5-.2 1-.4 1.7-.4s1.2.2 1.7.4c.9.4 1.5.8 2.6.8a3.1 3.1 0 0 0 3.1-3.1c0-3-3-5.4-6.4-5.4z"/></svg>`;
+const ICON_SPARKLE = `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>`;
 
 const FEATURE_ICONS: Record<string, string> = {
   whatsapp: ICON_WHATSAPP,
@@ -19,6 +24,14 @@ const FEATURE_ICONS: Record<string, string> = {
   calendar: ICON_CALENDAR,
   question: ICON_QUESTION,
   headset: ICON_HEADSET,
+  googlecalendar: ICON_SYNC,
+  audio: ICON_MIC,
+};
+
+const NICHE_ICONS: Record<string, string> = {
+  scissors: ICON_SCISSORS,
+  paw: ICON_PAW,
+  sparkle: ICON_SPARKLE,
 };
 
 function Button({
@@ -66,6 +79,7 @@ export async function MarketingHome() {
   const t = await getTranslations('marketing');
 
   const trustItems = t.raw('trustItems') as string[];
+  const niches = t.raw('niches.items') as { icon: string; tag: string; headline: string; body: string }[];
   const features = t.raw('features.items') as { icon: string; title: string; body: string }[];
   const planMeta = t.raw('pricing.plans') as { name: string; period: string; items: string[]; cta: string }[];
   const freePlanItems = t.raw('pricing.free.items') as string[];
@@ -255,6 +269,57 @@ export async function MarketingHome() {
               />
               {item}
             </span>
+          ))}
+        </div>
+      </section>
+
+      {/* Niches — vertical-specific positioning, each card leads to its own
+          landing copy angle even though there's no dedicated route yet. */}
+      <section id="nicho" style={{ padding: '70px 24px', maxWidth: 1100, margin: '0 auto' }}>
+        <h2 style={{ fontSize: 26, textAlign: 'center', marginBottom: 12 }}>{t('niches.sectionTitle')}</h2>
+        <p style={{ textAlign: 'center', color: '#666', fontSize: 14.5, marginBottom: 40, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+          {t('niches.sectionSubtitle')}
+        </p>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 20,
+          }}
+        >
+          {niches.map((n) => (
+            <div
+              key={n.tag}
+              style={{
+                background: '#fff',
+                border: '1px solid rgba(0,0,0,0.06)',
+                borderRadius: 16,
+                padding: '26px 24px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex',
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: '#eef2ff',
+                  color: BRAND_COLOR,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 14,
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: (NICHE_ICONS[n.icon] ?? ICON_SPARKLE).replace('width="24"', 'width="22"').replace('height="24"', 'height="22"'),
+                }}
+              />
+              <span style={{ display: 'block', fontSize: 12, fontWeight: 600, color: BRAND_COLOR, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                {n.tag}
+              </span>
+              <h3 style={{ fontSize: 17, margin: '0 0 8px', lineHeight: 1.35 }}>{n.headline}</h3>
+              <p style={{ fontSize: 13.5, color: '#666', lineHeight: 1.55, margin: 0 }}>{n.body}</p>
+            </div>
           ))}
         </div>
       </section>

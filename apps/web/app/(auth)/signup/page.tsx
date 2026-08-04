@@ -9,6 +9,7 @@ import { authClient } from '../../../lib/auth-client';
 import { authStyles as s } from '../auth-styles';
 import { PaymentStep } from '../../../lib/stripe/payment-step';
 import { PLANS, stripeConfiguredOnClient } from '../../../lib/stripe/plans';
+import { BUSINESS_TYPES } from '../../../lib/business-types';
 
 const initialState: SignUpState = {};
 
@@ -42,6 +43,13 @@ export default function SignUpPage() {
     basico: tb('planBasico'),
     whatsapp_proprio: tb('planWhatsappProprio'),
     integracao: tb('planIntegracao'),
+  };
+  const businessTypeLabels: Record<string, string> = {
+    salao_beleza: t('businessTypeSalaoBeleza'),
+    barbearia: t('businessTypeBarbearia'),
+    pet_shop: t('businessTypePetShop'),
+    estetica_massagem: t('businessTypeEsteticaMassagem'),
+    outro: t('businessTypeOutro'),
   };
 
   async function handleGoogle() {
@@ -100,6 +108,19 @@ export default function SignUpPage() {
         <label style={s.label}>
           {t('companyNameLabel')}
           <input name="companyName" required style={s.input} placeholder={t('companyNamePlaceholder')} />
+        </label>
+        <label style={s.label}>
+          {t('businessTypeLabel')}
+          <select name="businessType" required defaultValue="" style={s.input}>
+            <option value="" disabled>
+              {t('businessTypePlaceholder')}
+            </option>
+            {BUSINESS_TYPES.map((key) => (
+              <option key={key} value={key}>
+                {businessTypeLabels[key]}
+              </option>
+            ))}
+          </select>
         </label>
         <label style={s.label}>
           {t('yourNameLabel')}

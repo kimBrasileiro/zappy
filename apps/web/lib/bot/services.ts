@@ -2,7 +2,7 @@ import { prisma } from '@zappigo/db';
 import type { Service } from '@zappigo/db';
 import { checkBookingRateLimit } from './rate-limit';
 import { notifyBookingCancelled, notifyBookingCreated } from '../notifications';
-import { brazilWallClockToUtc, toBrazilWallClock } from '../timezone';
+import { getDeploymentTimezone, toWallClock, wallClockToUtc } from '../format-time';
 import { createEvent, deleteEvent, getFreeBusy, isCalendarConnected } from '../google-calendar/client';
 
 // Brazilian phone with DDD: 10 digits (landline, e.g. 11 3456-7890) or 11
@@ -48,8 +48,8 @@ function getBusinessHours(company: { config: unknown }, service: { businessHours
 // booking needs the exact instant back to look the row up), so every call
 // site that surfaces a time to the model now also gets this pre-converted,
 // unambiguous local string to actually say out loud.
-function formatBrazilDateTime(d: Date): string {
-  const wc = toBrazilWallClock(d);
+function formatLocalDateTime(d: Date): string {
+  const wc = toWallClock(getDeploymentTimezone(), d);
   return `${String(wc.day).padStart(2, '0')}/${String(wc.month0 + 1).padStart(2, '0')}/${wc.year} às ${String(wc.hour).padStart(2, '0')}:${String(wc.minute).padStart(2, '0')}`;
 }
 
@@ -172,25 +172,27 @@ export async function checkAvailability(
   const company = await prisma.company.findUnique({ where: { id: companyId } });
   if (!company) return { error: 'service_not_found', message: 'Empresa não encontrada.' };
 
-  // Business hours ("09:00"-"18:00" etc.) are interpreted as America/Sao_Paulo
-  // wall-clock (brazilWallClockToUtc), not raw UTC — no real per-company
-  // timezone support exists yet (see lib/timezone.ts), but treating a
-  // Brazilian business's own configured hours as if they were UTC meant the
-  // shop effectively closed 3 hours earlier than anyone configuring "18:00"
-  // actually intended. `dayStart` stays plain UTC midnight of this same
-  // Y/M/D — it's only used below as the DATE (not datetime) key for
-  // StaffAbsence.date, a @db.Date column with no time-of-day component to
-  // shift in the first place.
+  // Business hours ("09:00"-"18:00" etc.) are interpreted as this
+  // deployment's own local wall-clock (wallClockToUtc, see
+  // lib/format-time.ts), not raw UTC — no real per-company timezone support
+  // exists yet, every company on a given deployment shares that
+  // deployment's own timezone (DEFAULT_TIMEZONE), but treating a business's
+  // own configured hours as if they were UTC meant the shop effectively
+  // closed several hours earlier than anyone configuring "18:00" actually
+  // intended. `dayStart` stays plain UTC midnight of this same Y/M/D — it's
+  // only used below as the DATE (not datetime) key for StaffAbsence.date, a
+  // @db.Date column with no time-of-day component to shift in the first
+  // place.
   const [year, month, day] = date.split('-').map(Number);
   const dayStart = new Date(Date.UTC(year!, month! - 1, day!));
 
   // is24h bypasses both the day-of-week closed check and the open/close
-  // window entirely — every day is open, 00:00 through 23:59 (Brazil-local).
+  // window entirely — every day is open, 00:00 through 23:59 local time.
   let openTime: Date;
   let closeTime: Date;
   if (service.is24h) {
-    openTime = brazilWallClockToUtc(year!, month! - 1, day!, 0, 0);
-    closeTime = brazilWallClockToUtc(year!, month! - 1, day!, 23, 59);
+    openTime = wallClockToUtc(getDeploymentTimezone(), year!, month! - 1, day!, 0, 0);
+    closeTime = wallClockToUtc(getDeploymentTimezone(), year!, month! - 1, day!, 23, 59);
   } else {
     const hours = getBusinessHours(company, service);
     const dayHours = hours[DAY_KEYS[dayStart.getUTCDay()]!];
@@ -205,14 +207,14 @@ export async function checkAvailability(
     }
     const [openH, openM] = dayHours[0].split(':').map(Number);
     const [closeH, closeM] = dayHours[1].split(':').map(Number);
-    openTime = brazilWallClockToUtc(year!, month! - 1, day!, openH!, openM);
-    closeTime = brazilWallClockToUtc(year!, month! - 1, day!, closeH!, closeM);
+    openTime = wallClockToUtc(getDeploymentTimezone(), year!, month! - 1, day!, openH!, openM);
+    closeTime = wallClockToUtc(getDeploymentTimezone(), year!, month! - 1, day!, closeH!, closeM);
   }
 
-  const brazilDayStart = brazilWallClockToUtc(year!, month! - 1, day!, 0, 0);
-  const brazilDayEnd = brazilWallClockToUtc(year!, month! - 1, day!, 23, 59, 59, 999);
+  const localDayStart = wallClockToUtc(getDeploymentTimezone(), year!, month! - 1, day!, 0, 0);
+  const localDayEnd = wallClockToUtc(getDeploymentTimezone(), year!, month! - 1, day!, 23, 59, 59, 999);
   const existing = await prisma.booking.findMany({
-    where: { serviceId: service.id, status: 'confirmed', scheduledAt: { gte: brazilDayStart, lte: brazilDayEnd } },
+    where: { serviceId: service.id, status: 'confirmed', scheduledAt: { gte: localDayStart, lte: localDayEnd } },
   });
 
   // Eligible staff for this date: the full roster minus anyone marked absent
@@ -259,7 +261,7 @@ export async function checkAvailability(
   let calendarBusy: { startMs: number; endMs: number }[] = [];
   if (isCalendarConnected(company)) {
     try {
-      const busy = await getFreeBusy(company, brazilDayStart.toISOString(), brazilDayEnd.toISOString());
+      const busy = await getFreeBusy(company, localDayStart.toISOString(), localDayEnd.toISOString());
       calendarBusy = busy.map((b) => ({ startMs: new Date(b.start).getTime(), endMs: new Date(b.end).getTime() }));
     } catch (err) {
       console.error('[google-calendar] freebusy failed, falling back to Zappigo-only availability', err);
@@ -285,7 +287,7 @@ export async function checkAvailability(
         companyId,
         status: 'cancelled',
         googleCalendarEventId: { not: null },
-        scheduledAt: { gte: brazilDayStart, lte: brazilDayEnd },
+        scheduledAt: { gte: localDayStart, lte: localDayEnd },
       },
     });
     const staleRetries: Promise<void>[] = [];
@@ -345,7 +347,7 @@ export async function checkAvailability(
   if (time?.trim()) {
     const match = time.trim().match(/^(\d{1,2}):(\d{2})$/);
     if (match) {
-      const requestedMs = brazilWallClockToUtc(year!, month! - 1, day!, Number(match[1]), Number(match[2])).getTime();
+      const requestedMs = wallClockToUtc(getDeploymentTimezone(), year!, month! - 1, day!, Number(match[1]), Number(match[2])).getTime();
       const result = evaluateSlot(requestedMs);
       requestedTimeResult = {
         time: `${match[1]!.padStart(2, '0')}:${match[2]}`,
@@ -384,7 +386,7 @@ export async function checkAvailability(
     const staffAvailable = evaluation.staffAvailable;
 
     const d = new Date(t);
-    const wallClock = toBrazilWallClock(d);
+    const wallClock = toWallClock(getDeploymentTimezone(), d);
     const entry = {
       time: `${String(wallClock.hour).padStart(2, '0')}:${String(wallClock.minute).padStart(2, '0')}`,
       iso: d.toISOString(),
@@ -469,18 +471,34 @@ export async function createBooking(
     };
   }
 
-  // The model constructs a naive datetime string by combining the Brazil-
-  // local date and the Brazil-local "HH:MM" it showed the customer (see the
-  // orchestrator's system prompt) — never a raw UTC instant. A naive string
-  // with no timezone designator is parsed by JS Date as LOCAL SERVER time,
-  // which would silently shift the booking by whatever offset the server
-  // process happens to run in. Force the intended interpretation instead:
-  // append "-03:00" (America/Sao_Paulo, see lib/timezone.ts) whenever the
-  // string has no explicit offset already.
+  // The model constructs a naive datetime string by combining this
+  // deployment's own local date and the local "HH:MM" it showed the
+  // customer (see the orchestrator's system prompt) — never a raw UTC
+  // instant. A naive string with no timezone designator would otherwise be
+  // parsed by JS Date as LOCAL SERVER time, silently shifting the booking
+  // by whatever offset the server process happens to run in. Parse the
+  // wall-clock components out ourselves and convert via this deployment's
+  // own timezone (wallClockToUtc, DST-aware) instead of trusting `new
+  // Date()`'s own naive-string handling — a fixed offset string like
+  // "-03:00" would only ever be correct for a timezone with no DST.
   const hasExplicitOffset = /[zZ]|[+-]\d{2}:?\d{2}$/.test(args.scheduledAt.trim());
-  const normalizedScheduledAt = hasExplicitOffset ? args.scheduledAt : `${args.scheduledAt}-03:00`;
-
-  const scheduledAt = new Date(normalizedScheduledAt);
+  let scheduledAt: Date;
+  if (hasExplicitOffset) {
+    scheduledAt = new Date(args.scheduledAt);
+  } else {
+    const naive = args.scheduledAt.trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+    scheduledAt = naive
+      ? wallClockToUtc(
+          getDeploymentTimezone(),
+          Number(naive[1]),
+          Number(naive[2]) - 1,
+          Number(naive[3]),
+          Number(naive[4]),
+          Number(naive[5]),
+          naive[6] ? Number(naive[6]) : 0,
+        )
+      : new Date(NaN);
+  }
   if (Number.isNaN(scheduledAt.getTime())) {
     return {
       error: 'invalid_datetime',
@@ -511,7 +529,7 @@ export async function createBooking(
     // day — extracting it via getUTCFullYear/etc. straight off scheduledAt
     // (a real UTC instant) would misfire for a booking within 3h of UTC
     // midnight, e.g. 22:00 Brazil-local is already the next UTC day.
-    const brazilDate = toBrazilWallClock(scheduledAt);
+    const brazilDate = toWallClock(getDeploymentTimezone(), scheduledAt);
     const dayStart = new Date(Date.UTC(brazilDate.year, brazilDate.month0, brazilDate.day));
     const absences = await prisma.staffAbsence.findMany({ where: { serviceId: service.id, date: dayStart } });
     const absentStaff = new Set(absences.map((a) => a.staffName));
@@ -634,9 +652,9 @@ export async function createBooking(
           // is UTC (always 3h off Brazil time) and exists only so a
           // follow-up create_booking(confirmReplaceExisting: true) call can
           // reference the exact instant.
-          scheduledAtLocal: formatBrazilDateTime(previous[0]!.scheduledAt),
+          scheduledAtLocal: formatLocalDateTime(previous[0]!.scheduledAt),
         },
-        message: `Esse cliente já tem um agendamento CONFIRMADO de ${service.name} para ${formatBrazilDateTime(previous[0]!.scheduledAt)} (horário de Brasília) — NÃO crie o novo agendamento ainda. Lembre o cliente desse agendamento existente, dizendo exatamente esse horário de Brasília (nunca o campo scheduledAt em UTC), e pergunte explicitamente: ele quer REAGENDAR esse agendamento pro novo horário (nesse caso, chame create_booking de novo com os mesmos dados E confirmReplaceExisting: true, só depois que ele confirmar), ou prefere MANTER o agendamento antigo como está (nesse caso não chame create_booking de novo agora)? Nunca assuma a resposta.`,
+        message: `Esse cliente já tem um agendamento CONFIRMADO de ${service.name} para ${formatLocalDateTime(previous[0]!.scheduledAt)} (horário de Brasília) — NÃO crie o novo agendamento ainda. Lembre o cliente desse agendamento existente, dizendo exatamente esse horário de Brasília (nunca o campo scheduledAt em UTC), e pergunte explicitamente: ele quer REAGENDAR esse agendamento pro novo horário (nesse caso, chame create_booking de novo com os mesmos dados E confirmReplaceExisting: true, só depois que ele confirmar), ou prefere MANTER o agendamento antigo como está (nesse caso não chame create_booking de novo agora)? Nunca assuma a resposta.`,
       };
     }
     if (previous.length > 0) {
@@ -648,7 +666,7 @@ export async function createBooking(
       // Brazil-local string — no reason to hand the model a UTC value here
       // it would only have to convert and might misread, same fix as
       // scheduledAtLocal above.
-      rescheduledFrom = formatBrazilDateTime(previous[0]!.scheduledAt);
+      rescheduledFrom = formatLocalDateTime(previous[0]!.scheduledAt);
 
       if (company && isCalendarConnected(company)) {
         for (const b of previous) {
@@ -714,7 +732,7 @@ export async function createBooking(
       // The only one of these two fields to ever say out loud — scheduledAt
       // above is UTC (see formatBrazilDateTime's comment near the top of
       // this file for why that's not safe to read directly).
-      scheduledAtLocal: formatBrazilDateTime(booking.scheduledAt),
+      scheduledAtLocal: formatLocalDateTime(booking.scheduledAt),
       durationMinutes: booking.durationMinutes,
       priceCents: booking.priceCents,
       requiresManualConfirmation,
@@ -763,7 +781,7 @@ export async function listBookings(companyId: string, customerId: string | null)
       serviceName: b.service.name,
       scheduledAt: b.scheduledAt.toISOString(),
       // Say this one, not scheduledAt (UTC) — see formatBrazilDateTime.
-      scheduledAtLocal: formatBrazilDateTime(b.scheduledAt),
+      scheduledAtLocal: formatLocalDateTime(b.scheduledAt),
       ...(b.staffName ? { staffName: b.staffName } : {}),
     })),
   };
@@ -836,7 +854,7 @@ export async function cancelBooking(
     serviceName: service.name,
     scheduledAt: booking.scheduledAt.toISOString(),
     // Say this one, not scheduledAt (UTC) — see formatBrazilDateTime.
-    scheduledAtLocal: formatBrazilDateTime(booking.scheduledAt),
+    scheduledAtLocal: formatLocalDateTime(booking.scheduledAt),
     // Purely informational — there's no in-chat payment collection, so the
     // bot can only tell the customer a fee may apply per the company's
     // policy, never actually charge it.

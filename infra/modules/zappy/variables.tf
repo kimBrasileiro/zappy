@@ -148,6 +148,12 @@ variable "default_locale" {
   default     = ""
 }
 
+variable "default_timezone" {
+  description = "IANA timezone this deployment's business hours/bookings/display timestamps are computed and shown in (see apps/web/lib/format-time.ts), e.g. \"Europe/Madrid\". Empty = \"America/Sao_Paulo\"."
+  type        = string
+  default     = ""
+}
+
 variable "pricing_currency_symbol" {
   description = "Currency symbol shown on pricing displays, e.g. \"€\". Empty = \"R$\"."
   type        = string

@@ -1,12 +1,14 @@
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSuperAdmin } from '../../../lib/admin-auth';
 import { toggleUserActive } from './actions';
+import { formatDateTime } from '../../../lib/format-time';
 
 export default async function AdminUsersPage() {
   const { userId: callerId } = await requireSuperAdmin();
   const t = await getTranslations('admin.users');
+  const locale = await getLocale();
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
@@ -42,7 +44,7 @@ export default async function AdminUsersPage() {
                   {user.status}
                 </span>
               </td>
-              <td>{user.createdAt.toLocaleString('pt-BR')}</td>
+              <td>{formatDateTime(user.createdAt, locale)}</td>
               <td style={{ display: 'flex', gap: 6 }}>
                 <Link href={`/admin/users/${user.id}`} className="dash-btn dash-btn-secondary">
                   {t('editButton')}

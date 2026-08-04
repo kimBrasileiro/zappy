@@ -1,9 +1,9 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma, type Prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { RefreshButton } from '../refresh-button';
 import { BookingsView } from './bookings-view';
-import { brazilWallClockToUtc } from '../../../lib/timezone';
+import { getDeploymentTimezone, wallClockToUtc } from '../../../lib/format-time';
 
 export default async function BookingsPage({
   searchParams,
@@ -12,6 +12,8 @@ export default async function BookingsPage({
 }) {
   const { companyId } = await requireSession();
   const t = await getTranslations('dashboard.bookings');
+  const locale = await getLocale();
+  const timeZone = getDeploymentTimezone();
   const q = searchParams.q?.trim();
   const date = searchParams.date?.trim();
 
@@ -25,13 +27,14 @@ export default async function BookingsPage({
   }
 
   if (date) {
-    // scheduledAt is Brazil-local wall-clock anchored (see lib/timezone.ts
-    // and BookingsView's formatScheduledAt) — the date filter matches that
-    // same convention, not the server or browser's local timezone.
+    // scheduledAt is deployment-local wall-clock anchored (see
+    // lib/format-time.ts and BookingsView's formatScheduledAt) — the date
+    // filter matches that same convention, not the server or browser's
+    // local timezone.
     const [year, month, day] = date.split('-').map(Number);
     if (year && month && day) {
-      const dayStart = brazilWallClockToUtc(year, month - 1, day, 0, 0);
-      const dayEnd = brazilWallClockToUtc(year, month - 1, day, 23, 59, 59, 999);
+      const dayStart = wallClockToUtc(timeZone, year, month - 1, day, 0, 0);
+      const dayEnd = wallClockToUtc(timeZone, year, month - 1, day, 23, 59, 59, 999);
       where.scheduledAt = { gte: dayStart, lte: dayEnd };
     }
   }
@@ -77,6 +80,8 @@ export default async function BookingsPage({
       <BookingsView
         bookings={bookings}
         emptyLabel={q || date ? t('emptyFiltered') : t('emptyDefault')}
+        locale={locale}
+        timeZone={timeZone}
       />
     </>
   );

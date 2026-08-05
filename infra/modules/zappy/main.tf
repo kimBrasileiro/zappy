@@ -31,6 +31,7 @@ locals {
     "iamcredentials.googleapis.com", # Workload Identity Federation token exchange (wif.tf)
     "sts.googleapis.com",            # ditto
     "cloudresourcemanager.googleapis.com",
+    "monitoring.googleapis.com", # Uptime checks + alert policies (monitoring.tf)
   ]
 }
 

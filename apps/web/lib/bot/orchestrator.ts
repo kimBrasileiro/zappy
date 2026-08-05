@@ -100,16 +100,6 @@ export interface OrchestrateResult {
 const FALLBACK_MESSAGE =
   'Desculpa, não consegui processar isso agora. Pode tentar reformular ou pedir pra falar com um atendente?';
 
-// G11 — sent whenever the customer messages again after the ticket is
-// already being human-handled. The widget also has a persistent "aguardando
-// atendente" banner for this same state, but that alone isn't enough — a
-// customer who sends another message and gets nothing back (no bubble at
-// all) reasonably reads that as broken/stuck rather than "already in queue,
-// keep waiting." WhatsApp has no banner equivalent at all, so for that
-// channel this text is the only signal.
-const STILL_ESCALATED_MESSAGE =
-  'Você já está na fila de atendimento — um atendente humano vai te responder por aqui assim que possível.';
-
 // Fixed top-level menu shown on every fresh/switched context (see
 // isNewContext) instead of whatever the LLM or suggestQuickReplies would
 // otherwise guess — the three things a customer actually comes to this bot
@@ -232,9 +222,18 @@ export async function* orchestrate(
   // for a human (waiting_human, nobody's picked it up yet) does NOT stop the
   // bot — it keeps answering normally below, so the customer still gets
   // help while the ticket sits in the queue.
+  //
+  // Genuinely silent — no yield, no appendMessage — not a canned "you're in
+  // queue" reply. Both frontends were already built expecting exactly this:
+  // the widget (apps/widget/src/widget.ts's handleSend) explicitly treats an
+  // empty `full` as "backend went quiet on purpose, no bubble to render" and
+  // still updates the escalated banner; it also polls for the agent's own
+  // messages independently (pollAgentMessages), so the human's real replies
+  // reach the customer regardless of what this turn returns. A canned bot
+  // reply here doesn't fill a gap — a human is already actively typing back
+  // — it just makes the bot look like it's talking over them, which is the
+  // exact thing this guardrail exists to prevent, not cause.
   if (isHumanActivelyHandling(ticket)) {
-    yield STILL_ESCALATED_MESSAGE;
-    await appendMessage(ticket.id, company.id, 'bot', STILL_ESCALATED_MESSAGE);
     return { quickReplies: [], escalated: true };
   }
 

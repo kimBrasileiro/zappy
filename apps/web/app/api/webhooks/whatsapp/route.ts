@@ -149,10 +149,11 @@ export async function POST(request: Request) {
       isNewContext: route.isSwitch,
       pretranscribedUsage,
     });
-    // Empty only happens for a channel/guardrail case orchestrate() itself
-    // has nothing to say about — G11 (already human-handled) now always
-    // returns real text (see orchestrator.ts's STILL_ESCALATED_MESSAGE), so
-    // this isn't that.
+    // Empty happens on purpose once a human agent has taken the ticket over
+    // (orchestrator.ts's G11) — the bot goes fully silent rather than
+    // sending a canned "you're in queue" reply that would just look like
+    // it's talking over the human who's already actively responding (their
+    // own replies go out via sendAgentReply, not through here at all).
     if (reply) await sendWhatsAppQuickReplies(inbound.fromWaPhoneNumber, reply, quickReplies, credentials);
   } catch (err) {
     if (!(err instanceof OrchestratorBlockedError)) {

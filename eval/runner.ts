@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import { prisma } from '@zappigo/db';
 import { orchestrate, OrchestratorBlockedError } from '@zappigo/web/lib/bot/orchestrator';
 import { moderateAgentReply } from '@zappigo/web/lib/ai/gemini';
+import { getDeploymentTimezone, toWallClock, wallClockToUtc } from '@zappigo/web/lib/format-time';
 
 interface SeedBooking {
   scheduledAtOffsetHours: number;
@@ -162,6 +163,29 @@ async function collect(input: Parameters<typeof orchestrate>[0]) {
   }
 }
 
+// scheduledAtOffsetHours picks which relative DAY a seeded "existing
+// booking" fixture lands on (24h -> tomorrow, 48h -> day after tomorrow,
+// matching the scripted turns' own "amanhã"/"depois de amanhã" wording) —
+// but a raw `Date.now() + offsetHours*3600000` also inherits whatever
+// second-of-day the eval happens to run at, which is very often outside
+// business hours (e.g. a suite run at 20:04 seeds a booking at 20:04).
+// That produced a real, reproduced source of judge confusion in 3 booking
+// scenarios (existing_booking_needs_confirmation_not_silent_replace,
+// reschedule_flow, staff_conflict_and_autoallocate) — the judge, comparing
+// the customer's business-hours request against a seeded booking sitting
+// at a nonsensical hour, sometimes garbled the two times together in its
+// own reasoning. Fixed here, once, for every scenario that seeds a
+// booking: keep the same relative CALENDAR DAY the offset implies, but
+// always anchor the TIME to a fixed, realistic business hour (10:00) via
+// the same DST-safe wall-clock helpers the app itself uses — deterministic
+// regardless of what second the suite happens to run at.
+function seedBookingTime(offsetHours: number): Date {
+  const timeZone = getDeploymentTimezone();
+  const roughTarget = new Date(Date.now() + offsetHours * 60 * 60_000);
+  const { year, month0, day } = toWallClock(timeZone, roughTarget);
+  return wallClockToUtc(timeZone, year, month0, day, 10, 0, 0);
+}
+
 async function setupScenario(scenario: ConversationScenario) {
   const company = await prisma.company.create({
     data: {
@@ -206,7 +230,7 @@ async function setupScenario(scenario: ConversationScenario) {
         companyId: company.id,
         serviceId: service.id,
         customerId: customer.id,
-        scheduledAt: new Date(Date.now() + scenario.seedBooking.scheduledAtOffsetHours * 60 * 60_000),
+        scheduledAt: seedBookingTime(scenario.seedBooking.scheduledAtOffsetHours),
         durationMinutes: scenario.service!.durationMinutes,
         priceCents: scenario.service!.priceCents,
         staffName: scenario.seedBooking.staffName ?? null,

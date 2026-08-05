@@ -97,18 +97,30 @@ export async function POST(request: Request) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        if (!first.done && first.value) {
+        // orchestrate() can finish on this very first `.next()` call with
+        // zero yields (G11 — a human agent already has the ticket, the bot
+        // goes fully silent) — `first.done` is then already true and
+        // `first.value` already holds the real OrchestrateResult. Calling
+        // `.next()` again on an exhausted generator (as the loop below does)
+        // just returns `{done: true, value: undefined}`, which would
+        // silently throw away that result (losing `escalated`/quickReplies)
+        // if it weren't captured here first.
+        let result: OrchestrateResult | undefined;
+        if (first.done) {
+          result = first.value;
+        } else if (first.value) {
           sendFrame(controller, { type: 'delta', text: first.value });
         }
 
-        let result: OrchestrateResult | undefined;
-        for (;;) {
-          const next = await generator.next();
-          if (next.done) {
-            result = next.value;
-            break;
+        if (!first.done) {
+          for (;;) {
+            const next = await generator.next();
+            if (next.done) {
+              result = next.value;
+              break;
+            }
+            sendFrame(controller, { type: 'delta', text: next.value });
           }
-          sendFrame(controller, { type: 'delta', text: next.value });
         }
 
         if (result?.quickReplies?.length) {

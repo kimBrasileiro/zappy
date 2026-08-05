@@ -248,3 +248,11 @@ variable "db_deletion_protection" {
   type        = bool
   default     = true
 }
+
+# --- Monitoring/alerting (monitoring.tf) ----------------------------------
+
+variable "alert_email" {
+  description = "Recipient for system-health alert emails (site down, Cloud SQL down, 5xx burst) — see monitoring.tf. Same default as lib/admin-auth.ts#SUPER_ADMIN_EMAIL in the app itself, not read from there directly since Terraform and the app are separate config surfaces."
+  type        = string
+  default     = "kim@wisell.ai"
+}

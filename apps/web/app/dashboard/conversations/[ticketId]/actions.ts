@@ -12,6 +12,7 @@ import {
 } from '../../../../lib/whatsapp/client';
 import { moderateAgentReply } from '../../../../lib/ai/gemini';
 import { checkOutboundRateLimit } from '../../../../lib/bot/rate-limit';
+import { notifyModerationBlock } from '../../../../lib/notifications';
 
 export interface ReplyState {
   error?: string;
@@ -30,7 +31,7 @@ export async function sendAgentReply(
 
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
-    include: { customer: true, company: { select: { whatsappPhoneId: true, whatsappTokenEncrypted: true } } },
+    include: { customer: true, company: { select: { name: true, whatsappPhoneId: true, whatsappTokenEncrypted: true } } },
   });
   if (!ticket || ticket.companyId !== companyId) {
     // Same spirit as the orchestrator's G7 — never act on a ticket that
@@ -69,6 +70,7 @@ export async function sendAgentReply(
           after: { content, lastCustomerMessageAt: lastCustomerMessage?.createdAt ?? null },
         },
       });
+      await notifyModerationBlock({ companyName: ticket.company.name, ticketId, reason: 'agent_reply.blocked_window_expired', content });
       return { error: t('errorWindowExpired') };
     }
 
@@ -84,6 +86,7 @@ export async function sendAgentReply(
           after: { content, reason: rateLimit.reason },
         },
       });
+      await notifyModerationBlock({ companyName: ticket.company.name, ticketId, reason: 'agent_reply.blocked_rate_limit', content });
       return { error: t('errorRateLimited') };
     }
 
@@ -99,6 +102,7 @@ export async function sendAgentReply(
           after: { content },
         },
       });
+      await notifyModerationBlock({ companyName: ticket.company.name, ticketId, reason: 'agent_reply.blocked_moderation', content });
       return { error: t('errorModerationBlocked') };
     }
   }

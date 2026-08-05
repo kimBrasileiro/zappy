@@ -44,3 +44,10 @@ output "deployer_service_account" {
   description = "Email to set as `service_account` in the GitHub Actions workflow's google-github-actions/auth step."
   value       = google_service_account.deployer.email
 }
+
+# --- Monitoring/alerting (monitoring.tf) -----------------------------------
+
+output "alert_notification_channel" {
+  description = "Email notification channel alert policies fire through — confirm this shows up (and its `email_address`) in Cloud Monitoring after apply."
+  value       = var.app_url != "" ? google_monitoring_notification_channel.alert_email[0].id : null
+}

@@ -155,6 +155,40 @@ export async function notifyQuotaWarning(params: {
   );
 }
 
+// Keys match AuditLog.action verbatim (see sendAgentReply's three write
+// sites) — one shared vocabulary instead of a second parallel naming scheme.
+type ModerationBlockReason = 'agent_reply.blocked_moderation' | 'agent_reply.blocked_rate_limit' | 'agent_reply.blocked_window_expired';
+const MODERATION_BLOCK_REASON_LABEL: Record<ModerationBlockReason, string> = {
+  'agent_reply.blocked_moderation': 'política de conteúdo (WABA ban-risk)',
+  'agent_reply.blocked_rate_limit': 'limite de envio',
+  'agent_reply.blocked_window_expired': 'janela de 24h do WhatsApp expirada',
+};
+
+// Fires on every blocked agent-composed WhatsApp reply (see dashboard/
+// conversations/[ticketId]/actions.ts#sendAgentReply's three AuditLog write
+// sites) — same "find out immediately, not just via the admin panel"
+// reasoning as notifyQuotaWarning above, but per-event rather than a
+// once-a-month threshold: any single block is a signal one of Zappigo's own
+// customers might be risking the shared WABA (or just hit a real technical
+// wall like the 24h window), worth knowing about as it happens, not just
+// when someone happens to check /admin/moderation.
+export async function notifyModerationBlock(params: {
+  companyName: string;
+  ticketId: string;
+  reason: ModerationBlockReason;
+  content: string;
+}): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const reasonLabel = MODERATION_BLOCK_REASON_LABEL[params.reason];
+  await sendEmail(
+    SUPER_ADMIN_EMAIL,
+    `[Zappigo] Mensagem bloqueada — ${params.companyName}`,
+    `<p><strong>${escapeHtml(params.companyName)}</strong> teve uma resposta de atendente bloqueada — motivo: <strong>${escapeHtml(reasonLabel)}</strong>.</p>` +
+      `<p>Conteúdo bloqueado: <em>"${escapeHtml(params.content)}"</em></p>` +
+      `<p><a href="${appUrl}/admin/moderation">Ver painel de moderação</a></p>`,
+  );
+}
+
 const BILLING_EVENT_COPY = {
   subscription_created: { customer: 'Assinatura criada', admin: 'Nova assinatura' },
   plan_changed: { customer: 'Seu plano foi alterado', admin: 'Plano alterado' },

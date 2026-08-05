@@ -65,7 +65,7 @@ export async function GET(request: Request) {
       where: { id: companyId },
       data: {
         googleCalendarId: 'primary',
-        googleCalendarRefreshTokenEncrypted: encrypt(tokens.refresh_token),
+        googleCalendarRefreshTokenEncrypted: encrypt(tokens.refresh_token, 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY'),
         googleCalendarConnectedEmail: userinfo.email ?? null,
         googleCalendarConnectedAt: new Date(),
       },

@@ -1,7 +1,7 @@
 import { prisma } from '@zappigo/db';
 import { sendEmail } from './email/resend';
 import { formatDateTime, getDeploymentTimezone } from './format-time';
-import { sendWhatsAppMessage, toWhatsAppPhone } from './whatsapp/client';
+import { sendWhatsAppMessage, toWhatsAppPhone, type ResolvedWhatsAppCredentials } from './whatsapp/client';
 import { SUPER_ADMIN_EMAIL } from './admin-auth';
 
 // "Cliente" here is Zappigo's own customer — the company that signed up, not
@@ -24,6 +24,10 @@ export async function notifyBookingCreated(params: {
   customerName: string;
   customerPhone: string; // local format, no country code — see whatsapp/client.ts#toLocalPhone
   requiresManualConfirmation: boolean;
+  // Resolved by the caller (services.ts#createBooking already has the
+  // company row loaded) — see resolveWhatsAppCredentials for why this
+  // can't default to the shared number on its own.
+  whatsappCredentials: ResolvedWhatsAppCredentials;
 }): Promise<void> {
   const company = await getActiveAdminEmails(params.companyId);
   const when = formatDateTime(params.scheduledAt, 'pt-BR', getDeploymentTimezone());
@@ -42,7 +46,7 @@ export async function notifyBookingCreated(params: {
   const confirmationText = params.requiresManualConfirmation
     ? `Olá, ${params.customerName}! Recebemos seu pedido de agendamento de ${params.serviceName} para ${when}. Nossa equipe vai entrar em contato para confirmar.`
     : `Olá, ${params.customerName}! Seu agendamento de ${params.serviceName} para ${when} está confirmado.`;
-  await sendWhatsAppMessage(toWhatsAppPhone(params.customerPhone), confirmationText);
+  await sendWhatsAppMessage(toWhatsAppPhone(params.customerPhone), confirmationText, params.whatsappCredentials);
 }
 
 export async function notifyBookingCancelled(params: {

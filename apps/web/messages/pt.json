@@ -161,7 +161,8 @@
       "errorEmptyMessage": "Escreve uma mensagem antes de enviar.",
       "errorTicketNotFound": "Ticket não encontrado.",
       "errorRateLimited": "Muitas mensagens enviadas em pouco tempo — espera um instante e tenta de novo.",
-      "errorModerationBlocked": "Essa mensagem parece violar as políticas do WhatsApp Business e não foi enviada. Revise o conteúdo antes de tentar de novo."
+      "errorModerationBlocked": "Essa mensagem parece violar as políticas do WhatsApp Business e não foi enviada. Revise o conteúdo antes de tentar de novo.",
+      "errorWindowExpired": "Já se passaram mais de 24h desde a última mensagem do cliente — o WhatsApp não permite enviar mensagem livre fora desse prazo. Peça pro cliente escrever de novo antes de responder."
     },
     "services": {
       "title": "Serviços",
@@ -381,7 +382,18 @@
       "connectedAsPrefix": "Conectado como",
       "connectedSince": " desde {date}",
       "disconnectButton": "Desconectar",
-      "connectButton": "Conectar Google Calendar"
+      "connectButton": "Conectar Google Calendar",
+      "whatsappOwnTitle": "WhatsApp próprio",
+      "whatsappOwnBody": "Use o número de WhatsApp Business da sua própria empresa em vez do número compartilhado da Zappigo. Gere um token permanente (System User) no Meta Business Manager com acesso ao seu WhatsApp Business Account e cole abaixo junto com o phone_number_id. A partir da conexão, esse número atende exclusivamente a sua empresa — nunca mais passa pelo número compartilhado.",
+      "whatsappPhoneNumberIdLabel": "Phone Number ID",
+      "whatsappPhoneNumberIdPlaceholder": "Ex: 123456789012345",
+      "whatsappAccessTokenLabel": "Token de acesso permanente",
+      "whatsappAccessTokenPlaceholder": "Token gerado no Meta Business Manager",
+      "whatsappConnectButton": "Conectar meu WhatsApp",
+      "whatsappConnecting": "Conectando...",
+      "whatsappErrorFillFields": "Preenche o Phone Number ID e o token de acesso.",
+      "whatsappErrorInvalidCredentials": "Não conseguimos validar essas credenciais junto à Meta — confira se o Phone Number ID e o token estão corretos e se o token tem permissão de mensagens do WhatsApp Business.",
+      "whatsappErrorSubscribeFailed": "As credenciais são válidas, mas não conseguimos inscrever esse número para receber mensagens no nosso sistema. Tenta de novo em alguns minutos."
     }
   },
   "metadata": {
@@ -657,6 +669,9 @@
       "tableName": "Nome",
       "tableSlug": "Slug",
       "tableBusinessType": "Tipo de negócio",
+      "tableWhatsApp": "WhatsApp",
+      "whatsappOwn": "Próprio",
+      "whatsappShared": "Compartilhado",
       "tablePlan": "Plano",
       "tableStatus": "Status",
       "tableUsers": "Usuários",

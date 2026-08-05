@@ -23,7 +23,7 @@ async function getAccessToken(company: CalendarConnectedCompany): Promise<string
   if (!company.googleCalendarRefreshTokenEncrypted) {
     throw new Error('google_calendar_not_connected');
   }
-  const refreshToken = decrypt(company.googleCalendarRefreshTokenEncrypted);
+  const refreshToken = decrypt(company.googleCalendarRefreshTokenEncrypted, 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY');
 
   const response = await fetch(TOKEN_URL, {
     method: 'POST',

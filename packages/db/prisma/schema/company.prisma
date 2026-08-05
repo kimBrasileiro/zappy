@@ -10,8 +10,23 @@ model Company {
   status                 String   @default("active")
   config                 Json     @default("{}")
   slaConfig              Json     @default("{}") @map("sla_config")
+  // Dedicated WhatsApp Business number (manual onboarding — see
+  // dashboard/integracoes and lib/whatsapp/client.ts#resolveWhatsAppCredentials).
+  // whatsappPhoneId being non-null is THE signal, everywhere in this
+  // codebase, that this company has opted out of the shared platform
+  // number: inbound routing (lib/bot/conversation.ts#resolveWhatsAppRoute)
+  // short-circuits straight to this company whenever a message arrives on
+  // this phone_number_id, and — just as important — a company with this
+  // set is excluded from the shared number's name-matching directory and
+  // NEVER falls back to shared-number sending even if its own token is
+  // broken. Two identities must never blend on one WhatsApp thread.
   whatsappPhoneId        String?  @map("whatsapp_phone_id")
   whatsappTokenEncrypted String?  @map("whatsapp_token_encrypted")
+  // Display-only (like googleCalendarConnectedEmail below) — the human-
+  // readable number Meta returned when the token was validated at connect
+  // time, so the integrations page can show it without decrypting anything.
+  whatsappConnectedNumber String? @map("whatsapp_connected_number")
+  whatsappConnectedAt     DateTime? @map("whatsapp_connected_at") @db.Timestamptz(6)
   // Hostnames (no protocol/www/port, see lib/domains.ts#normalizeDomain) the
   // widget script is allowed to be embedded on. Empty = not configured yet =
   // open to any origin (see guardrails.ts#checkOrigin) — a fresh signup can

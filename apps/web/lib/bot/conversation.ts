@@ -156,11 +156,18 @@ async function hasActiveConversation(companyId: string, customerId: string, chan
 const WHATSAPP_CODE_PATTERN = /^Z:([a-z0-9-]+)\s*/i;
 const SCHEDULE_SWITCH_PATTERN = /agendar\s+servi[cç]os?\s+com\s+["“]?([^"”.!?\n]+?)["”]?[.!?]?\s*$/i;
 
+// whatsappPhoneId: null on both lookups below — a company that has
+// connected its own dedicated number is deliberately invisible to the
+// shared number's "which company did you mean" directory. Customers reach
+// it exclusively through its own number now (see resolveWhatsAppRoute's
+// dedicatedCompany short-circuit); naming it by text to the SHARED number
+// must never route there instead, or the two identities would blend on
+// exactly the shared thread this exclusion exists to keep separate.
 async function matchCompanyByNameInText(rawText: string): Promise<Company | null> {
   const normalizedText = normalizeForMatch(rawText);
   if (normalizedText.length < 3) return null;
 
-  const companies = await prisma.company.findMany({ where: { status: 'active' } });
+  const companies = await prisma.company.findMany({ where: { status: 'active', whatsappPhoneId: null } });
   const matches = companies.filter((c) => {
     const normalizedName = normalizeForMatch(c.name);
     const normalizedSlug = normalizeForMatch(c.slug);
@@ -181,7 +188,7 @@ async function resolveCompanyByName(candidate: string): Promise<Company | null> 
   const target = normalizeForMatch(candidate);
   if (!target) return null;
 
-  const companies = await prisma.company.findMany({ where: { status: 'active' } });
+  const companies = await prisma.company.findMany({ where: { status: 'active', whatsappPhoneId: null } });
   const exact = companies.find((c) => normalizeForMatch(c.name) === target || normalizeForMatch(c.slug) === target);
   if (exact) return exact;
 
@@ -203,9 +210,36 @@ async function switchRoute(fromWaPhoneNumber: string, company: Company): Promise
   return customer;
 }
 
-export async function resolveWhatsAppRoute(fromWaPhoneNumber: string, rawText: string): Promise<WhatsAppRouteResult> {
+// dedicatedCompany: resolved by the caller (api/webhooks/whatsapp/route.ts)
+// from Meta's own verified `phone_number_id` metadata on this inbound
+// message — the ONE signal here that can't be forged by anything a
+// customer types. When set, this is an absolute, unconditional
+// short-circuit: no code prefix, no name-in-text match, no existing
+// WhatsAppRoute history is even consulted. A message that arrived on a
+// company's own private number belongs to that company, full stop —
+// exactly the guarantee "o número é privado" requires, not just the usual
+// best-effort disambiguation the shared number relies on. isSwitch is
+// always false here too: unlike the shared number, there's no ambiguity to
+// announce with a fixed "you've reached X" greeting — the customer
+// deliberately messaged this specific business's own number.
+export async function resolveWhatsAppRoute(
+  fromWaPhoneNumber: string,
+  rawText: string,
+  dedicatedCompany: Company | null = null,
+): Promise<WhatsAppRouteResult> {
+  if (dedicatedCompany) {
+    const customer = await findOrCreateCustomerByPhone(dedicatedCompany.id, toLocalPhone(fromWaPhoneNumber));
+    return { needsCode: false, company: dedicatedCompany, customer, message: rawText, isSwitch: false };
+  }
+
+  // whatsappPhoneId: null — same exclusion as matchCompanyByNameInText
+  // above: a "Z:<slug>" code for a company that has since connected its own
+  // number must not resolve on the shared one either. There's no legitimate
+  // reason left to reach that company this way once it's gone dedicated.
   const codeMatch = rawText.match(WHATSAPP_CODE_PATTERN);
-  const codeCompany = codeMatch ? await prisma.company.findUnique({ where: { slug: codeMatch[1]!.toLowerCase() } }) : null;
+  const codeCompany = codeMatch
+    ? await prisma.company.findFirst({ where: { slug: codeMatch[1]!.toLowerCase(), whatsappPhoneId: null } })
+    : null;
   if (codeCompany) {
     const customer = await switchRoute(fromWaPhoneNumber, codeCompany);
     const message = rawText.slice(codeMatch![0].length).trim() || 'Olá!';
@@ -213,12 +247,23 @@ export async function resolveWhatsAppRoute(fromWaPhoneNumber: string, rawText: s
   }
 
   const route = await prisma.whatsAppRoute.findUnique({ where: { waPhoneNumber: fromWaPhoneNumber } });
-  const [existingCompany, existingCustomer] = route
+  let [existingCompany, existingCustomer] = route
     ? await Promise.all([
         prisma.company.findUnique({ where: { id: route.companyId } }),
         prisma.customer.findUnique({ where: { id: route.customerId } }),
       ])
     : [null, null];
+
+  // Stale route: this company used to share the platform number when this
+  // WhatsAppRoute row was written, but has since connected its own
+  // dedicated number. It must not still be reachable via the shared
+  // number's history — delete the row (nothing left it should mean) and
+  // fall through exactly as if no route existed at all.
+  if (existingCompany?.whatsappPhoneId) {
+    await prisma.whatsAppRoute.delete({ where: { waPhoneNumber: fromWaPhoneNumber } }).catch(() => {});
+    existingCompany = null;
+    existingCustomer = null;
+  }
 
   // Company explicitly named in the text — either the widget/dashboard's
   // exact "Olá, gostaria de agendar serviços com X" button phrase, or (as a

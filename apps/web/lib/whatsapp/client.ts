@@ -1,15 +1,84 @@
 import crypto from 'node:crypto';
+import { decrypt } from '../crypto';
 
 const GRAPH_API_VERSION = 'v20.0';
+
+// A company that connected its own dedicated number (see dashboard/
+// integracoes and resolveWhatsAppCredentials below) always sends through
+// THIS token/number — never the shared platform one, even as a fallback.
+// Mixing the two would mean a customer who deliberately messaged a
+// business's own private number could get a reply that looks like it came
+// from Zappigo's shared number instead, or vice versa.
+export interface WhatsAppCredentials {
+  token: string;
+  phoneNumberId: string;
+}
+const WHATSAPP_TOKEN_ENCRYPTION_KEY_ENV = 'WHATSAPP_TOKEN_ENCRYPTION_KEY';
+
+// 'shared' = this company has no dedicated number, use the platform's own
+// (the default, and the only state that existed before this feature).
+// 'broken' = whatsappPhoneId is set but the token is missing or fails to
+// decrypt — an inconsistent state that must NEVER silently fall back to
+// the shared number (see the module comment above); callers must refuse
+// to send and log loudly instead.
+export type ResolvedWhatsAppCredentials = WhatsAppCredentials | 'shared' | 'broken';
+
+export function resolveWhatsAppCredentials(
+  company: { whatsappPhoneId: string | null; whatsappTokenEncrypted: string | null },
+): ResolvedWhatsAppCredentials {
+  if (!company.whatsappPhoneId) return 'shared';
+  if (!company.whatsappTokenEncrypted) return 'broken';
+  try {
+    return { token: decrypt(company.whatsappTokenEncrypted, WHATSAPP_TOKEN_ENCRYPTION_KEY_ENV), phoneNumberId: company.whatsappPhoneId };
+  } catch (err) {
+    console.error(`[whatsapp] failed to decrypt dedicated-number token for phoneId ${company.whatsappPhoneId}`, err);
+    return 'broken';
+  }
+}
+
+// Meta's customer-service window: a business can only send free-form
+// text/interactive WhatsApp messages within 24h of the customer's own last
+// inbound message — outside that window only a pre-approved template
+// message (not used anywhere in this codebase) is allowed, and Meta simply
+// rejects a free-form send. sendWhatsAppMessage/sendWhatsAppPayload above
+// don't check this themselves (best-effort, fire-and-forget) — callers on
+// a path a human can trigger arbitrarily long after the customer's last
+// message (see dashboard/conversations/[ticketId]/actions.ts#sendAgentReply)
+// need to check it BEFORE sending, since a rejected send today fails
+// silently (console.error only) with no signal back to the agent.
+export const WHATSAPP_SESSION_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export function isWithinWhatsAppSessionWindow(lastCustomerMessageAt: Date | null): boolean {
+  if (!lastCustomerMessageAt) return false;
+  return Date.now() - lastCustomerMessageAt.getTime() < WHATSAPP_SESSION_WINDOW_MS;
+}
 
 // Best-effort, same spirit as the customer.update call in createBooking
 // (services.ts): a missing/misconfigured shared number should never crash
 // the caller (the webhook still has to record the conversation and ack the
 // Meta request either way) — it just means the reply never actually reaches
 // WhatsApp, which is loudly logged instead of thrown.
-async function sendWhatsAppPayload(toWaPhoneNumber: string, body: Record<string, unknown>, logExcerpt: string): Promise<void> {
-  const token = process.env.WHATSAPP_CLOUD_API_TOKEN;
-  const phoneNumberId = process.env.WHATSAPP_CLOUD_API_PHONE_NUMBER_ID;
+//
+// `credentials` omitted (or 'shared') uses the platform's own env-configured
+// number, exactly as before this feature existed. 'broken' means the caller
+// resolved a company that has a dedicated number configured but couldn't
+// get working credentials for it — refuses to send at all rather than
+// guessing which identity to use.
+async function sendWhatsAppPayload(
+  toWaPhoneNumber: string,
+  body: Record<string, unknown>,
+  logExcerpt: string,
+  credentials: ResolvedWhatsAppCredentials = 'shared',
+): Promise<void> {
+  if (credentials === 'broken') {
+    console.error(
+      `[whatsapp] refusing to send to ${toWaPhoneNumber} — company has a dedicated number configured but credentials are broken (not falling back to the shared number)`,
+    );
+    return;
+  }
+
+  const token = credentials === 'shared' ? process.env.WHATSAPP_CLOUD_API_TOKEN : credentials.token;
+  const phoneNumberId = credentials === 'shared' ? process.env.WHATSAPP_CLOUD_API_PHONE_NUMBER_ID : credentials.phoneNumberId;
 
   if (!token || !phoneNumberId) {
     console.warn(`[whatsapp] credenciais ausentes — não enviado para ${toWaPhoneNumber}: "${logExcerpt.slice(0, 80)}"`);
@@ -33,8 +102,12 @@ async function sendWhatsAppPayload(toWaPhoneNumber: string, body: Record<string,
   }
 }
 
-export async function sendWhatsAppMessage(toWaPhoneNumber: string, text: string): Promise<void> {
-  await sendWhatsAppPayload(toWaPhoneNumber, { type: 'text', text: { body: text } }, text);
+export async function sendWhatsAppMessage(
+  toWaPhoneNumber: string,
+  text: string,
+  credentials?: ResolvedWhatsAppCredentials,
+): Promise<void> {
+  await sendWhatsAppPayload(toWaPhoneNumber, { type: 'text', text: { body: text } }, text, credentials);
 }
 
 // WhatsApp reply buttons: max 3, each title capped at 20 chars. List
@@ -56,9 +129,10 @@ export async function sendWhatsAppQuickReplies(
   toWaPhoneNumber: string,
   bodyText: string,
   options: string[],
+  credentials?: ResolvedWhatsAppCredentials,
 ): Promise<void> {
   if (options.length === 0) {
-    await sendWhatsAppMessage(toWaPhoneNumber, bodyText);
+    await sendWhatsAppMessage(toWaPhoneNumber, bodyText, credentials);
     return;
   }
 
@@ -79,6 +153,7 @@ export async function sendWhatsAppQuickReplies(
         },
       },
       bodyText,
+      credentials,
     );
     return;
   }
@@ -104,6 +179,7 @@ export async function sendWhatsAppQuickReplies(
       },
     },
     bodyText,
+    credentials,
   );
 }
 
@@ -135,6 +211,15 @@ export interface InboundWhatsAppMessage {
   text?: string;
   audio?: { mediaId: string; mimeType: string };
   wamid: string;
+  // The Meta phone_number_id that RECEIVED this message — set by Meta
+  // itself in the verified webhook payload, never derivable from message
+  // text/sender. This is the one signal a dedicated number's own routing
+  // (lib/bot/conversation.ts#resolveWhatsAppRoute) can trust unconditionally:
+  // it can't be spoofed by anything a customer types, only by forging
+  // Meta's HMAC signature (checked before this function ever runs — see
+  // verifyWebhookSignature above). Absent only if Meta's payload shape ever
+  // omits metadata, which shouldn't happen in practice.
+  toPhoneNumberId?: string;
 }
 
 // Meta's webhook payload shape: entry[].changes[].value.messages[]. Handles
@@ -145,9 +230,10 @@ export interface InboundWhatsAppMessage {
 // tool in this system's catalog can do anything useful with those yet.
 export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | null {
   const entry = (payload as { entry?: unknown[] })?.entry?.[0] as
-    | { changes?: { value?: { messages?: unknown[] } }[] }
+    | { changes?: { value?: { messages?: unknown[]; metadata?: { phone_number_id?: string } } }[] }
     | undefined;
   const value = entry?.changes?.[0]?.value;
+  const toPhoneNumberId = value?.metadata?.phone_number_id;
   const message = value?.messages?.[0] as
     | {
         from?: string;
@@ -166,7 +252,7 @@ export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | 
   if (!message?.from || !message.id) return null;
 
   if (message.type === 'text' && message.text?.body) {
-    return { fromWaPhoneNumber: message.from, text: message.text.body, wamid: message.id };
+    return { fromWaPhoneNumber: message.from, text: message.text.body, wamid: message.id, toPhoneNumberId };
   }
 
   if (message.type === 'audio' && message.audio?.id) {
@@ -174,6 +260,7 @@ export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | 
       fromWaPhoneNumber: message.from,
       audio: { mediaId: message.audio.id, mimeType: message.audio.mime_type ?? 'audio/ogg' },
       wamid: message.id,
+      toPhoneNumberId,
     };
   }
 
@@ -183,7 +270,7 @@ export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | 
   // ever deals in free text) unchanged.
   if (message.type === 'interactive') {
     const tappedId = message.interactive?.button_reply?.id ?? message.interactive?.list_reply?.id;
-    if (tappedId) return { fromWaPhoneNumber: message.from, text: tappedId, wamid: message.id };
+    if (tappedId) return { fromWaPhoneNumber: message.from, text: tappedId, wamid: message.id, toPhoneNumberId };
   }
 
   return null;
@@ -195,8 +282,15 @@ export function parseInboundMessage(payload: unknown): InboundWhatsAppMessage | 
 // webhook payload itself (message.audio only ever carries an id). Best-
 // effort, same reasoning as sendWhatsAppPayload above: a download failure
 // must never crash the webhook, just mean this one message can't be understood.
-export async function downloadMedia(mediaId: string): Promise<{ base64: string; mimeType: string } | null> {
-  const token = process.env.WHATSAPP_CLOUD_API_TOKEN;
+export async function downloadMedia(
+  mediaId: string,
+  credentials: ResolvedWhatsAppCredentials = 'shared',
+): Promise<{ base64: string; mimeType: string } | null> {
+  if (credentials === 'broken') {
+    console.error(`[whatsapp] refusing to download media ${mediaId} — dedicated-number credentials are broken (not falling back to the shared token)`);
+    return null;
+  }
+  const token = credentials === 'shared' ? process.env.WHATSAPP_CLOUD_API_TOKEN : credentials.token;
   if (!token) {
     console.warn(`[whatsapp] credenciais ausentes — não foi possível baixar mídia ${mediaId}`);
     return null;

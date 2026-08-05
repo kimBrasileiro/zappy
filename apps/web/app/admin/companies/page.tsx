@@ -30,6 +30,7 @@ export default async function AdminCompaniesPage() {
             <th>{t('tableName')}</th>
             <th>{t('tableSlug')}</th>
             <th>{t('tableBusinessType')}</th>
+            <th>{t('tableWhatsApp')}</th>
             <th>{t('tablePlan')}</th>
             <th>{t('tableStatus')}</th>
             <th>{t('tableUsers')}</th>
@@ -43,6 +44,15 @@ export default async function AdminCompaniesPage() {
               <td>{company.name}</td>
               <td>{company.slug}</td>
               <td>{company.businessType ? (businessTypeLabels[company.businessType] ?? company.businessType) : '—'}</td>
+              <td>
+                {company.whatsappPhoneId ? (
+                  <span className="dash-badge dash-badge-in_progress" title={company.whatsappConnectedNumber ?? undefined}>
+                    {t('whatsappOwn')}
+                  </span>
+                ) : (
+                  <span style={{ color: '#999' }}>{t('whatsappShared')}</span>
+                )}
+              </td>
               <td>{company.plan}</td>
               <td>
                 <span className={company.status === 'active' ? 'dash-badge dash-badge-in_progress' : 'dash-badge dash-badge-closed'}>
@@ -56,7 +66,7 @@ export default async function AdminCompaniesPage() {
           ))}
           {companies.length === 0 && (
             <tr>
-              <td colSpan={8} style={{ color: '#999' }}>
+              <td colSpan={9} style={{ color: '#999' }}>
                 {t('noCompanies')}
               </td>
             </tr>

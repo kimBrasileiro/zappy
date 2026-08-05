@@ -1,8 +1,9 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
-import { disconnectGoogleCalendar } from './actions';
+import { disconnectGoogleCalendar, disconnectWhatsAppNumber } from './actions';
 import { formatDate } from '../../../lib/format-time';
+import { WhatsAppConnectForm } from './whatsapp-connect-form';
 
 export default async function IntegracoesPage({
   searchParams,
@@ -19,6 +20,9 @@ export default async function IntegracoesPage({
       googleCalendarRefreshTokenEncrypted: true,
       googleCalendarConnectedEmail: true,
       googleCalendarConnectedAt: true,
+      whatsappPhoneId: true,
+      whatsappConnectedNumber: true,
+      whatsappConnectedAt: true,
     },
   });
   if (!company) return null;
@@ -30,6 +34,7 @@ export default async function IntegracoesPage({
 
   const { connected, error } = await searchParams;
   const isConnected = !!company.googleCalendarId && !!company.googleCalendarRefreshTokenEncrypted;
+  const isWhatsAppConnected = !!company.whatsappPhoneId;
 
   return (
     <>
@@ -76,6 +81,34 @@ export default async function IntegracoesPage({
           <a href="/api/integrations/google-calendar/authorize" className="dash-btn" style={{ textDecoration: 'none' }}>
             {t('connectButton')}
           </a>
+        )}
+      </div>
+
+      <div className="dash-card">
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('whatsappOwnTitle')}</h3>
+        <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 14 }}>
+          {t('whatsappOwnBody')}
+        </p>
+
+        {isWhatsAppConnected ? (
+          <>
+            <p style={{ fontSize: 13.5, margin: '0 0 14px' }}>
+              {t('connectedAsPrefix')} <strong>{company.whatsappConnectedNumber}</strong>
+              {company.whatsappConnectedAt && (
+                <span style={{ color: '#999' }}>
+                  {t('connectedSince', { date: formatDate(company.whatsappConnectedAt, locale) })}
+                </span>
+              )}
+              .
+            </p>
+            <form action={disconnectWhatsAppNumber}>
+              <button type="submit" className="dash-btn dash-btn-secondary">
+                {t('disconnectButton')}
+              </button>
+            </form>
+          </>
+        ) : (
+          <WhatsAppConnectForm />
         )}
       </div>
     </>

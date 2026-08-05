@@ -17,7 +17,7 @@ function SendButton() {
   );
 }
 
-export function ReplyForm({ ticketId }: { ticketId: string }) {
+export function ReplyForm({ ticketId, sessionWindowClosed }: { ticketId: string; sessionWindowClosed?: boolean }) {
   const t = useTranslations('dashboard.conversations');
   const action = sendAgentReply.bind(null, ticketId);
   const [state, formAction] = useFormState(action, initialState);
@@ -32,6 +32,7 @@ export function ReplyForm({ ticketId }: { ticketId: string }) {
       }}
       className="dash-card"
     >
+      {!state?.error && sessionWindowClosed && <div className="dash-form-warning">{t('errorWindowExpired')}</div>}
       {state?.error && <div className="dash-form-error">{state.error}</div>}
       <div className="dash-form-row">
         <textarea name="content" required rows={3} placeholder={t('replyPlaceholder')} />

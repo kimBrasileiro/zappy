@@ -4,7 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
-import { sendWhatsAppMessage, toWhatsAppPhone } from '../../../../lib/whatsapp/client';
+import {
+  isWithinWhatsAppSessionWindow,
+  resolveWhatsAppCredentials,
+  sendWhatsAppMessage,
+  toWhatsAppPhone,
+} from '../../../../lib/whatsapp/client';
 import { moderateAgentReply } from '../../../../lib/ai/gemini';
 import { checkOutboundRateLimit } from '../../../../lib/bot/rate-limit';
 
@@ -23,7 +28,10 @@ export async function sendAgentReply(
   const content = String(formData.get('content') ?? '').trim();
   if (!content) return { error: t('errorEmptyMessage') };
 
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, include: { customer: true } });
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: { customer: true, company: { select: { whatsappPhoneId: true, whatsappTokenEncrypted: true } } },
+  });
   if (!ticket || ticket.companyId !== companyId) {
     // Same spirit as the orchestrator's G7 — never act on a ticket that
     // doesn't belong to the caller's company, even if the id lookup alone
@@ -41,6 +49,29 @@ export async function sendAgentReply(
   // /admin/moderation. Not shown to the client's own dashboard; this is
   // Zappigo's own visibility into which of ITS customers risk the WABA.
   if (ticket.channel === 'whatsapp') {
+    // Checked before rate-limit/moderation — it's a pure DB read (no Gemini
+    // call) and a hard technical constraint from Meta's side, not a policy
+    // judgment call, so there's no reason to spend an LLM call on a reply
+    // that's guaranteed to be rejected on the wire anyway.
+    const lastCustomerMessage = await prisma.message.findFirst({
+      where: { ticketId, senderType: 'customer' },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    });
+    if (!isWithinWhatsAppSessionWindow(lastCustomerMessage?.createdAt ?? null)) {
+      await prisma.auditLog.create({
+        data: {
+          companyId,
+          userId,
+          action: 'agent_reply.blocked_window_expired',
+          resourceType: 'ticket',
+          resourceId: ticketId,
+          after: { content, lastCustomerMessageAt: lastCustomerMessage?.createdAt ?? null },
+        },
+      });
+      return { error: t('errorWindowExpired') };
+    }
+
     const rateLimit = checkOutboundRateLimit(companyId, userId);
     if (!rateLimit.allowed) {
       await prisma.auditLog.create({
@@ -85,7 +116,7 @@ export async function sendAgentReply(
   // messages a different company. This ticket's company/customer are
   // already certain, so there's nothing to resolve.
   if (ticket.channel === 'whatsapp' && ticket.customer?.phone) {
-    await sendWhatsAppMessage(toWhatsAppPhone(ticket.customer.phone), content);
+    await sendWhatsAppMessage(toWhatsAppPhone(ticket.customer.phone), content, resolveWhatsAppCredentials(ticket.company));
   }
 
   if (ticket.status === 'bot_active' || ticket.status === 'waiting_human') {

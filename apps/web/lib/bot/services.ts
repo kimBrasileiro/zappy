@@ -4,6 +4,7 @@ import { checkBookingRateLimit } from './rate-limit';
 import { notifyBookingCancelled, notifyBookingCreated } from '../notifications';
 import { getDeploymentTimezone, toWallClock, wallClockToUtc } from '../format-time';
 import { createEvent, deleteEvent, getFreeBusy, isCalendarConnected } from '../google-calendar/client';
+import { resolveWhatsAppCredentials } from '../whatsapp/client';
 
 // Brazilian phone with DDD: 10 digits (landline, e.g. 11 3456-7890) or 11
 // (mobile, e.g. 11 98765-4321) once punctuation/spaces are stripped. Not a
@@ -434,11 +435,18 @@ export async function createBooking(
     };
   }
 
-  // Only the two calendar fields — cheap, and needed regardless of whether
-  // this company actually has Calendar connected, just to know that.
+  // Calendar fields (needed regardless of whether this company actually has
+  // Calendar connected, just to know that) plus the WhatsApp dedicated-
+  // number fields, needed below for notifyBookingCreated's confirmation
+  // send — cheap to fetch alongside since this is already one row.
   const company = await prisma.company.findUnique({
     where: { id: companyId },
-    select: { googleCalendarId: true, googleCalendarRefreshTokenEncrypted: true },
+    select: {
+      googleCalendarId: true,
+      googleCalendarRefreshTokenEncrypted: true,
+      whatsappPhoneId: true,
+      whatsappTokenEncrypted: true,
+    },
   });
 
   const customerName = args.customerName.trim();
@@ -722,6 +730,7 @@ export async function createBooking(
       customerName,
       customerPhone: normalizedPhone,
       requiresManualConfirmation,
+      whatsappCredentials: resolveWhatsAppCredentials(company ?? { whatsappPhoneId: null, whatsappTokenEncrypted: null }),
     });
 
     return {

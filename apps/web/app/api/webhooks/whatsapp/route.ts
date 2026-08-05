@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@zappigo/db';
 import { resolveWhatsAppRoute } from '../../../../lib/bot/conversation';
 import { OrchestratorBlockedError, orchestrate } from '../../../../lib/bot/orchestrator';
 import { transcribeAudio } from '../../../../lib/ai/gemini';
 import {
   downloadMedia,
   parseInboundMessage,
+  resolveWhatsAppCredentials,
   sendWhatsAppMessage,
   sendWhatsAppQuickReplies,
   verifyWebhookSignature,
@@ -87,6 +89,18 @@ export async function POST(request: Request) {
   if (!inbound) return NextResponse.json({ ok: true });
   if (isDuplicate(inbound.wamid)) return NextResponse.json({ ok: true });
 
+  // Resolved ONCE, up front, from Meta's own verified phone_number_id — not
+  // from anything a customer typed. Everything downstream in this handler
+  // (media download, every reply) uses these same credentials for this
+  // message, so a message that arrived on a company's own private number
+  // never touches the shared platform number in either direction. See
+  // lib/bot/conversation.ts#resolveWhatsAppRoute for the matching inbound-
+  // routing guarantee.
+  const dedicatedCompany = inbound.toPhoneNumberId
+    ? await prisma.company.findFirst({ where: { whatsappPhoneId: inbound.toPhoneNumberId, status: 'active' } })
+    : null;
+  const credentials = dedicatedCompany ? resolveWhatsAppCredentials(dedicatedCompany) : 'shared';
+
   // Voice note: resolve it to real text BEFORE routing — resolveWhatsAppRoute
   // itself needs actual text (Z:slug / company-name matching), so this can't
   // wait until orchestrate() the way the rest of this handler might suggest.
@@ -96,10 +110,10 @@ export async function POST(request: Request) {
   let text = inbound.text;
   let pretranscribedUsage: { costUsd: number; promptTokens: number; completionTokens: number } | undefined;
   if (!text && inbound.audio) {
-    const media = await downloadMedia(inbound.audio.mediaId);
+    const media = await downloadMedia(inbound.audio.mediaId, credentials);
     const transcription = media ? await transcribeAudio(media.base64, media.mimeType) : null;
     if (!transcription) {
-      await sendWhatsAppMessage(inbound.fromWaPhoneNumber, AUDIO_UNDERSTOOD_FAILED_MESSAGE);
+      await sendWhatsAppMessage(inbound.fromWaPhoneNumber, AUDIO_UNDERSTOOD_FAILED_MESSAGE, credentials);
       return NextResponse.json({ ok: true });
     }
     text = transcription.text;
@@ -111,9 +125,9 @@ export async function POST(request: Request) {
   }
   if (!text) return NextResponse.json({ ok: true }); // neither text nor audio resolved — nothing to act on
 
-  const route = await resolveWhatsAppRoute(inbound.fromWaPhoneNumber, text);
+  const route = await resolveWhatsAppRoute(inbound.fromWaPhoneNumber, text, dedicatedCompany);
   if (route.needsCode) {
-    await sendWhatsAppMessage(inbound.fromWaPhoneNumber, NEEDS_CODE_MESSAGE);
+    await sendWhatsAppMessage(inbound.fromWaPhoneNumber, NEEDS_CODE_MESSAGE, credentials);
     return NextResponse.json({ ok: true });
   }
   if (route.needsConfirmation) {
@@ -121,6 +135,7 @@ export async function POST(request: Request) {
       inbound.fromWaPhoneNumber,
       `Olá! Você gostaria de agendar serviços ou suporte com a ${route.company.name}? Se for outra empresa, é só me dizer o nome dela.`,
       ['Sim', 'Não'],
+      credentials,
     );
     return NextResponse.json({ ok: true });
   }
@@ -138,7 +153,7 @@ export async function POST(request: Request) {
     // has nothing to say about — G11 (already human-handled) now always
     // returns real text (see orchestrator.ts's STILL_ESCALATED_MESSAGE), so
     // this isn't that.
-    if (reply) await sendWhatsAppQuickReplies(inbound.fromWaPhoneNumber, reply, quickReplies);
+    if (reply) await sendWhatsAppQuickReplies(inbound.fromWaPhoneNumber, reply, quickReplies, credentials);
   } catch (err) {
     if (!(err instanceof OrchestratorBlockedError)) {
       console.error('[whatsapp] orchestrate failed', err);

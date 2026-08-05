@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../lib/auth-server';
 import { formatRelativeTime } from '../../../../lib/format-time';
+import { isWithinWhatsAppSessionWindow } from '../../../../lib/whatsapp/client';
 import { Avatar } from '../../avatar';
 import { ReplyForm } from './reply-form';
 import { resolveTicket } from './actions';
@@ -37,6 +38,14 @@ export default async function TicketDetailPage({ params }: { params: { ticketId:
   };
 
   const displayName = ticket.customer?.name ?? ticket.customer?.email ?? ticket.customer?.externalId ?? t('anonymous');
+
+  // Same reasoning as sendAgentReply's own check (actions.ts) — reused here
+  // just to warn the agent before they type instead of after. The server
+  // action is still the actual gate; this is purely informational and can
+  // go slightly stale (e.g. a new customer message lands right after this
+  // render) without being a correctness problem.
+  const lastCustomerMessage = [...messages].reverse().find((m) => m.senderType === 'customer');
+  const sessionWindowClosed = ticket.channel === 'whatsapp' && !isWithinWhatsAppSessionWindow(lastCustomerMessage?.createdAt ?? null);
 
   return (
     <>
@@ -82,7 +91,7 @@ export default async function TicketDetailPage({ params }: { params: { ticketId:
             {messages.length === 0 && <p style={{ color: '#999' }}>{t('noMessages')}</p>}
           </div>
 
-          <ReplyForm ticketId={ticket.id} />
+          <ReplyForm ticketId={ticket.id} sessionWindowClosed={sessionWindowClosed} />
         </div>
 
         <div className="dash-customer-panel dash-card">

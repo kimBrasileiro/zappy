@@ -210,11 +210,16 @@ const MODERATION_SYSTEM_PROMPT =
   '- É claramente uma mensagem promocional/de marketing em massa (oferta, desconto, campanha) em vez de ' +
   'uma resposta de atendimento a esse cliente específico.\n' +
   '- Contém assédio, discurso de ódio ou ameaça.\n' +
+  '- Não tem nenhuma relação com atendimento ao cliente de uma empresa de agendamento/serviços — por ' +
+  'exemplo, ajudar em tarefa pessoal do cliente sem relação com o negócio, debate político/religioso, ou ' +
+  'a conversa virando um assistente de IA genérico para qualquer assunto. Isso NÃO inclui saudação, ' +
+  'agradecimento, despedida ou papo leve de atendimento (\'bom dia\', \'de nada\', emoji, etc) — esse tipo ' +
+  'de mensagem é normal e deve receber ALLOW.\n' +
   'Uma resposta normal de atendimento — agendamento, dúvida, suporte, confirmação, até mencionar preço de ' +
   'um serviço que o próprio cliente perguntou sobre — deve SEMPRE receber ALLOW, desde que não toque nas ' +
-  'categorias acima. Na dúvida sobre tom promocional (fora das categorias proibidas), responda ALLOW: o ' +
-  'custo de um falso bloqueio é maior que deixar passar uma mensagem limítrofe. Responda com EXATAMENTE uma ' +
-  'palavra, ALLOW ou BLOCK — nada mais.';
+  'categorias acima. Na dúvida sobre tom promocional ou relação com o negócio (fora das categorias ' +
+  'proibidas), responda ALLOW: o custo de um falso bloqueio é maior que deixar passar uma mensagem ' +
+  'limítrofe. Responda com EXATAMENTE uma palavra, ALLOW ou BLOCK — nada mais.';
 
 // Blocking gate in front of every agent-composed WhatsApp send (see
 // dashboard/conversations/[ticketId]/actions.ts#sendAgentReply) — the one

@@ -20,7 +20,17 @@ model Company {
   // set is excluded from the shared number's name-matching directory and
   // NEVER falls back to shared-number sending even if its own token is
   // broken. Two identities must never blend on one WhatsApp thread.
-  whatsappPhoneId        String?  @map("whatsapp_phone_id")
+  // @unique: Postgres allows any number of NULL rows under a unique index
+  // (every company that hasn't connected a dedicated number), but guarantees
+  // no two companies can ever hold the SAME phone_number_id — without this,
+  // a second signup submitting an id it merely has Graph API read access to
+  // (e.g. an agency managing several clients' WABAs) would make inbound
+  // routing's `findFirst({ where: { whatsappPhoneId } })` pick one company
+  // non-deterministically, silently hijacking/blending another tenant's
+  // conversations. connectWhatsAppNumber (dashboard/integracoes/actions.ts)
+  // also pre-checks this for a friendly error, but THIS constraint is what
+  // actually closes the race, not the pre-check alone.
+  whatsappPhoneId        String?  @unique @map("whatsapp_phone_id")
   whatsappTokenEncrypted String?  @map("whatsapp_token_encrypted")
   // Display-only (like googleCalendarConnectedEmail below) — the human-
   // readable number Meta returned when the token was validated at connect

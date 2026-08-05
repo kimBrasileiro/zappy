@@ -207,14 +207,21 @@ const MODERATION_SYSTEM_PROMPT =
   'segmentos, então qualquer menção é tratada como fora de política, mesmo respondendo uma pergunta legítima ' +
   'do cliente.\n' +
   '- Contém conteúdo adulto/sexual explícito.\n' +
-  '- É claramente uma mensagem promocional/de marketing em massa (oferta, desconto, campanha) em vez de ' +
-  'uma resposta de atendimento a esse cliente específico.\n' +
+  '- É claramente uma mensagem promocional/de marketing em massa — dirigida a qualquer pessoa em geral, sem ' +
+  'relação com o que ESSE cliente específico perguntou ou combinou na conversa (ex: "esse mês temos condições ' +
+  'especiais em tudo, aproveita e chama a gente"). Isso é BEM DIFERENTE de citar um preço ou desconto real, ' +
+  'pontual, dirigido a esse cliente dentro do contexto da conversa (ex: um desconto de fidelidade oferecido a ' +
+  'um cliente recorrente específico, ou o preço de um serviço que ele mesmo perguntou) — isso é atendimento ' +
+  'normal e deve receber ALLOW, mesmo mencionando "desconto" ou um valor menor que o de tabela.\n' +
   '- Contém assédio, discurso de ódio ou ameaça.\n' +
   '- Não tem nenhuma relação com atendimento ao cliente de uma empresa de agendamento/serviços — por ' +
   'exemplo, ajudar em tarefa pessoal do cliente sem relação com o negócio, debate político/religioso, ou ' +
   'a conversa virando um assistente de IA genérico para qualquer assunto. Isso NÃO inclui saudação, ' +
   'agradecimento, despedida ou papo leve de atendimento (\'bom dia\', \'de nada\', emoji, etc) — esse tipo ' +
   'de mensagem é normal e deve receber ALLOW.\n' +
+  'Um serviço real que só SOA chamativo (tatuagem, piercing, procedimento estético invasivo, massagem, etc) ' +
+  'não é, por si só, motivo de bloqueio — a Zappigo atende negócios legítimos desses segmentos normalmente; ' +
+  'só bloqueie esse tipo de mensagem se ela também se encaixar em alguma das categorias proibidas acima.\n' +
   'Uma resposta normal de atendimento — agendamento, dúvida, suporte, confirmação, até mencionar preço de ' +
   'um serviço que o próprio cliente perguntou sobre — deve SEMPRE receber ALLOW, desde que não toque nas ' +
   'categorias acima. Na dúvida sobre tom promocional ou relação com o negócio (fora das categorias ' +

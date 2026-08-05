@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
-import { prisma } from '@zappigo/db';
+import { Prisma, prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
 import { encrypt } from '../../../lib/crypto';
 
@@ -49,6 +49,23 @@ export async function connectWhatsAppNumber(_prevState: ConnectWhatsAppState, fo
     return { error: t('whatsappErrorFillFields') };
   }
 
+  // Two distinct integrity checks, both required — a proactive check here
+  // gives a clear, translated error instead of a raw constraint-violation
+  // 500, but only the DB's own @unique on whatsappPhoneId (see
+  // company.prisma) actually closes the race between this check and the
+  // write below; the catch around the final update is the real backstop.
+  const current = await prisma.company.findUnique({ where: { id: companyId }, select: { whatsappPhoneId: true } });
+  if (current?.whatsappPhoneId && current.whatsappPhoneId !== phoneNumberId) {
+    return { error: t('whatsappErrorAlreadyConnected') };
+  }
+  const takenByOther = await prisma.company.findFirst({
+    where: { whatsappPhoneId: phoneNumberId, id: { not: companyId } },
+    select: { id: true },
+  });
+  if (takenByOther) {
+    return { error: t('whatsappErrorNumberTaken') };
+  }
+
   let displayNumber: string | null = null;
   try {
     const res = await fetch(
@@ -74,15 +91,26 @@ export async function connectWhatsAppNumber(_prevState: ConnectWhatsAppState, fo
     return { error: t('whatsappErrorSubscribeFailed') };
   }
 
-  await prisma.company.update({
-    where: { id: companyId },
-    data: {
-      whatsappPhoneId: phoneNumberId,
-      whatsappTokenEncrypted: encrypt(accessToken, 'WHATSAPP_TOKEN_ENCRYPTION_KEY'),
-      whatsappConnectedNumber: displayNumber ?? phoneNumberId,
-      whatsappConnectedAt: new Date(),
-    },
-  });
+  try {
+    await prisma.company.update({
+      where: { id: companyId },
+      data: {
+        whatsappPhoneId: phoneNumberId,
+        whatsappTokenEncrypted: encrypt(accessToken, 'WHATSAPP_TOKEN_ENCRYPTION_KEY'),
+        whatsappConnectedNumber: displayNumber ?? phoneNumberId,
+        whatsappConnectedAt: new Date(),
+      },
+    });
+  } catch (err) {
+    // P2002: another company won the race and took this phone_number_id
+    // between the check above and this write — extremely unlikely (two
+    // simultaneous connect attempts for the same number), but the pre-check
+    // alone can't guarantee it, only the DB's own @unique index can.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      return { error: t('whatsappErrorNumberTaken') };
+    }
+    throw err;
+  }
 
   revalidatePath('/dashboard/integracoes');
   return {};

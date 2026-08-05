@@ -44,12 +44,18 @@ export async function POST(request: Request) {
   let generator: AsyncGenerator<string, OrchestrateResult, unknown>;
   let first: IteratorResult<string, OrchestrateResult>;
   try {
+    // Cloud Run sits behind Google's load balancer, which sets this header;
+    // the first entry is the original client (see rate-limit.ts#checkRateLimit
+    // for why this matters — the client-supplied conversationId alone isn't
+    // a safe rate-limit key on a public, cross-origin endpoint like this one).
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
     generator = orchestrate({
       companySlug: companyId,
       channel: 'site_chat',
       conversationId,
       message,
       origin: request.headers.get('origin'),
+      clientIp,
       language,
     });
     // Force guardrail checks (which run before the first `yield`) to execute

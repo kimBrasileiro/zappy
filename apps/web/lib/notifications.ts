@@ -36,7 +36,7 @@ export async function notifyBookingCreated(params: {
     await sendEmail(
       company.emails,
       `Novo agendamento — ${params.serviceName}`,
-      `<p><strong>${params.customerName}</strong> (${params.customerPhone}) agendou <strong>${params.serviceName}</strong> para ${when}.</p>` +
+      `<p><strong>${escapeHtml(params.customerName)}</strong> (${escapeHtml(params.customerPhone)}) agendou <strong>${escapeHtml(params.serviceName)}</strong> para ${when}.</p>` +
         (params.requiresManualConfirmation
           ? '<p>Este é um pré-agendamento — a equipe precisa confirmar com o cliente.</p>'
           : ''),
@@ -61,7 +61,7 @@ export async function notifyBookingCancelled(params: {
   await sendEmail(
     company.emails,
     `Agendamento cancelado — ${params.serviceName}`,
-    `<p>O agendamento de <strong>${params.serviceName}</strong> para ${when} foi cancelado.</p>`,
+    `<p>O agendamento de <strong>${escapeHtml(params.serviceName)}</strong> para ${when} foi cancelado.</p>`,
   );
 }
 
@@ -74,7 +74,7 @@ export async function notifyNewSignup(params: { companyName: string; adminEmail:
   await sendEmail(
     SUPER_ADMIN_EMAIL,
     `[Zappigo] Novo cadastro — ${params.companyName}`,
-    `<p>Nova empresa cadastrada: <strong>${params.companyName}</strong> (plano ${params.plan}), admin ${params.adminEmail}.</p>`,
+    `<p>Nova empresa cadastrada: <strong>${escapeHtml(params.companyName)}</strong> (plano ${escapeHtml(params.plan)}), admin ${escapeHtml(params.adminEmail)}.</p>`,
   );
 }
 
@@ -181,13 +181,13 @@ export async function notifyBillingEvent(params: {
     await sendEmail(
       company.emails,
       `${copy.customer} — Zappigo`,
-      `<p>${copy.customer}: plano <strong>${params.planLabel}</strong>.</p><p>Veja os detalhes em <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/dashboard/billing">Assinatura</a>.</p>`,
+      `<p>${copy.customer}: plano <strong>${escapeHtml(params.planLabel)}</strong>.</p><p>Veja os detalhes em <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/dashboard/billing">Assinatura</a>.</p>`,
     );
   }
 
   await sendEmail(
     SUPER_ADMIN_EMAIL,
     `[Zappigo] ${copy.admin} — ${company.companyName}`,
-    `<p><strong>${company.companyName}</strong>: ${copy.admin.toLowerCase()}, plano <strong>${params.planLabel}</strong>.</p>`,
+    `<p><strong>${escapeHtml(company.companyName)}</strong>: ${copy.admin.toLowerCase()}, plano <strong>${escapeHtml(params.planLabel)}</strong>.</p>`,
   );
 }

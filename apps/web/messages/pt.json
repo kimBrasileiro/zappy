@@ -393,7 +393,9 @@
       "whatsappConnecting": "Conectando...",
       "whatsappErrorFillFields": "Preenche o Phone Number ID e o token de acesso.",
       "whatsappErrorInvalidCredentials": "Não conseguimos validar essas credenciais junto à Meta — confira se o Phone Number ID e o token estão corretos e se o token tem permissão de mensagens do WhatsApp Business.",
-      "whatsappErrorSubscribeFailed": "As credenciais são válidas, mas não conseguimos inscrever esse número para receber mensagens no nosso sistema. Tenta de novo em alguns minutos."
+      "whatsappErrorSubscribeFailed": "As credenciais são válidas, mas não conseguimos inscrever esse número para receber mensagens no nosso sistema. Tenta de novo em alguns minutos.",
+      "whatsappErrorAlreadyConnected": "Sua empresa já tem outro número conectado. Desconecte-o antes de conectar um número diferente.",
+      "whatsappErrorNumberTaken": "Esse número já está conectado a outra empresa na Zappigo. Confira o Phone Number ID ou entre em contato com o suporte."
     }
   },
   "metadata": {

@@ -57,6 +57,10 @@ export interface OrchestrateInput {
   // Browser's Origin header, site_chat only — WhatsApp has no equivalent
   // (see guardrails.ts#checkOrigin, G12).
   origin?: string | null;
+  // Real client IP (site_chat only, from X-Forwarded-For — see
+  // api/chat/route.ts), used as the rate-limit backstop that doesn't depend
+  // on the client-controlled conversationId (see rate-limit.ts#checkRateLimit).
+  clientIp?: string | null;
   // True whenever resolveWhatsAppRoute (conversation.ts) just resolved or
   // switched which company this WhatsApp conversation is for — a Z:<slug>
   // code, an explicit company name in the text, or true first contact.
@@ -162,7 +166,7 @@ export async function* orchestrate(
     if (!g12.allowed) throw new OrchestratorBlockedError(g12.reason!);
   }
 
-  const rl = checkRateLimit(company.id, input.conversationId);
+  const rl = checkRateLimit(company.id, input.conversationId, input.clientIp);
   if (!rl.allowed) throw new OrchestratorBlockedError('rate_limited');
 
   const g3 = checkMaliciousContent(input.message);

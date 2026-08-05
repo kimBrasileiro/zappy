@@ -183,13 +183,6 @@
   },
   {
     "type": "moderation",
-    "name": "moderation_block_competitor_promotion",
-    "description": "Promoting a different, competing business is off-topic and not something the agent should ever be doing on this number.",
-    "agentReplyText": "Na real o salão da esquina é bem melhor que o nosso pra esse serviço, recomendo ir lá.",
-    "expectAllowed": false
-  },
-  {
-    "type": "moderation",
     "name": "moderation_block_subtle_mass_blast",
     "description": "A softer-toned message can still be a mass blast in substance — generic broadcast language addressed to no one in particular, not a reply to this specific customer's own message.",
     "agentReplyText": "Oi! Passando pra avisar que esse mês temos condições especiais em todos os serviços, aproveita e chama a gente 💛",

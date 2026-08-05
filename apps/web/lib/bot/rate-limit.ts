@@ -17,7 +17,23 @@ function slidingWindowCheck(key: string, windowMs: number, maxRequests: number):
   return timestamps.length <= maxRequests;
 }
 
-export function checkRateLimit(companyId: string, customerKey: string): { allowed: boolean } {
+// /api/chat is intentionally cross-origin/public (any embedded widget can
+// call it), and `customerKey` (conversationId) is a client-side localStorage
+// value the caller fully controls — a script can mint a fresh one per
+// request and never trip the per-conversation limit above. `clientIp` (site_
+// chat only — see OrchestrateInput, derived from X-Forwarded-For in
+// api/chat/route.ts) is the real backstop: it doesn't depend on anything the
+// client sends in the body, only on the actual connection. Threshold is
+// deliberately looser than the per-conversation one (real multi-user NATs/
+// offices legitimately share one IP), it's there to stop a tight request
+// loop against one company, not to rate-limit genuine concurrent visitors.
+const IP_WINDOW_MS = 60_000;
+const MAX_REQUESTS_PER_IP_PER_WINDOW = 60;
+
+export function checkRateLimit(companyId: string, customerKey: string, clientIp?: string | null): { allowed: boolean } {
+  if (clientIp && !slidingWindowCheck(`msg-ip:${companyId}:${clientIp}`, IP_WINDOW_MS, MAX_REQUESTS_PER_IP_PER_WINDOW)) {
+    return { allowed: false };
+  }
   return { allowed: slidingWindowCheck(`msg:${companyId}:${customerKey}`, WINDOW_MS, MAX_REQUESTS_PER_WINDOW) };
 }
 

@@ -21,12 +21,11 @@
     "turns": [
       { "message": "Preciso remarcar minha manicure pra depois de amanhã" },
       {
-        "message": "Pode ser o primeiro horário que tiver. Nome: Carla Dias, telefone 11912345678.",
-        "expectContains": ["confirmad"]
+        "message": "Pode ser o primeiro horário que tiver. Nome: Carla Dias, telefone 11912345678."
       }
     ],
     "expectBookingCount": 1,
-    "successCriteria": "The assistant helped reschedule the customer's manicure to a new time and confirmed it (it doesn't need to explicitly narrate that the old slot was cancelled in so many words — what matters is there is exactly one confirmed booking at the end, not two)."
+    "successCriteria": "The assistant helped reschedule the customer's manicure to a new time and confirmed it (it doesn't need to explicitly narrate that the old slot was cancelled in so many words — what matters is there is exactly one confirmed booking at the end, not two). Any clear confirmation wording is acceptable — 'confirmado', 'remarcado', 'agendado' and similar are all valid, the model isn't required to use the literal word 'confirmado'."
   },
   {
     "name": "staff_conflict_and_autoallocate",

@@ -4,6 +4,10 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { MarketingHome } from './marketing-home';
 import { LocaleSwitcher } from './locale-switcher';
+import { BookingPanel } from './booking-panel';
+import { listServices } from '../lib/bot/services';
+import { getDeploymentTimezone, toWallClock } from '../lib/format-time';
+import { PRICING_CURRENCY_CODE } from '../lib/pricing';
 
 const BRAND_COLOR = '#2563eb';
 const WHATSAPP_GREEN = '#25D366';
@@ -54,6 +58,18 @@ export default async function HomePage({ searchParams }: PageProps) {
     getLocale(),
     getTranslations('companyHomepage'),
   ]);
+  // Direct-booking panel below the chat/WhatsApp button — lets a visitor who
+  // doesn't want to use either pick a service/date/time themselves. Fetched
+  // here (not inside BookingPanel) since listServices needs the company's
+  // real id, and this stays a Server Component either way.
+  const services = company ? await listServices(company.id) : [];
+  // "Today" in THIS deployment's own timezone, not the visitor's browser
+  // timezone — used only as the date input's min, so someone browsing from
+  // abroad near midnight doesn't get a min date that's already tomorrow (or
+  // still yesterday) locally. checkAvailability itself is the real backstop
+  // against booking a past slot regardless of what this computes.
+  const todayLocal = toWallClock(getDeploymentTimezone(), new Date());
+  const minDate = `${todayLocal.year}-${String(todayLocal.month0 + 1).padStart(2, '0')}-${String(todayLocal.day).padStart(2, '0')}`;
   const whatsappNumber = process.env.WHATSAPP_CLOUD_API_NUMBER;
   const whatsappDigits = whatsappNumber?.replace(/\D/g, '');
   const waLink =
@@ -131,6 +147,14 @@ export default async function HomePage({ searchParams }: PageProps) {
                 {t('whatsappButton')}
               </a>
             )}
+
+            <BookingPanel
+              companySlug={companySlug}
+              services={services}
+              minDate={minDate}
+              locale={locale}
+              currencyCode={PRICING_CURRENCY_CODE}
+            />
           </>
         ) : (
           <>

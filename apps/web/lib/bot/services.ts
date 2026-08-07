@@ -10,7 +10,7 @@ import { resolveWhatsAppCredentials } from '../whatsapp/client';
 // (mobile, e.g. 11 98765-4321) once punctuation/spaces are stripped. Not a
 // full carrier-validity check — just enough to reject obviously-fake input
 // ("123", "sim") before it reaches the database.
-function normalizePhone(phone: string): string | null {
+export function normalizePhone(phone: string): string | null {
   const digits = phone.replace(/\D/g, '');
   return digits.length === 10 || digits.length === 11 ? digits : null;
 }
@@ -416,7 +416,11 @@ export async function checkAvailability(
 
 export async function createBooking(
   companyId: string,
-  ticketId: string,
+  // Null for a booking made directly through the public company page's
+  // form (app/booking-actions.ts) — there's no chat conversation to link
+  // it to. Every bot-originated booking (tool-definitions.ts) still passes
+  // its real ticketId.
+  ticketId: string | null,
   customerId: string | null,
   args: {
     serviceName: string;
@@ -737,10 +741,18 @@ export async function createBooking(
       success: true,
       bookingId: booking.id,
       serviceName: service.name,
-      scheduledAt: booking.scheduledAt.toISOString(),
-      // The only one of these two fields to ever say out loud — scheduledAt
-      // above is UTC (see formatBrazilDateTime's comment near the top of
-      // this file for why that's not safe to read directly).
+      // Deliberately NOT returning a raw UTC `scheduledAt` field here, only
+      // this local one — the system prompt already tells the model "never
+      // read scheduledAt, always read scheduledAtLocal" (see orchestrator.ts),
+      // but that instruction doesn't always hold: eval/scenarios/support-flows
+      // .json's reschedule_flow caught the model quoting the raw UTC hour to
+      // the customer despite it (up to a 3h-off confirmation). Nothing reads
+      // a raw scheduledAt back out of THIS specific result downstream (not
+      // orchestrator.ts's own post-processing, not a later tool call — the
+      // documented pattern for e.g. cancel_booking is to call list_bookings
+      // first for a canonical Z-suffixed instant, not reuse this one), so
+      // removing the ambiguous field entirely is strictly safer than hoping
+      // the instruction holds every time.
       scheduledAtLocal: formatLocalDateTime(booking.scheduledAt),
       durationMinutes: booking.durationMinutes,
       priceCents: booking.priceCents,
@@ -810,9 +822,26 @@ export async function cancelBooking(
 
   // list_bookings always returns an explicit "Z"-suffixed instant (via
   // toISOString()), so this fallback only matters if the model retypes the
-  // string itself — same Brazil-local defensive parse as createBooking above.
+  // string itself — same DST-safe wall-clock parse as createBooking above
+  // (a fixed "-03:00" suffix would be wrong half the year on .es/Madrid).
   const hasExplicitOffset = /[zZ]|[+-]\d{2}:?\d{2}$/.test(args.scheduledAt.trim());
-  const scheduledAt = new Date(hasExplicitOffset ? args.scheduledAt : `${args.scheduledAt}-03:00`);
+  let scheduledAt: Date;
+  if (hasExplicitOffset) {
+    scheduledAt = new Date(args.scheduledAt);
+  } else {
+    const naive = args.scheduledAt.trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+    scheduledAt = naive
+      ? wallClockToUtc(
+          getDeploymentTimezone(),
+          Number(naive[1]),
+          Number(naive[2]) - 1,
+          Number(naive[3]),
+          Number(naive[4]),
+          Number(naive[5]),
+          naive[6] ? Number(naive[6]) : 0,
+        )
+      : new Date(NaN);
+  }
   if (Number.isNaN(scheduledAt.getTime())) {
     return {
       error: 'invalid_datetime',

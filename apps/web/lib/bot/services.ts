@@ -148,6 +148,12 @@ export async function checkAvailability(
   date: string,
   staffName?: string,
   time?: string,
+  // Default (3) matches the bot's own use — its replies turn these straight
+  // into quick-reply buttons, so more than a handful would just clutter the
+  // chat. The public booking form (app/booking-actions.ts) is a real
+  // date/time picker with room to show a full day's options, so it passes a
+  // much higher cap instead of silently hiding slots that are actually free.
+  maxPerBucket = 3,
 ) {
   const service = await resolveService(companyId, serviceName);
   if (!service) {
@@ -372,9 +378,9 @@ export async function checkAvailability(
   // entered as something off-grid (e.g. "09:05") — every candidate start
   // time this loop considers is a round mark, full stop.
   const firstGridStart = Math.ceil(openTime.getTime() / gridMs) * gridMs;
-  // Bucketed into manhã/tarde by Brazil-local noon, capped at 3 each — the
-  // orchestrator turns these directly into quick-reply buttons, so the
-  // customer picks a time instead of typing one back.
+  // Bucketed into manhã/tarde by Brazil-local noon, capped at maxPerBucket
+  // each — see the parameter's own comment above for why that cap varies by
+  // caller.
   const morningSlots: { time: string; iso: string; staffAvailable?: string[] }[] = [];
   const afternoonSlots: { time: string; iso: string; staffAvailable?: string[] }[] = [];
   for (
@@ -394,8 +400,8 @@ export async function checkAvailability(
       ...(staffAvailable ? { staffAvailable } : {}),
     };
     if (wallClock.hour < 12) {
-      if (morningSlots.length < 3) morningSlots.push(entry);
-    } else if (afternoonSlots.length < 3) {
+      if (morningSlots.length < maxPerBucket) morningSlots.push(entry);
+    } else if (afternoonSlots.length < maxPerBucket) {
       afternoonSlots.push(entry);
     }
   }

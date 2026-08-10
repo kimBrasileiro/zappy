@@ -32,7 +32,10 @@ export async function getPublicAvailability(companySlug: string, serviceName: st
     return { error: 'rate_limited' as const };
   }
 
-  return checkAvailability(company.id, serviceName, date, staffName);
+  // Uncapped-in-practice (vs. the bot's default of 3, sized for chat
+  // quick-reply buttons) — this is a real date/time picker, so a visitor
+  // should see every open slot in the day, not just the first few.
+  return checkAvailability(company.id, serviceName, date, staffName, undefined, 24);
 }
 
 export async function submitPublicBooking(

@@ -161,13 +161,7 @@ export function BookingPanel({
     : '';
 
   return (
-    <div style={{ maxWidth: 420, margin: '40px auto 0', textAlign: 'left' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
-        <span style={{ color: '#999', fontSize: 13 }}>{t('divider')}</span>
-        <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
-      </div>
-
+    <div style={{ maxWidth: 420, margin: '8px auto 0', textAlign: 'left' }}>
       <div
         style={{
           border: '1px solid rgba(0,0,0,0.08)',

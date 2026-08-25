@@ -123,31 +123,6 @@ export default async function HomePage({ searchParams }: PageProps) {
             <h1 style={{ fontSize: 32, margin: '0 0 16px' }}>{company.name}</h1>
             <p style={{ color: '#555', fontSize: 16, lineHeight: 1.7, margin: '0 0 32px' }}>{description}</p>
 
-            <p style={{ color: '#888', fontSize: 14, marginBottom: 20 }}>{t('instructions')}</p>
-
-            {waLink && (
-              <a
-                href={waLink}
-                target="_blank"
-                rel="noopener"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  background: WHATSAPP_GREEN,
-                  color: '#fff',
-                  padding: '14px 28px',
-                  borderRadius: 999,
-                  fontWeight: 600,
-                  fontSize: 16,
-                  textDecoration: 'none',
-                }}
-              >
-                <span dangerouslySetInnerHTML={{ __html: ICON_WHATSAPP }} />
-                {t('whatsappButton')}
-              </a>
-            )}
-
             <BookingPanel
               companySlug={companySlug}
               services={services}
@@ -155,6 +130,36 @@ export default async function HomePage({ searchParams }: PageProps) {
               locale={locale}
               currencyCode={PRICING_CURRENCY_CODE}
             />
+
+            {waLink && (
+              <div style={{ maxWidth: 420, margin: '32px auto 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
+                  <span style={{ color: '#999', fontSize: 13 }}>{t('instructions')}</span>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
+                </div>
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noopener"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    background: WHATSAPP_GREEN,
+                    color: '#fff',
+                    padding: '14px 28px',
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    fontSize: 16,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <span dangerouslySetInnerHTML={{ __html: ICON_WHATSAPP }} />
+                  {t('whatsappButton')}
+                </a>
+              </div>
+            )}
           </>
         ) : (
           <>

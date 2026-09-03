@@ -50,7 +50,7 @@ variable "google_calendar_client_id" {
 
 variable "resend_from_email" {
   type    = string
-  default = "Zappy (staging) <onboarding@resend.dev>"
+  default = "Zappigo <naoresponda@mail.zappigo.com.br>"
 }
 
 variable "whatsapp_phone_number_id" {

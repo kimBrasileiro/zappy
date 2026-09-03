@@ -44,28 +44,35 @@ function parseCancellationFeeCents(formData: FormData): number {
   return Math.round(value * 100);
 }
 
-function parseStaffNames(formData: FormData): string[] {
-  const raw = String(formData.get('staffNames') ?? '');
-  const names = raw
-    .split(',')
-    .map((n) => n.trim())
-    .filter(Boolean);
-  // De-duplicated case/accent-insensitively but keeps the first spelling
-  // typed — two entries that only differ by casing/accents would otherwise
-  // silently create two "different" staff members that conflict-checking
-  // treats as distinct people.
+// Staff is mandatory (service-form.tsx always renders at least one
+// staffName_0/staffDuration_0 row — see StaffRow) — reads the indexed rows
+// the client component serializes rather than a single comma-separated
+// field, since each row also carries its own optional duration override.
+function parseStaffRows(formData: FormData): { staffNames: string[]; staffDurations: Record<string, number> } {
   const seen = new Set<string>();
-  const deduped: string[] = [];
-  for (const name of names) {
+  const staffNames: string[] = [];
+  const staffDurations: Record<string, number> = {};
+
+  for (let idx = 0; formData.has(`staffName_${idx}`); idx++) {
+    const name = String(formData.get(`staffName_${idx}`) ?? '').trim();
+    if (!name) continue;
+    // De-duplicated case/accent-insensitively but keeps the first spelling
+    // typed — two rows that only differ by casing/accents would otherwise
+    // silently create two "different" staff members that conflict-checking
+    // treats as distinct people.
     const key = name
       .normalize('NFD')
       .replace(/\p{Diacritic}/gu, '')
       .toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    deduped.push(name);
+    staffNames.push(name);
+
+    const durationRaw = Number(formData.get(`staffDuration_${idx}`));
+    if (durationRaw > 0) staffDurations[name] = Math.round(durationRaw);
   }
-  return deduped;
+
+  return { staffNames, staffDurations };
 }
 
 function parseBusinessHours(formData: FormData): BusinessHours | null {
@@ -105,11 +112,12 @@ export async function createService(
   const businessHours = parseBusinessHours(formData);
   const cancellationNoticeHours = parseCancellationNoticeHours(formData);
   const cancellationFeeCents = parseCancellationFeeCents(formData);
-  const staffNames = parseStaffNames(formData);
+  const { staffNames, staffDurations } = parseStaffRows(formData);
 
   if (!name) return { error: t('errorNameRequired') };
   if (durationMinutes === null) return { error: t('errorInvalidDuration') };
   if (priceCents === null) return { error: t('errorInvalidPrice') };
+  if (staffNames.length === 0) return { error: t('errorStaffRequired') };
 
   await prisma.service.create({
     data: {
@@ -124,6 +132,7 @@ export async function createService(
       cancellationNoticeHours,
       cancellationFeeCents,
       staffNames,
+      staffDurations,
       createdBy: userId,
     },
   });
@@ -152,11 +161,12 @@ export async function updateService(
   const businessHours = parseBusinessHours(formData);
   const cancellationNoticeHours = parseCancellationNoticeHours(formData);
   const cancellationFeeCents = parseCancellationFeeCents(formData);
-  const staffNames = parseStaffNames(formData);
+  const { staffNames, staffDurations } = parseStaffRows(formData);
 
   if (!name) return { error: t('errorNameRequired') };
   if (durationMinutes === null) return { error: t('errorInvalidDuration') };
   if (priceCents === null) return { error: t('errorInvalidPrice') };
+  if (staffNames.length === 0) return { error: t('errorStaffRequired') };
 
   await prisma.service.update({
     where: { id: serviceId },
@@ -171,6 +181,7 @@ export async function updateService(
       cancellationNoticeHours,
       cancellationFeeCents,
       staffNames,
+      staffDurations,
     },
   });
 

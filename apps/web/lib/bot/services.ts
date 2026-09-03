@@ -113,6 +113,18 @@ function hasStaffConcept(service: Service): boolean {
   return service.staffNames.length > 0;
 }
 
+// A service can genuinely take different amounts of time depending on who
+// performs it (see service.prisma's staffDurations comment) — this is the
+// single source of truth every duration-sensitive call site below resolves
+// through, so a staff member with no override transparently falls back to
+// the service's own base duration.
+function resolveStaffDuration(service: Service, staffName: string | null): number {
+  if (!staffName) return service.durationMinutes;
+  const overrides = service.staffDurations as Record<string, number>;
+  const minutes = overrides[staffName];
+  return typeof minutes === 'number' && minutes > 0 ? minutes : service.durationMinutes;
+}
+
 export async function listServices(companyId: string) {
   const services = await prisma.service.findMany({
     where: { companyId, active: true },
@@ -127,6 +139,15 @@ export async function listServices(companyId: string) {
     // (and should) ask the customer's preference or pass a staffName, instead
     // of assuming a single generic provider.
     ...(s.staffNames.length > 0 ? { staffOptions: s.staffNames } : {}),
+    // Only present when at least one staff member's duration actually
+    // differs from durationMinutes above — most services don't override
+    // anything, and repeating the same number per name would just be noise
+    // the model has to read past. When present, lets the bot answer "quanto
+    // tempo demora com a Ana?" correctly instead of quoting the base duration
+    // for everyone.
+    ...(s.staffNames.some((n) => resolveStaffDuration(s, n) !== s.durationMinutes)
+      ? { staffDurationsMinutes: Object.fromEntries(s.staffNames.map((n) => [n, resolveStaffDuration(s, n)])) }
+      : {}),
     // Present only when the service actually has a notice window configured
     // — most services default to 0/0 (no restriction), not worth cluttering
     // every reply with "sem multa, cancele quando quiser".
@@ -320,8 +341,20 @@ export async function checkAvailability(
     return calendarBusy.some((b) => startMs < b.endMs && b.startMs < endMs);
   };
 
-  const stepMinutes = service.durationMinutes;
   const now = Date.now();
+
+  // A service can take a different amount of time depending on who performs
+  // it (resolveStaffDuration) — with no specific staff requested, each
+  // eligible candidate is checked against THEIR OWN duration below, not one
+  // shared number. The smallest of those durations is the latest possible
+  // start time anyone could still take, and is what bounds the grid loop
+  // further down (a longer-duration colleague simply won't qualify for a `t`
+  // that's only valid for someone quicker — checked per-candidate inside
+  // evaluateSlot, not by narrowing the loop itself).
+  const candidateDurations = hasStaffConcept(service)
+    ? eligibleStaff.map((n) => resolveStaffDuration(service, n))
+    : [service.durationMinutes];
+  const minDuration = Math.min(...candidateDurations);
 
   // Single source of truth for "is this exact start time actually free" —
   // used both by the requested-time check below AND the preview-grid loop,
@@ -333,17 +366,21 @@ export async function checkAvailability(
   // it into the capped list).
   const evaluateSlot = (t: number): { ok: boolean; staffAvailable?: string[] } => {
     if (t < now) return { ok: false }; // no slots in the past
-    if (t < openTime.getTime() || t + stepMinutes * 60_000 > closeTime.getTime()) return { ok: false };
-    if (conflictsWithCalendar(t, stepMinutes)) return { ok: false };
 
     if (hasStaffConcept(service)) {
-      const free = eligibleStaff.filter(
-        (name) => !existing.some((b) => b.staffName === name && overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes)),
-      );
+      const free = eligibleStaff.filter((name) => {
+        const dur = resolveStaffDuration(service, name);
+        if (t < openTime.getTime() || t + dur * 60_000 > closeTime.getTime()) return false;
+        if (conflictsWithCalendar(t, dur)) return false;
+        return !existing.some((b) => b.staffName === name && overlaps(t, dur, b.scheduledAt.getTime(), b.durationMinutes));
+      });
       if (free.length === 0) return { ok: false };
       return { ok: true, staffAvailable: !requestedStaff ? free : undefined };
     }
-    const conflict = existing.some((b) => overlaps(t, stepMinutes, b.scheduledAt.getTime(), b.durationMinutes));
+
+    if (t < openTime.getTime() || t + service.durationMinutes * 60_000 > closeTime.getTime()) return { ok: false };
+    if (conflictsWithCalendar(t, service.durationMinutes)) return { ok: false };
+    const conflict = existing.some((b) => overlaps(t, service.durationMinutes, b.scheduledAt.getTime(), b.durationMinutes));
     return { ok: !conflict };
   };
 
@@ -366,12 +403,13 @@ export async function checkAvailability(
   }
 
   // Appointments always START on a round grid (:00/:15/:30/:45), independent
-  // of how long the service itself takes — advancing by stepMinutes instead
-  // (the old behavior) drifted onto non-round times for any service whose
-  // duration isn't a clean divisor of 60 (a 33-minute service produced 09:00,
-  // 09:33, 10:06...). The service's actual duration still governs how far
-  // ahead each slot's overlap check (and the close-time cutoff below) look —
-  // only the grid the customer picks *from* is fixed.
+  // of how long the service (or a given staff member's own duration) takes —
+  // advancing by the duration itself (the old behavior) drifted onto
+  // non-round times for any service whose duration isn't a clean divisor of
+  // 60 (a 33-minute service produced 09:00, 09:33, 10:06...). Each candidate's
+  // actual duration still governs how far ahead their own overlap check (and
+  // close-time cutoff, both inside evaluateSlot) look — only the grid the
+  // customer picks *from* is fixed.
   const SLOT_GRID_MINUTES = 15;
   const gridMs = SLOT_GRID_MINUTES * 60_000;
   // Snapped up to the grid too, in case business hours themselves were ever
@@ -385,7 +423,7 @@ export async function checkAvailability(
   const afternoonSlots: { time: string; iso: string; staffAvailable?: string[] }[] = [];
   for (
     let t = firstGridStart;
-    t + stepMinutes * 60_000 <= closeTime.getTime();
+    t + minDuration * 60_000 <= closeTime.getTime();
     t += gridMs
   ) {
     const evaluation = evaluateSlot(t);
@@ -554,7 +592,7 @@ export async function createBooking(
 
     const conflictsFor = (name: string) =>
       sameDay.some(
-        (b) => b.staffName === name && overlaps(scheduledAt.getTime(), service.durationMinutes, b.scheduledAt.getTime(), b.durationMinutes),
+        (b) => b.staffName === name && overlaps(scheduledAt.getTime(), resolveStaffDuration(service, name), b.scheduledAt.getTime(), b.durationMinutes),
       );
 
     if (args.staffName?.trim()) {
@@ -707,7 +745,7 @@ export async function createBooking(
         customerId: effectiveCustomerId,
         ticketId,
         scheduledAt,
-        durationMinutes: service.durationMinutes,
+        durationMinutes: resolveStaffDuration(service, assignedStaff),
         priceCents: service.priceCents,
         staffName: assignedStaff,
         notes: `Cliente: ${customerName}, Tel: ${normalizedPhone}`,

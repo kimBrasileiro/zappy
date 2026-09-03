@@ -6,6 +6,7 @@ import { IMPERSONATE_COOKIE, isSuperAdminEmail } from './admin-auth';
 
 export interface RequireSessionResult {
   userId: string;
+  email: string;
   companyId: string;
   role: string;
   // True only for the hardcoded super-admin email (see admin-auth.ts) —
@@ -59,5 +60,5 @@ export async function requireSession(): Promise<RequireSessionResult> {
     }
   }
 
-  return { userId: user.id, companyId, role: user.role, isSuperAdmin, actualCompanyId: user.companyId };
+  return { userId: user.id, email: user.email, companyId, role: user.role, isSuperAdmin, actualCompanyId: user.companyId };
 }

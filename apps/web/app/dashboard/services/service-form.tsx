@@ -11,6 +11,13 @@ const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
 export type BusinessHours = Record<string, [string, string] | null>;
 
+// Every service has at least one row — staff is mandatory (a service is
+// really a person's own agenda, not an abstract slot; see
+// lib/bot/services.ts#resolveStaffDuration). `duration` empty means "use
+// this service's own base duration" — only set when this specific person
+// genuinely takes a different amount of time than everyone else.
+type StaffRow = { name: string; duration: string };
+
 function SubmitButton({ label }: { label: string }) {
   const t = useTranslations('dashboard.services');
   const { pending } = useFormStatus();
@@ -24,6 +31,12 @@ function SubmitButton({ label }: { label: string }) {
 export function ServiceForm({
   action,
   defaultValues,
+  // Names already used by this company's OTHER services — offered as
+  // autocomplete suggestions (via <datalist>) so the same person typed once
+  // for "Corte" shows up as a pick for "Barba" too, instead of every service
+  // re-typing (and risking a typo that silently creates a second, unrelated
+  // "person" as far as conflict-checking is concerned).
+  existingStaffNames = [],
   submitLabel,
 }: {
   action: (prevState: ServiceFormState, formData: FormData) => Promise<ServiceFormState>;
@@ -38,12 +51,32 @@ export function ServiceForm({
     cancellationNoticeHours: number;
     cancellationFeeCents: number;
     staffNames: string[];
+    staffDurations?: Record<string, number>;
   };
+  existingStaffNames?: string[];
   submitLabel: string;
 }) {
   const t = useTranslations('dashboard.services');
   const [state, formAction] = useFormState(action, initialState);
   const [is24h, setIs24h] = useState(defaultValues?.is24h ?? false);
+  const [staffRows, setStaffRows] = useState<StaffRow[]>(() =>
+    defaultValues?.staffNames?.length
+      ? defaultValues.staffNames.map((name) => ({
+          name,
+          duration: defaultValues.staffDurations?.[name] ? String(defaultValues.staffDurations[name]) : '',
+        }))
+      : [{ name: '', duration: '' }],
+  );
+
+  function updateStaffRow(idx: number, patch: Partial<StaffRow>) {
+    setStaffRows((rows) => rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+  }
+  function addStaffRow() {
+    setStaffRows((rows) => [...rows, { name: '', duration: '' }]);
+  }
+  function removeStaffRow(idx: number) {
+    setStaffRows((rows) => (rows.length > 1 ? rows.filter((_, i) => i !== idx) : rows));
+  }
 
   const durationIsHours = !!defaultValues && defaultValues.durationMinutes % 60 === 0 && defaultValues.durationMinutes >= 60;
   const durationValue = defaultValues
@@ -96,12 +129,47 @@ export function ServiceForm({
 
       <div className="dash-form-row">
         <label>{t('formStaffLabel')}</label>
-        <input
-          name="staffNames"
-          defaultValue={defaultValues?.staffNames?.join(', ') ?? ''}
-          placeholder={t('formStaffPlaceholder')}
-        />
-        <span style={{ fontSize: 11.5, color: '#999' }}>{t('formStaffHint')}</span>
+        <p style={{ fontSize: 11.5, color: '#999', margin: '0 0 8px' }}>{t('formStaffHint')}</p>
+        <datalist id="known-staff-names">
+          {existingStaffNames.map((name) => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
+        {staffRows.map((row, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+            <input
+              name={`staffName_${idx}`}
+              list="known-staff-names"
+              required
+              value={row.name}
+              onChange={(e) => updateStaffRow(idx, { name: e.target.value })}
+              placeholder={t('formStaffNamePlaceholder')}
+              style={{ flex: 1 }}
+            />
+            <input
+              name={`staffDuration_${idx}`}
+              type="number"
+              min={1}
+              step="1"
+              value={row.duration}
+              onChange={(e) => updateStaffRow(idx, { duration: e.target.value })}
+              placeholder={t('formStaffDurationPlaceholder')}
+              style={{ width: 96 }}
+            />
+            <button
+              type="button"
+              onClick={() => removeStaffRow(idx)}
+              disabled={staffRows.length === 1}
+              className="dash-btn dash-btn-secondary"
+              style={{ padding: '4px 10px', flexShrink: 0 }}
+            >
+              {t('formStaffRemove')}
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={addStaffRow} className="dash-btn dash-btn-secondary" style={{ marginTop: 2 }}>
+          {t('formStaffAdd')}
+        </button>
       </div>
 
       <div className="dash-form-row">

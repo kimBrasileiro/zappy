@@ -23,6 +23,9 @@ export default async function ServicesPage() {
     where: { companyId },
     orderBy: { createdAt: 'desc' },
   });
+  // Autocomplete suggestions for the new-service form's staff rows — every
+  // name already in use somewhere in this company's catalog.
+  const existingStaffNames = [...new Set(services.flatMap((s) => s.staffNames))].sort();
 
   return (
     <>
@@ -37,7 +40,7 @@ export default async function ServicesPage() {
       </div>
 
       <div className="dash-card">
-        <ServiceForm action={createService} submitLabel={t('createLabel')} />
+        <ServiceForm action={createService} existingStaffNames={existingStaffNames} submitLabel={t('createLabel')} />
       </div>
 
       <table className="dash-table">

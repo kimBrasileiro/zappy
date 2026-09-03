@@ -36,6 +36,14 @@ model Service {
   // "no staff concept" — a single generic provider, the original behavior,
   // fully unaffected.
   staffNames      String[] @default([]) @map("staff_names")
+  // Per-staff-member duration override, Record<staffName, minutes> — a
+  // service can genuinely take different amounts of time depending on who
+  // performs it (e.g. "Corte" is 30min with Bruno, 45min with Ana). A name
+  // absent from this map falls back to durationMinutes above (the common
+  // case: most staff share the service's base duration, only outliers need
+  // an entry here). Keyed by the exact spelling in staffNames — see
+  // lib/bot/services.ts#resolveStaffDuration.
+  staffDurations  Json     @default("{}") @map("staff_durations")
   active          Boolean  @default(true)
   createdBy       String?  @map("created_by") @db.Uuid
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

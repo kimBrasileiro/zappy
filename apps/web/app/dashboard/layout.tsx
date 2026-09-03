@@ -12,7 +12,7 @@ import './dashboard.css';
 const ICON_CHAT = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const { companyId, isSuperAdmin, actualCompanyId } = await requireSession(); // redirects to /login or /onboarding when needed
+  const { companyId, email, isSuperAdmin, actualCompanyId } = await requireSession(); // redirects to /login or /onboarding when needed
   const t = await getTranslations('dashboard.impersonation');
 
   const isImpersonating = isSuperAdmin && companyId !== actualCompanyId;
@@ -26,9 +26,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <div className="dash-shell">
       <nav className="dash-nav">
-        <div className="dash-nav-brand">
-          <span className="dash-nav-logo" dangerouslySetInnerHTML={{ __html: ICON_CHAT }} />
-          Zappigo
+        <div className="dash-nav-brand" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="dash-nav-logo" dangerouslySetInnerHTML={{ __html: ICON_CHAT }} />
+            Zappigo
+          </div>
+          <span style={{ fontSize: 11.5, fontWeight: 400, color: '#8b8f9a', wordBreak: 'break-all' }}>{email}</span>
         </div>
         {isSuperAdmin && <CompanySwitcher companies={companies} currentCompanyId={companyId} />}
         <div style={{ padding: '0 8px 10px' }}>

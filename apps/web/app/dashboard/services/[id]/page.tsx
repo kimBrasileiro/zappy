@@ -17,6 +17,15 @@ export default async function EditServicePage({ params }: { params: { id: string
   const service = await prisma.service.findUnique({ where: { id: params.id } });
   if (!service || service.companyId !== companyId) notFound();
 
+  // Autocomplete suggestions for the staff rows — names already in use on
+  // this company's OTHER services (this one's own names are already in the
+  // form via defaultValues, no need to duplicate them here).
+  const otherServices = await prisma.service.findMany({
+    where: { companyId, id: { not: service.id } },
+    select: { staffNames: true },
+  });
+  const existingStaffNames = [...new Set(otherServices.flatMap((s) => s.staffNames))].sort();
+
   const absences =
     service.staffNames.length > 0
       ? await prisma.staffAbsence.findMany({
@@ -42,7 +51,9 @@ export default async function EditServicePage({ params }: { params: { id: string
             cancellationNoticeHours: service.cancellationNoticeHours,
             cancellationFeeCents: service.cancellationFeeCents,
             staffNames: service.staffNames,
+            staffDurations: service.staffDurations as Record<string, number>,
           }}
+          existingStaffNames={existingStaffNames}
           submitLabel={t('saveChanges')}
         />
       </div>

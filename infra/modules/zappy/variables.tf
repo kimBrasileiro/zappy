@@ -176,16 +176,6 @@ variable "pricing_amount_basico" {
   default = ""
 }
 
-variable "pricing_amount_whatsapp_proprio" {
-  type    = string
-  default = ""
-}
-
-variable "pricing_amount_integracao" {
-  type    = string
-  default = ""
-}
-
 # --- Cloud Run sizing (kept small on purpose — see ../../README.md#cost) --
 
 variable "min_instances" {

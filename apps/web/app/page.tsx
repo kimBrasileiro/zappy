@@ -12,7 +12,6 @@ import { PRICING_CURRENCY_CODE } from '../lib/pricing';
 const BRAND_COLOR = '#2563eb';
 const WHATSAPP_GREEN = '#25D366';
 
-const CHAT_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
 const ICON_WHATSAPP =
   '<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M12 2a10 10 0 0 0-8.66 15L2 22l5.14-1.31A10 10 0 1 0 12 2zm0 18.2a8.16 8.16 0 0 1-4.17-1.14l-.3-.18-3.05.78.82-2.97-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81s-.4-.12-.56.12-.63.81-.78.97-.28.19-.53.06a6.7 6.7 0 0 1-1.97-1.22 7.4 7.4 0 0 1-1.36-1.7c-.14-.25 0-.38.11-.5s.25-.29.37-.44a1.6 1.6 0 0 0 .25-.41.46.46 0 0 0 0-.44c-.06-.12-.56-1.35-.77-1.85s-.4-.42-.56-.43h-.48a.9.9 0 0 0-.66.31 2.76 2.76 0 0 0-.86 2.05 4.78 4.78 0 0 0 1 2.54 10.9 10.9 0 0 0 4.19 3.7c.58.25 1.04.4 1.4.51a3.37 3.37 0 0 0 1.54.1 2.52 2.52 0 0 0 1.65-1.16 2 2 0 0 0 .14-1.16c-.06-.1-.22-.16-.47-.28z"/></svg>';
 
@@ -98,20 +97,8 @@ export default async function HomePage({ searchParams }: PageProps) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 9,
-              background: BRAND_COLOR,
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            dangerouslySetInnerHTML={{ __html: CHAT_ICON.replace('width="24"', 'width="17"').replace('height="24"', 'height="17"') }}
-          />
-          <span style={{ fontWeight: 700, fontSize: 15 }}>Zappigo</span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset, no need for next/image here */}
+          <img src="/zappigo-logo.png" alt="Zappigo" style={{ height: 34, width: 'auto' }} />
           <span style={{ color: '#999', fontSize: 13 }}>· {t('tagline')}</span>
         </div>
         <LocaleSwitcher />

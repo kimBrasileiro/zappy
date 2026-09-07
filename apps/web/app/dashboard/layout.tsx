@@ -9,10 +9,12 @@ import { LocaleSwitcher } from '../locale-switcher';
 import { stopImpersonating } from './impersonate-actions';
 import './dashboard.css';
 
-const ICON_CHAT = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16v12H7l-3 3V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
-
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const { companyId, email, isSuperAdmin, actualCompanyId } = await requireSession(); // redirects to /login or /onboarding when needed
+  // allowInactiveBilling: true — this layout wraps /dashboard/billing itself
+  // (where a suspended company needs to land to see why and reactivate), so
+  // it can't be the thing enforcing the gate; each individual page does that
+  // via its own plain requireSession() call instead (see lib/auth-server.ts).
+  const { companyId, email, isSuperAdmin, actualCompanyId } = await requireSession({ allowInactiveBilling: true }); // redirects to /login or /onboarding when needed
   const t = await getTranslations('dashboard.impersonation');
 
   const isImpersonating = isSuperAdmin && companyId !== actualCompanyId;
@@ -28,7 +30,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       <nav className="dash-nav">
         <div className="dash-nav-brand" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="dash-nav-logo" dangerouslySetInnerHTML={{ __html: ICON_CHAT }} />
+            {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset, no need for next/image here */}
+            <img src="/zappigo-icon.png" alt="" width={28} height={28} style={{ borderRadius: 9, flexShrink: 0 }} />
             Zappigo
           </div>
           <span style={{ fontSize: 11.5, fontWeight: 400, color: '#8b8f9a', wordBreak: 'break-all' }}>{email}</span>

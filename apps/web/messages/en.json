@@ -22,6 +22,7 @@
       "leads": "Leads",
       "installation": "Installation",
       "integrations": "Integrations",
+      "billing": "Billing",
       "support": "Support"
     },
     "impersonation": {
@@ -205,6 +206,9 @@
       "formPriceLabel": "Price (R$)",
       "formStaffLabel": "Who does this service",
       "formStaffNamePlaceholder": "Staff member's name",
+      "formStaffSelectPlaceholder": "Select a staff member",
+      "formStaffNewOption": "+ New staff member...",
+      "formStaffBackToList": "Choose from list",
       "formStaffDurationPlaceholder": "min. (optional)",
       "formStaffAdd": "+ add staff member",
       "formStaffRemove": "Remove",
@@ -270,6 +274,11 @@
       "attendedButton": "Attended",
       "attendedTitle": "Mark that the customer attended",
       "noShowButton": "No-show",
+      "absenceTitle": "Day off on {date}",
+      "absenceRemove": "Remove",
+      "absenceStaffPlaceholder": "Select who was absent",
+      "absenceSaving": "Saving...",
+      "absenceAddButton": "Mark absent",
       "noShowTitle": "Mark that the customer didn't show up",
       "cancelButton": "Cancel"
     },
@@ -296,13 +305,17 @@
       "statusIncomplete": "Awaiting payment",
       "statusIncompleteExpired": "Expired",
       "statusUnpaid": "Unpaid",
-      "planBasico": "Basic",
-      "planWhatsappProprio": "Own WhatsApp",
-      "planIntegracao": "Integration with your system",
+      "planBasico": "Zappigo",
       "launchBadge": "Launch period — free",
       "launchBody": "Your account uses Zappigo at no cost, with the platform's shared WhatsApp number — no card, no charge. If that changes in the future, we'll give plenty of notice before any charge begins.",
       "billingNotConfigured": "Billing isn't set up on this instance yet — contact support.",
       "noActiveSubscription": "Your company doesn't have an active subscription yet.",
+      "startSubscriptionButton": "Subscribe now",
+      "startingSubscription": "Starting...",
+      "trialFootnote": "7-day free trial — cancel anytime, no fee.",
+      "errorStartSubscriptionFailed": "Couldn't start the subscription right now. Try again in a moment or contact support.",
+      "noPaymentMethodWarning": "There's no card on file for this subscription yet — add one before the trial ends to avoid losing access.",
+      "addPaymentMethodButton": "Add card",
       "perMonthSuffix": "/month",
       "trialEndsAt": "Your trial ends on {date} — the card on file will be charged automatically after that.",
       "willCancelAt": "Your subscription is set to cancel on {date}. You'll keep normal access until then.",
@@ -531,33 +544,14 @@
       },
       "plans": [
         {
-          "name": "Basic",
+          "name": "Zappigo",
           "period": "/mo",
           "items": [
             "Dashboard for appointments, conversations, and FAQ",
             "Chat widget for your site",
             "Zappigo's shared WhatsApp number",
-            "Handoff to human support"
-          ],
-          "cta": "Get started"
-        },
-        {
-          "name": "Own WhatsApp number",
-          "period": "/mo",
-          "items": [
-            "Everything in Basic",
-            "A WhatsApp number exclusive to your business",
-            "Onboarding assisted by our team"
-          ],
-          "cta": "Get started"
-        },
-        {
-          "name": "Integrate with your system",
-          "period": "/mo",
-          "items": [
-            "Everything in Basic",
-            "Connects to the scheduling system you already use",
-            "No new tool for your team to learn"
+            "Handoff to human support",
+            "7-day free trial"
           ],
           "cta": "Get started"
         }
@@ -592,7 +586,7 @@
         {
           "question": "How much does it cost?",
           "answerFree": "Nothing! We're in our launch period and Zappigo is free for everyone, including the chat widget for your site and a shared WhatsApp number. No card, no catch.",
-          "answerPaid": "The Basic plan costs {priceBasico}/month and already includes the chat widget for your site and a shared Zappigo WhatsApp number. If you want a WhatsApp number exclusive to your business, the plan costs {priceWhatsapp}/month; to connect to a scheduling system you already use, it's {priceIntegracao}/month. Each plan includes everything in Basic. Every plan has a 7-day free trial."
+          "answerPaid": "The plan costs {priceBasico}/month and includes the bookings dashboard, the chat widget for your site, and a shared Zappigo WhatsApp number. 7-day free trial before any charge."
         },
         {
           "question": "How does automatic scheduling work?",
@@ -786,6 +780,24 @@
     "signupWithGoogle": "Sign up with Google",
     "noAccountYet": "Don't have an account?",
     "createAccountLink": "Create account",
+    "forgotPasswordLink": "Forgot your password?",
+    "backToLoginLink": "Back to login",
+    "forgotPasswordTitle": "Forgot your password?",
+    "forgotPasswordBody": "Enter your email and we'll send you a link to create a new password.",
+    "forgotPasswordSubmit": "Send link",
+    "forgotPasswordSending": "Sending...",
+    "forgotPasswordSentTitle": "Check your email",
+    "forgotPasswordSentBody": "If that email has a Zappigo account, you'll get a link to create a new password shortly.",
+    "resetPasswordInvalidTitle": "Invalid or expired link",
+    "resetPasswordInvalidBody": "This password reset link isn't valid — it may have already been used or expired. Request a new one.",
+    "resetPasswordRequestNewLink": "Request new link",
+    "resetPasswordDoneTitle": "Password reset!",
+    "resetPasswordDoneBody": "Your password was changed successfully. You can now log in with the new one.",
+    "resetPasswordTitle": "Create new password",
+    "resetPasswordNewLabel": "New password",
+    "resetPasswordSubmit": "Save new password",
+    "resetPasswordSaving": "Saving...",
+    "resetPasswordError": "Couldn't reset the password — the link may have expired. Request a new one.",
     "alreadyHaveAccount": "Already have an account?",
     "loginLink": "Log in",
     "errorEmailNotVerified": "You need to confirm your email before logging in — check your inbox.",
@@ -830,6 +842,7 @@
     "onboardingContinue": "Continue",
     "errorFillAllFields": "Fill in all fields.",
     "errorMustAcceptTerms": "You need to accept the Terms of Use and Privacy Policy to continue.",
+    "errorCompanyNameTaken": "There's already a company registered with that name — pick a different one (helps customers reach the right one on WhatsApp).",
     "errorAccountCreationFailed": "Couldn't create the account.",
     "errorCompanyNameRequired": "Enter your company's name.",
     "passwordTooShort": "Password must be at least 10 characters.",

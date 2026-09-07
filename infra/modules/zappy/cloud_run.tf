@@ -17,12 +17,17 @@ locals {
       WHATSAPP_DEFAULT_COUNTRY_CODE      = var.whatsapp_default_country_code
       DEFAULT_LOCALE                     = var.default_locale
       DEFAULT_TIMEZONE                   = var.default_timezone
-      PRICING_CURRENCY_SYMBOL            = var.pricing_currency_symbol
-      PRICING_CURRENCY_CODE              = var.pricing_currency_code
-      PRICING_AMOUNT_FREE                = var.pricing_amount_free
-      PRICING_AMOUNT_BASICO              = var.pricing_amount_basico
-      PRICING_AMOUNT_WHATSAPP_PROPRIO    = var.pricing_amount_whatsapp_proprio
-      PRICING_AMOUNT_INTEGRACAO          = var.pricing_amount_integracao
+      // NEXT_PUBLIC_-prefixed — apps/web/lib/pricing.ts is imported from
+      // client components (signup/onboarding show the plan's price in the
+      // browser), and only NEXT_PUBLIC_* env vars get statically inlined
+      // into the client bundle at build time; a plain server-side var here
+      // would read as undefined in the browser regardless of this actual
+      // runtime value (confirmed as a real bug: signup showed the
+      // hardcoded '197' fallback forever, no matter what this was set to).
+      NEXT_PUBLIC_PRICING_CURRENCY_SYMBOL = var.pricing_currency_symbol
+      NEXT_PUBLIC_PRICING_CURRENCY_CODE   = var.pricing_currency_code
+      NEXT_PUBLIC_PRICING_AMOUNT_FREE     = var.pricing_amount_free
+      NEXT_PUBLIC_PRICING_AMOUNT_BASICO   = var.pricing_amount_basico
     } : k => v if v != ""
   }
 }

@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { requireSession } from '../../../../../lib/auth-server';
+import { STATE_COOKIE } from '../../../../../lib/google-calendar/oauth-state';
 
 // A separate Google OAuth Client from login's (lib/auth.ts's
 // socialProviders.google, GOOGLE_CLIENT_ID/SECRET) — GOOGLE_CALENDAR_CLIENT_ID/
@@ -10,7 +11,6 @@ import { requireSession } from '../../../../../lib/auth-server';
 // keeping them as two Cloud Console OAuth Clients means a compromised
 // Calendar credential can't touch the login flow or vice versa.
 const REDIRECT_PATH = '/api/integrations/google-calendar/callback';
-export const STATE_COOKIE = 'zappigo_gcal_oauth_state';
 
 export async function GET() {
   await requireSession(); // redirects to /login if not authenticated

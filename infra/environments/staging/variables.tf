@@ -53,6 +53,11 @@ variable "resend_from_email" {
   default = "Zappigo <naoresponda@mail.zappigo.com.br>"
 }
 
+variable "pricing_amount_basico" {
+  type    = string
+  default = "19"
+}
+
 variable "whatsapp_phone_number_id" {
   type    = string
   default = ""

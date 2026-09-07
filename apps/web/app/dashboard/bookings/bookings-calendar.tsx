@@ -1,14 +1,23 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Calendar, dateFnsLocalizer, type Event } from 'react-big-calendar';
+import { useRouter } from 'next/navigation';
+import { Calendar, dateFnsLocalizer, type Event, type SlotInfo } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
 import type { Booking, Customer, Service } from '@zappigo/db';
 import { cancelBooking, markBookingAttended, markBookingNoShow } from './actions';
+import { addStaffAbsence, removeStaffAbsence } from '../services/actions';
 import { toWallClock } from '../../../lib/format-time';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+type StaffService = { id: string; name: string; staffNames: string[] };
+type AbsenceRow = { id: string; serviceId: string; staffName: string; date: Date };
+
+function dateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 // The calendar grid itself (month/week names, "next"/"today" chrome) stays
 // pt-BR-locale — same scope cut as scheduledAt formatting throughout this
@@ -67,9 +76,57 @@ function toWallClockLocalDate(d: Date, timeZone: string): Date {
 
 type BookingEvent = Event & { resource: BookingWithRelations };
 
-export function BookingsCalendar({ bookings, timeZone }: { bookings: BookingWithRelations[]; timeZone: string }) {
+export function BookingsCalendar({
+  bookings,
+  timeZone,
+  staffServices,
+  absences,
+}: {
+  bookings: BookingWithRelations[];
+  timeZone: string;
+  staffServices: StaffService[];
+  absences: AbsenceRow[];
+}) {
   const t = useTranslations('dashboard.bookings');
+  const router = useRouter();
   const [selected, setSelected] = useState<BookingWithRelations | null>(null);
+  const [absenceDate, setAbsenceDate] = useState<Date | null>(null);
+  const [absenceServiceId, setAbsenceServiceId] = useState('');
+  const [absenceStaffName, setAbsenceStaffName] = useState('');
+  const [absencePending, setAbsencePending] = useState(false);
+  const [absenceError, setAbsenceError] = useState<string | null>(null);
+
+  const absenceService = staffServices.find((s) => s.id === absenceServiceId) ?? null;
+  const absencesForDay = absenceDate ? absences.filter((a) => dateKey(a.date) === dateKey(absenceDate)) : [];
+
+  function openAbsencePopover(date: Date) {
+    setAbsenceDate(date);
+    setAbsenceServiceId(staffServices[0]?.id ?? '');
+    setAbsenceStaffName('');
+    setAbsenceError(null);
+  }
+
+  async function handleAddAbsence() {
+    if (!absenceDate || !absenceServiceId || !absenceStaffName) return;
+    setAbsencePending(true);
+    setAbsenceError(null);
+    const formData = new FormData();
+    formData.set('staffName', absenceStaffName);
+    formData.set('date', dateKey(absenceDate));
+    const result = await addStaffAbsence(absenceServiceId, {}, formData);
+    setAbsencePending(false);
+    if (result.error) {
+      setAbsenceError(result.error);
+      return;
+    }
+    setAbsenceStaffName('');
+    router.refresh();
+  }
+
+  async function handleRemoveAbsence(serviceId: string, absenceId: string) {
+    await removeStaffAbsence(serviceId, absenceId);
+    router.refresh();
+  }
 
   const statusLabel: Record<string, string> = {
     confirmed: t('statusConfirmed'),
@@ -110,6 +167,8 @@ export function BookingsCalendar({ bookings, timeZone }: { bookings: BookingWith
           },
         })}
         onSelectEvent={(event) => setSelected((event as BookingEvent).resource)}
+        selectable={staffServices.length > 0}
+        onSelectSlot={(slotInfo: SlotInfo) => openAbsencePopover(slotInfo.start)}
       />
 
       {selected && (
@@ -139,6 +198,78 @@ export function BookingsCalendar({ bookings, timeZone }: { bookings: BookingWith
                 <form action={async () => { await cancelBooking(selected.id); setSelected(null); }}>
                   <button type="submit" className="dash-btn dash-btn-danger">{t('cancelButton')}</button>
                 </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {absenceDate && (
+        <div className="dash-calendar-popover-backdrop" onClick={() => setAbsenceDate(null)}>
+          <div className="dash-card dash-calendar-popover" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>
+              {t('absenceTitle', { date: absenceDate.toLocaleDateString('pt-BR') })}
+            </h3>
+
+            {absencesForDay.length > 0 && (
+              <ul style={{ listStyle: 'none', margin: '0 0 14px', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {absencesForDay.map((a) => {
+                  const service = staffServices.find((s) => s.id === a.serviceId);
+                  return (
+                    <li key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5 }}>
+                      <span>
+                        {a.staffName} — {service?.name ?? a.serviceId}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAbsence(a.serviceId, a.id)}
+                        className="dash-btn dash-btn-secondary"
+                        style={{ padding: '3px 9px', fontSize: 12 }}
+                      >
+                        {t('absenceRemove')}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {staffServices.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {absenceError && <div style={{ color: '#b91c1c', fontSize: 13 }}>{absenceError}</div>}
+                {staffServices.length > 1 && (
+                  <select
+                    value={absenceServiceId}
+                    onChange={(e) => {
+                      setAbsenceServiceId(e.target.value);
+                      setAbsenceStaffName('');
+                    }}
+                  >
+                    {staffServices.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <select value={absenceStaffName} onChange={(e) => setAbsenceStaffName(e.target.value)}>
+                  <option value="" disabled>
+                    {t('absenceStaffPlaceholder')}
+                  </option>
+                  {(absenceService?.staffNames ?? []).map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleAddAbsence}
+                  disabled={!absenceStaffName || absencePending}
+                  className="dash-btn"
+                >
+                  {absencePending ? t('absenceSaving') : t('absenceAddButton')}
+                </button>
               </div>
             )}
           </div>

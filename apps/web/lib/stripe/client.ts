@@ -26,13 +26,10 @@ export function getStripe(): Stripe {
   return client;
 }
 
-// The 3 tiers from the marketing page (marketing-home.tsx#PRICING) — each
-// needs a real Price object created in the Stripe dashboard once there's an
-// account; the env var just holds that Price's id (price_...).
+// The single plan (plans.ts#PLANS) — needs a real Price object created in
+// Stripe; the env var just holds that Price's id (price_...).
 export const PLAN_PRICE_ENV_VARS = {
   basico: 'STRIPE_PRICE_BASICO',
-  whatsapp_proprio: 'STRIPE_PRICE_WHATSAPP_PROPRIO',
-  integracao: 'STRIPE_PRICE_INTEGRACAO',
 } as const;
 
 export type PlanKey = keyof typeof PLAN_PRICE_ENV_VARS;
@@ -46,12 +43,20 @@ export function priceIdForPlan(plan: PlanKey): string | null {
 }
 
 // Company.status ('active' | 'inactive') is the only thing
-// guardrails.ts#checkCompanyActive looks at — this is the single place that
-// decides what each Stripe subscription status means for that gate, so the
-// mapping can't drift between the webhook handler and anywhere else that
-// might need it later.
-export function isBillingActive(subscriptionStatus: string | null): boolean {
-  return subscriptionStatus === 'trialing' || subscriptionStatus === 'active';
+// guardrails.ts#checkCompanyActive looks at, and lib/auth-server.ts's own
+// dashboard billing gate uses this same function — the single place that
+// decides what "billing is really active" means, so the two can't drift
+// apart. "trialing" alone is deliberately NOT enough: Stripe lets a
+// trialing subscription exist with zero payment method attached (see
+// startTrialSubscription's own comment on pending_setup_intent always being
+// null for a trial) — a company that started the flow but never actually
+// finished the card step must stay gated, not get in on the trial's status
+// string alone. "active" already proves a card worked (Stripe couldn't have
+// billed the first invoice without one), so it doesn't need this check.
+export function isBillingActive(subscriptionStatus: string | null, hasPaymentMethod: boolean): boolean {
+  if (subscriptionStatus === 'active') return true;
+  if (subscriptionStatus === 'trialing') return hasPaymentMethod;
+  return false;
 }
 
 // Shared by both places a company gets created with billing already wired up
@@ -88,7 +93,6 @@ export async function startTrialSubscription(params: {
     trial_period_days: 7,
     payment_behavior: 'default_incomplete',
     payment_settings: { save_default_payment_method: 'on_subscription' },
-    expand: ['pending_setup_intent'],
   });
 
   await prisma.company.update({
@@ -107,6 +111,20 @@ export async function startTrialSubscription(params: {
     planLabel: PLANS.find((p) => p.key === params.plan)?.label ?? params.plan,
   });
 
-  const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null;
-  return setupIntent?.client_secret ?? null;
+  // Confirmed against Stripe directly: a trialing subscription's own
+  // pending_setup_intent stays null — there's no invoice due yet for Stripe
+  // to attach one to, regardless of payment_behavior/payment_settings above
+  // (those only govern what happens once a REAL invoice shows up, at trial
+  // end). Collecting a card up front (so trial-abuse is prevented and the
+  // trial-end charge doesn't just fail) needs its own, explicit SetupIntent
+  // — api/webhooks/stripe/route.ts#setup_intent.succeeded is what actually
+  // attaches the resulting payment method to this subscription once the
+  // customer confirms it.
+  const setupIntent = await stripe.setupIntents.create({
+    customer: customer.id,
+    payment_method_types: ['card'],
+    usage: 'off_session',
+    metadata: { companyId: params.companyId, subscriptionId: subscription.id },
+  });
+  return setupIntent.client_secret;
 }

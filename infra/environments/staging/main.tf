@@ -31,6 +31,7 @@ module "zappy" {
   google_client_id          = var.google_client_id
   google_calendar_client_id = var.google_calendar_client_id
   resend_from_email         = var.resend_from_email
+  pricing_amount_basico     = var.pricing_amount_basico
   whatsapp_phone_number_id  = var.whatsapp_phone_number_id
   whatsapp_number           = var.whatsapp_number
 

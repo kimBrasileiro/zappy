@@ -8,6 +8,8 @@ import { BookingsCalendar } from './bookings-calendar';
 import { formatDateTime } from '../../../lib/format-time';
 
 type BookingWithRelations = Booking & { service: Service; customer: Customer | null };
+type StaffService = { id: string; name: string; staffNames: string[] };
+type AbsenceRow = { id: string; serviceId: string; staffName: string; date: Date };
 
 const STATUS_BADGE: Record<string, string> = {
   confirmed: 'dash-badge-in_progress',
@@ -25,11 +27,15 @@ export function BookingsView({
   emptyLabel,
   locale,
   timeZone,
+  staffServices,
+  absences,
 }: {
   bookings: BookingWithRelations[];
   emptyLabel: string;
   locale: string;
   timeZone: string;
+  staffServices: StaffService[];
+  absences: AbsenceRow[];
 }) {
   const t = useTranslations('dashboard.bookings');
   const [view, setView] = useState<'list' | 'calendar'>('list');
@@ -61,7 +67,7 @@ export function BookingsView({
       </div>
 
       {view === 'calendar' ? (
-        <BookingsCalendar bookings={bookings} timeZone={timeZone} />
+        <BookingsCalendar bookings={bookings} timeZone={timeZone} staffServices={staffServices} absences={absences} />
       ) : (
         <table className="dash-table">
           <thead>

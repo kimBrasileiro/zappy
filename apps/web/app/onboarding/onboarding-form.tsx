@@ -28,8 +28,6 @@ export function OnboardingForm() {
 
   const planLabels: Record<string, string> = {
     basico: tb('planBasico'),
-    whatsapp_proprio: tb('planWhatsappProprio'),
-    integracao: tb('planIntegracao'),
   };
   const businessTypeLabels: Record<string, string> = {
     salao_beleza: t('businessTypeSalaoBeleza'),
@@ -78,12 +76,11 @@ export function OnboardingForm() {
       {stripeConfiguredOnClient && (
         <div style={s.label}>
           {t('planSectionLabel')}
-          {PLANS.map((p, i) => (
-            <label key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 400 }}>
-              <input type="radio" name="plan" value={p.key} defaultChecked={i === 0} />
-              {planLabels[p.key] ?? p.label} — {p.price}{tb('perMonthSuffix')}
-            </label>
-          ))}
+          <input type="hidden" name="plan" value={PLANS[0].key} />
+          <p style={{ fontWeight: 400, margin: '4px 0 0', fontSize: 14 }}>
+            {planLabels[PLANS[0].key] ?? PLANS[0].label} — {PLANS[0].price}
+            {tb('perMonthSuffix')}
+          </p>
         </div>
       )}
 

@@ -50,6 +50,17 @@ model Company {
   stripeCustomerId       String?  @map("stripe_customer_id")
   stripeSubscriptionId   String?  @map("stripe_subscription_id")
   subscriptionStatus     String?  @map("subscription_status")
+  // A "trialing" subscription can exist with zero payment method attached —
+  // Stripe never forces one just because a trial started (see
+  // lib/stripe/client.ts#startTrialSubscription's own comment on why the
+  // subscription's pending_setup_intent is always null for a trial). This is
+  // what lets lib/stripe/client.ts#isBillingActive tell "real trial, card on
+  // file" apart from "subscription exists but nobody's finished checkout
+  // yet" — kept in sync by api/webhooks/stripe/route.ts on every
+  // subscription event (derived straight from Stripe's own
+  // default_payment_method) AND immediately on setup_intent.succeeded,
+  // rather than requiring a live Stripe call on every dashboard request.
+  hasPaymentMethod       Boolean  @default(false) @map("has_payment_method")
   // Mirrors Stripe's Subscription.cancel_at_period_end — without this, the
   // DB has no record at all of "will cancel at period end" (Stripe's status
   // string itself doesn't change until the period actually ends), which

@@ -15,8 +15,16 @@ export type BusinessHours = Record<string, [string, string] | null>;
 // really a person's own agenda, not an abstract slot; see
 // lib/bot/services.ts#resolveStaffDuration). `duration` empty means "use
 // this service's own base duration" — only set when this specific person
-// genuinely takes a different amount of time than everyone else.
-type StaffRow = { name: string; duration: string };
+// genuinely takes a different amount of time than everyone else. `isNew`
+// toggles the row between picking an existing person from the dropdown and
+// typing a brand-new name — see the NEW_STAFF_VALUE sentinel below.
+type StaffRow = { name: string; duration: string; isNew: boolean };
+
+// Not a real name (staff names are user-typed free text — see
+// dashboard/services/actions.ts#parseStaffRows — so any sentinel risks
+// colliding with a real one; this string never appears in a <select> built
+// from real names, only as the one hardcoded "add new" option's value).
+const NEW_STAFF_VALUE = '__new__';
 
 function SubmitButton({ label }: { label: string }) {
   const t = useTranslations('dashboard.services');
@@ -59,20 +67,34 @@ export function ServiceForm({
   const t = useTranslations('dashboard.services');
   const [state, formAction] = useFormState(action, initialState);
   const [is24h, setIs24h] = useState(defaultValues?.is24h ?? false);
+  // A row starts in "new name" mode only when there's genuinely nothing to
+  // pick from yet — otherwise it starts on the dropdown, sentinel-selected
+  // (forces an explicit choice rather than silently defaulting to whichever
+  // name happens to sort first).
+  const newRow = (): StaffRow => ({ name: '', duration: '', isNew: existingStaffNames.length === 0 });
+
   const [staffRows, setStaffRows] = useState<StaffRow[]>(() =>
     defaultValues?.staffNames?.length
       ? defaultValues.staffNames.map((name) => ({
           name,
           duration: defaultValues.staffDurations?.[name] ? String(defaultValues.staffDurations[name]) : '',
+          // This service's OWN current names are deliberately excluded from
+          // existingStaffNames (see the two page.tsx callers) so editing
+          // doesn't offer "this same service" as if it were a different
+          // person — the dropdown re-adds each row's own name as an option
+          // below, but a name unique to this service still isn't anywhere
+          // else in the company, so there's nothing meaningful to "pick"
+          // instead of it — starts in free-text mode in that case.
+          isNew: !existingStaffNames.includes(name),
         }))
-      : [{ name: '', duration: '' }],
+      : [newRow()],
   );
 
   function updateStaffRow(idx: number, patch: Partial<StaffRow>) {
     setStaffRows((rows) => rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
   }
   function addStaffRow() {
-    setStaffRows((rows) => [...rows, { name: '', duration: '' }]);
+    setStaffRows((rows) => [...rows, newRow()]);
   }
   function removeStaffRow(idx: number) {
     setStaffRows((rows) => (rows.length > 1 ? rows.filter((_, i) => i !== idx) : rows));
@@ -130,43 +152,79 @@ export function ServiceForm({
       <div className="dash-form-row">
         <label>{t('formStaffLabel')}</label>
         <p style={{ fontSize: 11.5, color: '#999', margin: '0 0 8px' }}>{t('formStaffHint')}</p>
-        <datalist id="known-staff-names">
-          {existingStaffNames.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
-        {staffRows.map((row, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-            <input
-              name={`staffName_${idx}`}
-              list="known-staff-names"
-              required
-              value={row.name}
-              onChange={(e) => updateStaffRow(idx, { name: e.target.value })}
-              placeholder={t('formStaffNamePlaceholder')}
-              style={{ flex: 1 }}
-            />
-            <input
-              name={`staffDuration_${idx}`}
-              type="number"
-              min={1}
-              step="1"
-              value={row.duration}
-              onChange={(e) => updateStaffRow(idx, { duration: e.target.value })}
-              placeholder={t('formStaffDurationPlaceholder')}
-              style={{ width: 96 }}
-            />
-            <button
-              type="button"
-              onClick={() => removeStaffRow(idx)}
-              disabled={staffRows.length === 1}
-              className="dash-btn dash-btn-secondary"
-              style={{ padding: '4px 10px', flexShrink: 0 }}
-            >
-              {t('formStaffRemove')}
-            </button>
-          </div>
-        ))}
+        {staffRows.map((row, idx) => {
+          // Every row's own current name is offered even if it isn't in
+          // existingStaffNames (unique to this service, or not chosen yet)
+          // — otherwise switching back from free-text mode would have
+          // nothing to reselect it with.
+          const options = row.name && !existingStaffNames.includes(row.name)
+            ? [...existingStaffNames, row.name]
+            : existingStaffNames;
+          return (
+            <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+              {row.isNew ? (
+                <input
+                  name={`staffName_${idx}`}
+                  required
+                  value={row.name}
+                  onChange={(e) => updateStaffRow(idx, { name: e.target.value })}
+                  placeholder={t('formStaffNamePlaceholder')}
+                  style={{ flex: 1 }}
+                />
+              ) : (
+                <select
+                  name={`staffName_${idx}`}
+                  required
+                  value={row.name}
+                  onChange={(e) => {
+                    if (e.target.value === NEW_STAFF_VALUE) updateStaffRow(idx, { name: '', isNew: true });
+                    else updateStaffRow(idx, { name: e.target.value });
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  <option value="" disabled>
+                    {t('formStaffSelectPlaceholder')}
+                  </option>
+                  {options.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                  <option value={NEW_STAFF_VALUE}>{t('formStaffNewOption')}</option>
+                </select>
+              )}
+              {row.isNew && options.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => updateStaffRow(idx, { name: '', isNew: false })}
+                  className="dash-btn dash-btn-secondary"
+                  style={{ padding: '4px 10px', flexShrink: 0 }}
+                >
+                  {t('formStaffBackToList')}
+                </button>
+              )}
+              <input
+                name={`staffDuration_${idx}`}
+                type="number"
+                min={1}
+                step="1"
+                value={row.duration}
+                onChange={(e) => updateStaffRow(idx, { duration: e.target.value })}
+                placeholder={t('formStaffDurationPlaceholder')}
+                style={{ width: 96, flexShrink: 0 }}
+              />
+              <button
+                type="button"
+                onClick={() => removeStaffRow(idx)}
+                disabled={staffRows.length === 1}
+                className="dash-btn dash-btn-secondary"
+                style={{ padding: '4px 10px', flexShrink: 0 }}
+              >
+                {t('formStaffRemove')}
+              </button>
+            </div>
+          );
+        })}
         <button type="button" onClick={addStaffRow} className="dash-btn dash-btn-secondary" style={{ marginTop: 2 }}>
           {t('formStaffAdd')}
         </button>

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { auth } from '../../lib/auth';
-import { generateUniqueSlug } from '../../lib/slug';
+import { generateUniqueSlug, isCompanyNameTaken } from '../../lib/slug';
 import { createDefaultFaqs } from '../../lib/default-faqs';
 import { getDeploymentDefaultLocale } from '../../i18n/default-locale';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../lib/stripe/client';
@@ -41,6 +41,9 @@ export async function completeOnboarding(
   }
   if (formData.get('terms') !== 'on') {
     return { error: t('errorMustAcceptTerms') };
+  }
+  if (await isCompanyNameTaken(companyName)) {
+    return { error: t('errorCompanyNameTaken') };
   }
 
   const stripeEnabled = isStripeConfigured();

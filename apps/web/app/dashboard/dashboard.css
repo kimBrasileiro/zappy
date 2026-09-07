@@ -71,22 +71,6 @@
   margin-bottom: 14px;
 }
 
-.dash-nav-logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--dash-brand) 0%, var(--dash-brand-dark) 100%);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
-}
-.dash-nav-logo svg {
-  width: 15px;
-  height: 15px;
-}
 
 .dash-nav-link {
   color: #9ca3af;

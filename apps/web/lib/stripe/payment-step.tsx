@@ -8,7 +8,7 @@ import { authStyles as s } from '../../app/(auth)/auth-styles';
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
-function ConfirmCardForm() {
+function ConfirmCardForm({ returnPath }: { returnPath: string }) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -20,14 +20,14 @@ function ConfirmCardForm() {
     setSubmitting(true);
     setError(null);
 
-    // No charge happens here — this is a SetupIntent (see signup/actions.ts
-    // and onboarding/actions.ts), it only attaches a payment method to the
-    // subscription for when the 7-day trial ends. On success Stripe redirects
-    // to return_url itself; we only ever see this function return when it
-    // *didn't* succeed.
+    // No charge happens here — this is a SetupIntent (see signup/actions.ts,
+    // onboarding/actions.ts and dashboard/billing/actions.ts), it only
+    // attaches a payment method to the subscription for when the 7-day
+    // trial ends. On success Stripe redirects to return_url itself; we only
+    // ever see this function return when it *didn't* succeed.
     const { error: confirmError } = await stripe.confirmSetup({
       elements,
-      confirmParams: { return_url: `${window.location.origin}/dashboard` },
+      confirmParams: { return_url: `${window.location.origin}${returnPath}` },
     });
 
     if (confirmError) {
@@ -47,7 +47,7 @@ function ConfirmCardForm() {
   );
 }
 
-export function PaymentStep({ clientSecret }: { clientSecret: string }) {
+export function PaymentStep({ clientSecret, returnPath = '/dashboard' }: { clientSecret: string; returnPath?: string }) {
   if (!stripePromise) {
     return (
       <div style={s.error}>
@@ -57,7 +57,7 @@ export function PaymentStep({ clientSecret }: { clientSecret: string }) {
   }
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <ConfirmCardForm />
+      <ConfirmCardForm returnPath={returnPath} />
     </Elements>
   );
 }

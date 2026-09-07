@@ -1,7 +1,7 @@
 import Script from 'next/script';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { FREE_TIER_MODE } from '../lib/stripe/plans';
-import { PRICE_BASICO, PRICE_FREE, PRICE_INTEGRACAO, PRICING_CURRENCY_CODE, PRICE_WHATSAPP_PROPRIO } from '../lib/pricing';
+import { PRICE_BASICO, PRICE_FREE, PRICING_CURRENCY_CODE } from '../lib/pricing';
 import { LocaleSwitcher } from './locale-switcher';
 
 const BRAND_COLOR = '#2563eb';
@@ -88,24 +88,20 @@ export async function MarketingHome() {
   const demoQuickReplies = (t.raw('demoQuickReplies') as string[]).join('|');
 
   // t.raw() bypasses ICU interpolation (it hands back the literal string,
-  // placeholders and all) — the "quanto custa" answer's {priceBasico}/
-  // {priceWhatsapp}/{priceIntegracao} placeholders need substituting by
-  // hand with the same deployment-config prices used in the pricing
-  // section above, not hardcoded translated amounts.
+  // placeholders and all) — the "quanto custa" answer's {priceBasico}
+  // placeholder needs substituting by hand with the same deployment-config
+  // price used in the pricing section above, not a hardcoded translated
+  // amount.
   for (const item of faqItems) {
     if (item.answerPaid) {
-      item.answerPaid = item.answerPaid
-        .replace('{priceBasico}', PRICE_BASICO)
-        .replace('{priceWhatsapp}', PRICE_WHATSAPP_PROPRIO)
-        .replace('{priceIntegracao}', PRICE_INTEGRACAO);
+      item.answerPaid = item.answerPaid.replace('{priceBasico}', PRICE_BASICO);
     }
   }
 
-  // Prices are deployment config (lib/pricing.ts), not translated content —
-  // matched to planMeta by the same fixed order the message files always
-  // list plans in (Básico, WhatsApp próprio, Integração).
-  const planHrefs = ['/signup', '/signup', '/signup'];
-  const planPrices = [PRICE_BASICO, PRICE_WHATSAPP_PROPRIO, PRICE_INTEGRACAO];
+  // A single plan (see lib/stripe/plans.ts#PLANS) — price is deployment
+  // config (lib/pricing.ts), not translated content.
+  const planHrefs = ['/signup'];
+  const planPrices = [PRICE_BASICO];
   const plans = planMeta.map((plan, i) => ({ ...plan, price: planPrices[i]! }));
 
   const SOFTWARE_APPLICATION_JSON_LD = jsonLd({
@@ -170,24 +166,9 @@ export async function MarketingHome() {
           borderBottom: '1px solid rgba(0,0,0,0.06)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <span
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 9,
-              background: BRAND_COLOR,
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-            dangerouslySetInnerHTML={{
-              __html: ICON_CHAT.replace('width="24"', 'width="17"').replace('height="24"', 'height="17"'),
-            }}
-          />
-          <span style={{ fontWeight: 700, fontSize: 16 }}>Zappigo</span>
+        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset, no need for next/image here */}
+          <img src="/zappigo-logo.png" alt="Zappigo" style={{ height: 40, width: 'auto' }} />
         </div>
         <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
           <div className="marketing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
@@ -448,7 +429,7 @@ export async function MarketingHome() {
                   flexDirection: 'column',
                 }}
               >
-                {i === 0 && (
+                {i === 0 && plans.length > 1 && (
                   <span
                     style={{
                       alignSelf: 'flex-start',

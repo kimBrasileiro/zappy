@@ -19,7 +19,7 @@ export function NavLinks() {
     { href: '/dashboard/leads', label: t('leads') },
     { href: '/dashboard/instalacao', label: t('installation') },
     { href: '/dashboard/integracoes', label: t('integrations') },
-    // { href: '/dashboard/billing', label: 'Assinatura' },
+    { href: '/dashboard/billing', label: t('billing') },
     { href: '/dashboard/suporte', label: t('support') },
   ];
 

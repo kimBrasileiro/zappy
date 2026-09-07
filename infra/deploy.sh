@@ -31,12 +31,23 @@ cd "$REPO_ROOT"
 #   export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 : "${NEXT_PUBLIC_APP_URL:?Set NEXT_PUBLIC_APP_URL first (must match app_url in that environment tfvars)}"
 : "${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:=}"
+# Same reasoning as the two above — apps/web/lib/pricing.ts is imported by
+# client components (signup/onboarding show the price in the browser), so
+# these need to be NEXT_PUBLIC_ build-args too, not just Cloud Run runtime
+# env vars, or the client bundle ships with the hardcoded fallback forever.
+# Must match that environment's tfvars (pricing_amount_basico etc.).
+: "${NEXT_PUBLIC_PRICING_AMOUNT_BASICO:=19}"
+: "${NEXT_PUBLIC_PRICING_CURRENCY_SYMBOL:=R$}"
+: "${NEXT_PUBLIC_PRICING_CURRENCY_CODE:=BRL}"
 
 echo "==> Building runner image (web service)"
 docker build \
   --target runner \
   --build-arg NEXT_PUBLIC_APP_URL="$NEXT_PUBLIC_APP_URL" \
   --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" \
+  --build-arg NEXT_PUBLIC_PRICING_AMOUNT_BASICO="$NEXT_PUBLIC_PRICING_AMOUNT_BASICO" \
+  --build-arg NEXT_PUBLIC_PRICING_CURRENCY_SYMBOL="$NEXT_PUBLIC_PRICING_CURRENCY_SYMBOL" \
+  --build-arg NEXT_PUBLIC_PRICING_CURRENCY_CODE="$NEXT_PUBLIC_PRICING_CURRENCY_CODE" \
   -f apps/web/Dockerfile \
   -t "${REPO}/web:${TAG}" \
   -t "${REPO}/web:latest" \

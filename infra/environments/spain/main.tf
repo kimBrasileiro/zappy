@@ -41,8 +41,6 @@ module "zappy" {
   pricing_currency_code           = var.pricing_currency_code
   pricing_amount_free             = var.pricing_amount_free
   pricing_amount_basico           = var.pricing_amount_basico
-  pricing_amount_whatsapp_proprio = var.pricing_amount_whatsapp_proprio
-  pricing_amount_integracao       = var.pricing_amount_integracao
 
   min_instances = var.min_instances
   max_instances = var.max_instances

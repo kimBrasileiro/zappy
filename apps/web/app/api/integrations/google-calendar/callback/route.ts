@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@zappigo/db';
 import { requireSession } from '../../../../../lib/auth-server';
 import { encrypt } from '../../../../../lib/crypto';
-import { STATE_COOKIE } from '../authorize/route';
+import { STATE_COOKIE } from '../../../../../lib/google-calendar/oauth-state';
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';

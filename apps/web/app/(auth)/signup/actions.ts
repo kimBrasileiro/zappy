@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@zappigo/db';
 import { auth } from '../../../lib/auth';
-import { generateUniqueSlug } from '../../../lib/slug';
+import { generateUniqueSlug, isCompanyNameTaken } from '../../../lib/slug';
 import { createDefaultFaqs } from '../../../lib/default-faqs';
 import { getDeploymentDefaultLocale } from '../../../i18n/default-locale';
 import { isPlanKey, isStripeConfigured, startTrialSubscription, type PlanKey } from '../../../lib/stripe/client';
@@ -54,6 +54,12 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   if (!acceptedTerms) {
     return { error: t('errorMustAcceptTerms') };
   }
+  // Two companies sharing a (near-enough) name break the shared WhatsApp
+  // number's "just say your business's name" matching — see
+  // lib/slug.ts#isCompanyNameTaken.
+  if (await isCompanyNameTaken(companyName)) {
+    return { error: t('errorCompanyNameTaken') };
+  }
 
   const stripeEnabled = isStripeConfigured();
   const plan: PlanKey = isPlanKey(planRaw) ? planRaw : 'basico';
@@ -77,7 +83,17 @@ export async function signUp(_prevState: SignUpState, formData: FormData): Promi
   let signUpResult: Awaited<ReturnType<typeof auth.api.signUpEmail>>;
   try {
     signUpResult = await auth.api.signUpEmail({
-      body: { email, password, name, companyId: company.id, role: 'admin' },
+      // callbackURL: where clicking the confirmation email link lands once
+      // verified (see lib/auth.ts's sendVerificationEmail, which builds the
+      // emailed link's own `url` from this) — defaults to "/" otherwise,
+      // stranding a just-verified customer on the marketing homepage.
+      // Landing on billing specifically (not /dashboard) is deliberate: a
+      // company on the real paid plan has no Stripe subscription yet at
+      // this point, and requireSession's billing gate (lib/auth-server.ts)
+      // blocks every OTHER dashboard route until one exists with a real
+      // card attached — this is the one page that gate lets through, and
+      // the one that actually starts that flow (see start-subscription-form.tsx).
+      body: { email, password, name, companyId: company.id, role: 'admin', callbackURL: '/dashboard/billing' },
       headers: await headers(),
     });
   } catch (err) {

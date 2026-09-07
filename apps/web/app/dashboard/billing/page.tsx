@@ -5,7 +5,8 @@ import { getStripe, isStripeConfigured } from '../../../lib/stripe/client';
 import { PLANS, FREE_TIER_MODE } from '../../../lib/stripe/plans';
 import { PRICING_CURRENCY_CODE } from '../../../lib/pricing';
 import { cancelSubscription, reactivateSubscription } from './actions';
-import { ChangePlanForm } from './change-plan-form';
+import { StartSubscriptionForm } from './start-subscription-form';
+import { AddPaymentMethodForm } from './add-payment-method-form';
 import { formatDate } from '../../../lib/format-time';
 
 function formatPrice(cents: number): string {
@@ -13,7 +14,9 @@ function formatPrice(cents: number): string {
 }
 
 export default async function BillingPage() {
-  const { companyId } = await requireSession();
+  // allowInactiveBilling: true — this IS the page a suspended company needs
+  // to reach (to see why, and to reactivate) — see lib/auth-server.ts.
+  const { companyId } = await requireSession({ allowInactiveBilling: true });
   const t = await getTranslations('dashboard.billing');
   const locale = await getLocale();
   const company = await prisma.company.findUnique({ where: { id: companyId } });
@@ -31,8 +34,6 @@ export default async function BillingPage() {
 
   const planLabels: Record<string, string> = {
     basico: t('planBasico'),
-    whatsapp_proprio: t('planWhatsappProprio'),
-    integracao: t('planIntegracao'),
   };
 
   if (!isStripeConfigured()) {
@@ -74,10 +75,9 @@ export default async function BillingPage() {
     return (
       <>
         <h1 className="dash-h1">{t('title')}</h1>
+        <p className="dash-subtitle">{t('noActiveSubscription')}</p>
         <div className="dash-card">
-          <p style={{ color: '#999', fontSize: 13.5, margin: 0 }}>
-            {t('noActiveSubscription')}
-          </p>
+          <StartSubscriptionForm planLabel={PLANS[0].label} price={PLANS[0].price} />
         </div>
       </>
     );
@@ -124,6 +124,8 @@ export default async function BillingPage() {
           </p>
         )}
 
+        {!subscription.default_payment_method && <AddPaymentMethodForm />}
+
         {subscription.cancel_at_period_end ? (
           <>
             <p style={{ color: '#b91c1c', fontSize: 13, marginBottom: 14 }}>
@@ -145,11 +147,6 @@ export default async function BillingPage() {
             </form>
           </>
         )}
-      </div>
-
-      <div className="dash-card">
-        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 12 }}>{t('changePlanTitle')}</h3>
-        <ChangePlanForm currentPlan={company.plan} />
       </div>
     </>
   );

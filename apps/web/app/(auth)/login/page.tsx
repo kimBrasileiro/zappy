@@ -108,6 +108,9 @@ export default function LoginPage() {
           {t('passwordLabel')}
           <input name="password" type="password" required style={s.input} />
         </label>
+        <Link href="/forgot-password" style={{ fontSize: 12.5, color: '#2563eb', textDecoration: 'none', alignSelf: 'flex-end', marginTop: -8 }}>
+          {t('forgotPasswordLink')}
+        </Link>
 
         <button type="submit" disabled={pending} style={s.button}>
           {pending ? t('loggingIn') : t('loginButton')}

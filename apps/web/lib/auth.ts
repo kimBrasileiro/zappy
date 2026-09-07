@@ -23,6 +23,21 @@ export const auth = betterAuth({
     // enforces regardless of what calls it, so it can't drift out of sync
     // with that check.
     minPasswordLength: 10,
+    // Enables /api/auth/request-password-reset + /reset-password (both
+    // exposed automatically by the [...all] catch-all route the moment this
+    // is set — see api/routes/password.mjs in better-auth's own source,
+    // which throws RESET_PASSWORD_DISABLED without it). `url` already
+    // carries the callback redirect (forgot-password/page.tsx passes
+    // redirectTo: '/reset-password') plus the token as a query param by the
+    // time this fires — reset-password/page.tsx reads it straight off
+    // searchParams, no extra wiring needed on our side.
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail(
+        user.email,
+        'Redefinir senha — Zappigo',
+        `<p>Recebemos um pedido pra redefinir sua senha na Zappigo.</p><p><a href="${url}">Criar nova senha</a></p><p>Se você não pediu isso, pode ignorar este email — sua senha continua a mesma.</p>`,
+      );
+    },
   },
 
   emailVerification: {

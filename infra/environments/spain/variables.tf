@@ -112,16 +112,6 @@ variable "pricing_amount_basico" {
   default = ""
 }
 
-variable "pricing_amount_whatsapp_proprio" {
-  type    = string
-  default = ""
-}
-
-variable "pricing_amount_integracao" {
-  type    = string
-  default = ""
-}
-
 # --- Sizing / DB (kept at the same cheap defaults as staging — this is a
 # brand-new market with zero traffic yet; revisit once real usage exists) --
 

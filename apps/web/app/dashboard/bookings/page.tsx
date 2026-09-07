@@ -46,6 +46,23 @@ export default async function BookingsPage({
     take: 200,
   });
 
+  // For the calendar's "mark day off" popover — only services that actually
+  // have a staff roster are relevant (see lib/bot/services.ts#hasStaffConcept).
+  const [allServices, absences] = await Promise.all([
+    prisma.service.findMany({
+      where: { companyId, active: true },
+      select: { id: true, name: true, staffNames: true },
+      orderBy: { name: 'asc' },
+    }),
+    // Upcoming only — past absences aren't actionable from here, and this
+    // list is re-fetched on every page load, not worth growing unbounded.
+    prisma.staffAbsence.findMany({
+      where: { companyId, date: { gte: new Date(new Date().toISOString().slice(0, 10)) } },
+      select: { id: true, serviceId: true, staffName: true, date: true },
+    }),
+  ]);
+  const staffServices = allServices.filter((s) => s.staffNames.length > 0);
+
   return (
     <>
       <div className="dash-toolbar">
@@ -82,6 +99,8 @@ export default async function BookingsPage({
         emptyLabel={q || date ? t('emptyFiltered') : t('emptyDefault')}
         locale={locale}
         timeZone={timeZone}
+        staffServices={staffServices}
+        absences={absences}
       />
     </>
   );

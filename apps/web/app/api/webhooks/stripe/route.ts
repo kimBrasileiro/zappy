@@ -12,11 +12,19 @@ async function syncSubscriptionStatus(subscription: Stripe.Subscription): Promis
   const company = await prisma.company.findFirst({ where: { stripeSubscriptionId: subscription.id } });
   if (!company) return;
 
+  // default_payment_method is a plain field on every subscription payload
+  // (no expand needed) — string id once set, null until then. Derived fresh
+  // from Stripe's own object rather than trusting whatever this same row
+  // already had, so this self-heals if attachConfirmedPaymentMethod's direct
+  // write below and this event ever raced or missed each other.
+  const hasPaymentMethod = !!subscription.default_payment_method;
+
   await prisma.company.update({
     where: { id: company.id },
     data: {
       subscriptionStatus: subscription.status,
-      status: isBillingActive(subscription.status) ? 'active' : 'inactive',
+      hasPaymentMethod,
+      status: isBillingActive(subscription.status, hasPaymentMethod) ? 'active' : 'inactive',
       trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
       // Re-synced here regardless of source — dashboard/billing/actions.ts
       // already sets this immediately for our own UI, but a subscription
@@ -32,6 +40,36 @@ async function markPastDue(subscriptionId: string): Promise<void> {
     where: { stripeSubscriptionId: subscriptionId },
     data: { subscriptionStatus: 'past_due', status: 'inactive' },
   });
+}
+
+// Attaches the card the customer just confirmed (via <PaymentStep>, off the
+// standalone SetupIntent lib/stripe/client.ts#startTrialSubscription creates
+// — a trialing subscription never gets its own pending_setup_intent, since
+// there's no invoice due yet to attach one to) to the subscription so it's
+// actually charged automatically when the trial ends, instead of the
+// trial-end invoice failing for lack of a payment method.
+async function attachConfirmedPaymentMethod(setupIntent: Stripe.SetupIntent): Promise<void> {
+  const { companyId, subscriptionId } = setupIntent.metadata ?? {};
+  const paymentMethod = setupIntent.payment_method;
+  if (!subscriptionId || !paymentMethod) return;
+
+  const stripe = getStripe();
+  await stripe.subscriptions.update(subscriptionId, {
+    default_payment_method: typeof paymentMethod === 'string' ? paymentMethod : paymentMethod.id,
+  });
+
+  // Written directly (not just left to the customer.subscription.updated
+  // event this same subscriptions.update call triggers) so dashboard access
+  // unlocks the moment the card is confirmed, not after a second webhook
+  // round-trip — companyId is on this SetupIntent's own metadata (see
+  // lib/stripe/client.ts#startTrialSubscription/addPaymentMethod), no lookup
+  // needed.
+  if (companyId) {
+    await prisma.company.update({
+      where: { id: companyId },
+      data: { hasPaymentMethod: true, status: 'active' },
+    });
+  }
 }
 
 async function notifyTrialEnding(subscription: Stripe.Subscription): Promise<void> {
@@ -82,6 +120,9 @@ export async function POST(request: Request) {
       }
       case 'customer.subscription.trial_will_end':
         await notifyTrialEnding(event.data.object as Stripe.Subscription);
+        break;
+      case 'setup_intent.succeeded':
+        await attachConfirmedPaymentMethod(event.data.object as Stripe.SetupIntent);
         break;
       default:
         break;

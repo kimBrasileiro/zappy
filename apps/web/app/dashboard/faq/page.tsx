@@ -31,6 +31,7 @@ export default async function FaqPage() {
         <FaqForm action={createFaq} submitLabel={t('createLabel')} />
       </div>
 
+      <div className="dash-table-wrap">
       <table className="dash-table">
         <thead>
           <tr>
@@ -73,6 +74,7 @@ export default async function FaqPage() {
           )}
         </tbody>
       </table>
+      </div>
     </>
   );
 }

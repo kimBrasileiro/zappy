@@ -104,6 +104,205 @@
   background: linear-gradient(180deg, #f5f7ff 0%, #f8f9fb 320px);
 }
 
+/* --- Mobile app shell ----------------------------------------------------
+   Below the breakpoint the sidebar becomes an off-canvas drawer (checkbox
+   hack — layout.tsx puts <input id="dash-nav-toggle"> as .dash-shell's
+   first child so these ~ sibling selectors can reach it with zero client
+   JS) opened either from the topbar hamburger or the bottom tab bar's
+   "Mais" tab, and primary navigation moves to a fixed bottom tab bar
+   (mobile-bottom-tabs.tsx) so the dashboard reads as a native app rather
+   than a squeezed desktop layout. All of these stay display:none/hidden
+   above the breakpoint — see the @media block below for what turns them
+   on. */
+.dash-nav-toggle-input {
+  display: none;
+}
+.dash-mobile-topbar {
+  display: none;
+}
+.dash-nav-backdrop {
+  display: none;
+}
+.dash-nav-close {
+  display: none;
+}
+.dash-bottom-tabs {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .dash-shell {
+    display: block;
+  }
+
+  .dash-mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding: 0 16px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 40;
+  }
+  .dash-mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: -8px;
+    border-radius: 10px;
+    color: #333;
+    cursor: pointer;
+  }
+  .dash-mobile-menu-btn:active {
+    background: var(--dash-gray-100);
+  }
+
+  .dash-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 80vw;
+    max-width: 300px;
+    z-index: 95;
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+    overflow-y: auto;
+  }
+  .dash-nav-toggle-input:checked ~ .dash-nav {
+    transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.3);
+  }
+  .dash-nav-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  .dash-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 17, 32, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 90;
+  }
+  .dash-nav-toggle-input:checked ~ .dash-nav-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .dash-main {
+    max-width: 100%;
+    padding: 72px 16px 84px;
+  }
+
+  .dash-bottom-tabs {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    z-index: 40;
+  }
+  .dash-bottom-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 2px;
+    border-radius: 12px;
+    color: var(--dash-gray-400);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .dash-bottom-tab:active {
+    background: var(--dash-gray-50);
+  }
+  .dash-bottom-tab.active {
+    color: var(--dash-brand);
+  }
+  .dash-bottom-tab-icon {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+  }
+  .dash-bottom-tab-label {
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  /* App-style touch targets — every button gets a real 44px+ tap area and
+     a slightly rounder, "native control" radius, not just the desktop
+     hover-oriented sizing above. */
+  .dash-btn {
+    min-height: 46px;
+    padding: 11px 20px;
+    border-radius: 12px;
+    font-size: 14.5px;
+  }
+  .dash-form-row input,
+  .dash-form-row textarea,
+  .dash-form-row select {
+    /* >=16px stops iOS Safari auto-zooming the page on focus */
+    font-size: 16px;
+    padding: 11px 12px;
+    border-radius: 10px;
+  }
+  .dash-search-input {
+    font-size: 16px;
+    max-width: 100%;
+  }
+
+  .dash-stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+    gap: 10px;
+  }
+  .dash-card {
+    padding: 18px 18px;
+  }
+  .dash-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 14px;
+  }
+  .dash-table-wrap .dash-table {
+    min-width: 560px;
+  }
+  .dash-calendar {
+    padding: 12px;
+  }
+  .dash-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
 .dash-h1 {
   font-size: 23px;
   font-weight: 700;

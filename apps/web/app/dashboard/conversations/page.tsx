@@ -29,6 +29,7 @@ export default async function ConversationsPage() {
         <RefreshButton />
       </div>
 
+      <div className="dash-table-wrap">
       <table className="dash-table">
         <thead>
           <tr>
@@ -64,6 +65,7 @@ export default async function ConversationsPage() {
           )}
         </tbody>
       </table>
+      </div>
     </>
   );
 }

@@ -19,6 +19,7 @@ export default async function AdminModerationPage() {
       <h1 className="dash-h1">{t('title')}</h1>
       <p className="dash-subtitle">{t('subtitle')}</p>
 
+      <div className="dash-table-wrap">
       <table className="dash-table">
         <thead>
           <tr>
@@ -56,6 +57,7 @@ export default async function AdminModerationPage() {
           )}
         </tbody>
       </table>
+      </div>
     </>
   );
 }

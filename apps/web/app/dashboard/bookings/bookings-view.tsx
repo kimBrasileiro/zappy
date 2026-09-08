@@ -69,6 +69,7 @@ export function BookingsView({
       {view === 'calendar' ? (
         <BookingsCalendar bookings={bookings} timeZone={timeZone} staffServices={staffServices} absences={absences} />
       ) : (
+        <div className="dash-table-wrap">
         <table className="dash-table">
           <thead>
             <tr>
@@ -128,6 +129,7 @@ export function BookingsView({
             )}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

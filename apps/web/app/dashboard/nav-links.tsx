@@ -16,6 +16,8 @@ export function NavLinks() {
     { href: '/dashboard/quick-replies', label: t('quickReplies') },
     { href: '/dashboard/services', label: t('services') },
     { href: '/dashboard/bookings', label: t('bookings') },
+    { href: '/dashboard/clients', label: t('clients') },
+    { href: '/dashboard/reports', label: t('reports') },
     { href: '/dashboard/leads', label: t('leads') },
     { href: '/dashboard/instalacao', label: t('installation') },
     { href: '/dashboard/integracoes', label: t('integrations') },

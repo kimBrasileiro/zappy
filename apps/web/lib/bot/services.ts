@@ -15,9 +15,13 @@ export function normalizePhone(phone: string): string | null {
   return digits.length === 10 || digits.length === 11 ? digits : null;
 }
 
-type BusinessHours = Record<string, [string, string] | null>;
+// Exported for dashboard/reports's occupancy estimate, which needs the same
+// "what hours is this company actually open" logic as the bot's own
+// availability check — duplicating the table there would drift the moment
+// this one changes.
+export type BusinessHours = Record<string, [string, string] | null>;
 
-const DEFAULT_BUSINESS_HOURS: BusinessHours = {
+export const DEFAULT_BUSINESS_HOURS: BusinessHours = {
   sun: null,
   mon: ['09:00', '18:00'],
   tue: ['09:00', '18:00'],
@@ -27,7 +31,7 @@ const DEFAULT_BUSINESS_HOURS: BusinessHours = {
   sat: ['09:00', '18:00'],
 };
 
-const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+export const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 // A service's own businessHours (set on the dashboard) take precedence over
 // the company-wide default — most services don't set one and just inherit

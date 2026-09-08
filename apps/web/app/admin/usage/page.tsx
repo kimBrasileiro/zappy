@@ -127,6 +127,7 @@ export default async function AdminUsagePage() {
         {t('capExplanation', { noMessagesNote: totalMessages === 0 ? t('noMessagesNote') : '' })}
       </p>
 
+      <div className="dash-table-wrap">
       <table className="dash-table">
         <thead>
           <tr>
@@ -170,6 +171,7 @@ export default async function AdminUsagePage() {
           )}
         </tbody>
       </table>
+      </div>
     </>
   );
 }

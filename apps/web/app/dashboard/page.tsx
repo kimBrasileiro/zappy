@@ -185,6 +185,7 @@ export default async function DashboardHomePage() {
       </div>
 
       <div className="dash-section-title">{t('sectionRecent')}</div>
+      <div className="dash-table-wrap">
       <table className="dash-table">
         <thead>
           <tr>
@@ -218,6 +219,7 @@ export default async function DashboardHomePage() {
           )}
         </tbody>
       </table>
+      </div>
     </>
   );
 }

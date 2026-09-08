@@ -5,6 +5,11 @@ model Customer {
   email         String?
   phone         String? // WhatsApp identifier
   externalId    String?   @map("external_id") // id in the client's own system (CRM, etc.)
+  // Free-text preferences/notes typed by the company's own team on the
+  // client profile page (dashboard/clients) — e.g. "alérgica a esmalte X",
+  // "prefere corte com a Ana". Never written by the bot or the customer
+  // themselves, purely an internal note.
+  notes         String?
   metadata      Json      @default("{}")
   gdprDeletedAt DateTime? @map("gdpr_deleted_at") @db.Timestamptz(6) // LGPD/GDPR anonymization marker
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)

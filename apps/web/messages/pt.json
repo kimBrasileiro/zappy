@@ -19,11 +19,14 @@
       "quickReplies": "Quick Replies",
       "services": "Serviços",
       "bookings": "Agendamentos",
+      "clients": "Clientes",
+      "reports": "Relatórios",
       "leads": "Leads",
       "installation": "Instalação",
       "integrations": "Integrações",
       "billing": "Assinatura",
-      "support": "Suporte"
+      "support": "Suporte",
+      "more": "Mais"
     },
     "impersonation": {
       "viewingAs": "Visualizando como <b>{name}</b>.",
@@ -282,6 +285,43 @@
       "noShowTitle": "Marcar que o cliente faltou",
       "cancelButton": "Cancelar"
     },
+    "clients": {
+      "title": "Clientes",
+      "subtitle": "Todo mundo que já agendou com você, com histórico e valor gasto.",
+      "tableName": "Nome",
+      "tablePhone": "Telefone",
+      "tableVisits": "Visitas",
+      "tableTotalSpent": "Total gasto",
+      "tableLastVisit": "Última visita",
+      "recurringBadge": "Recorrente",
+      "anonymous": "Anônimo",
+      "noClients": "Nenhum cliente ainda.",
+      "statVisits": "Visitas concluídas",
+      "statTotalSpent": "Total gasto",
+      "statLastActivity": "Última atividade",
+      "notesTitle": "Notas e preferências",
+      "notesBody": "Anotações internas — nunca vistas pelo cliente nem pelo bot. Ex: alergias, preferência de profissional, observações do atendimento.",
+      "notesPlaceholder": "Ex: prefere corte com a Ana, alérgica a esmalte com formol...",
+      "notesSave": "Salvar notas",
+      "notesSaving": "Salvando...",
+      "notesSaved": "Notas salvas.",
+      "historyTitle": "Histórico de agendamentos",
+      "noHistory": "Nenhum agendamento ainda."
+    },
+    "reports": {
+      "title": "Relatórios",
+      "subtitle": "Faturamento, ocupação e os serviços e clientes que mais rendem.",
+      "periodDays": "{days} dias",
+      "statRevenue": "Faturamento",
+      "statCompleted": "Atendimentos concluídos",
+      "statCancellationRate": "Taxa de cancelamento",
+      "statNewClients": "Novos clientes",
+      "statOccupancy": "Ocupação da agenda",
+      "sectionTopServices": "Serviços que mais rendem",
+      "sectionTopClients": "Clientes que mais rendem",
+      "noData": "Sem dados suficientes nesse período.",
+      "bookingsCount": "{count, plural, one {1 atendimento} other {# atendimentos}}"
+    },
     "leads": {
       "title": "Leads",
       "subtitle": "Clientes que perguntaram sobre um serviço mas nunca fecharam o agendamento — gerado sob demanda, não ao vivo.",
@@ -471,16 +511,34 @@
           "body": "Responde, marca e confirma horário sozinha enquanto você atende quem já está na cadeira."
         },
         {
+          "icon": "sparkle",
+          "tag": "Manicure / Nail Designer",
+          "headline": "Sua agenda de esmaltação nunca mais lota o WhatsApp.",
+          "body": "A cliente escolhe o horário e confirma sozinha — você só recebe a agenda pronta pra trabalhar."
+        },
+        {
+          "icon": "drop",
+          "tag": "Estética / Depilação / Massagem",
+          "headline": "Sua cliente marca, remarca e confirma sozinha.",
+          "body": "Você só recebe a agenda pronta — sem trocar mensagem pra achar horário."
+        },
+        {
           "icon": "paw",
           "tag": "Pet Shop",
           "headline": "Suas mãos estão ocupadas com os pets. As da Zappigo, não.",
           "body": "Nunca mais perca um banho e tosa porque não deu tempo de olhar o celular."
         },
         {
-          "icon": "sparkle",
-          "tag": "Estética / Massagem",
-          "headline": "Sua cliente marca, remarca e confirma sozinha.",
-          "body": "Você só recebe a agenda pronta — sem trocar mensagem pra achar horário."
+          "icon": "dumbbell",
+          "tag": "Personal Trainer / Academia",
+          "headline": "Seu aluno agenda o treino sem precisar te chamar.",
+          "body": "Menos mensagem perguntando 'que horas você tem vago', mais tempo treinando quem já está na sua agenda."
+        },
+        {
+          "icon": "car",
+          "tag": "Lava-jato / Estética Automotiva",
+          "headline": "Enquanto um carro seca, o próximo já tá agendado.",
+          "body": "Cliente marca o horário pelo WhatsApp, sem ligar nem esperar resposta."
         }
       ]
     },
@@ -623,6 +681,25 @@
       "Como funciona a Zappigo?",
       "Falar com o time comercial"
     ],
+    "chatDemo": {
+      "contactName": "Salão da Ana",
+      "contactStatus": "online",
+      "caption": "Sem link, sem app pra baixar — o cliente agenda direto na conversa que já está usando.",
+      "messages": [
+        { "from": "customer", "text": "Oi! Vocês têm horário pra corte amanhã à tarde?", "time": "14:02" },
+        { "from": "bot", "text": "Temos sim! Amanhã à tarde tenho 15h ou 16h30, qual prefere?", "time": "14:02" },
+        { "from": "customer", "text": "16h30 pra mim", "time": "14:03" },
+        { "from": "bot", "text": "Perfeito ✅ Agendado: Corte masculino, amanhã (qui) às 16h30 com o Bruno. Te aviso um pouco antes!", "time": "14:03" }
+      ]
+    },
+    "bookingDemo": {
+      "sectionTitle": "Duas formas de agendar",
+      "sectionSubtitle": "Conversando pelo WhatsApp, ou direto por um formulário no seu site — o cliente escolhe o que preferir.",
+      "mockService": "Corte de cabelo",
+      "mockStaff": "Bruno",
+      "mockDate": "9 set 2026",
+      "caption": "Um formulário de agendamento pronto pra colar no seu site, sem precisar programar nada."
+    },
     "footer": {
       "login": "Entrar",
       "signup": "Criar conta",

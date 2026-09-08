@@ -43,6 +43,7 @@ export default async function ServicesPage() {
         <ServiceForm action={createService} existingStaffNames={existingStaffNames} submitLabel={t('createLabel')} />
       </div>
 
+      <div className="dash-table-wrap">
       <table className="dash-table">
         <thead>
           <tr>
@@ -108,6 +109,7 @@ export default async function ServicesPage() {
           )}
         </tbody>
       </table>
+      </div>
     </>
   );
 }

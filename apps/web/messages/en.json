@@ -19,11 +19,14 @@
       "quickReplies": "Quick Replies",
       "services": "Services",
       "bookings": "Bookings",
+      "clients": "Clients",
+      "reports": "Reports",
       "leads": "Leads",
       "installation": "Installation",
       "integrations": "Integrations",
       "billing": "Billing",
-      "support": "Support"
+      "support": "Support",
+      "more": "More"
     },
     "impersonation": {
       "viewingAs": "Viewing as <b>{name}</b>.",
@@ -282,6 +285,43 @@
       "noShowTitle": "Mark that the customer didn't show up",
       "cancelButton": "Cancel"
     },
+    "clients": {
+      "title": "Clients",
+      "subtitle": "Everyone who's ever booked with you, with history and total spend.",
+      "tableName": "Name",
+      "tablePhone": "Phone",
+      "tableVisits": "Visits",
+      "tableTotalSpent": "Total spent",
+      "tableLastVisit": "Last visit",
+      "recurringBadge": "Returning",
+      "anonymous": "Anonymous",
+      "noClients": "No clients yet.",
+      "statVisits": "Completed visits",
+      "statTotalSpent": "Total spent",
+      "statLastActivity": "Last activity",
+      "notesTitle": "Notes and preferences",
+      "notesBody": "Internal notes — never seen by the client or the bot. E.g. allergies, staff preference, appointment observations.",
+      "notesPlaceholder": "E.g. prefers Ana, allergic to formaldehyde-based polish...",
+      "notesSave": "Save notes",
+      "notesSaving": "Saving...",
+      "notesSaved": "Notes saved.",
+      "historyTitle": "Booking history",
+      "noHistory": "No bookings yet."
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Revenue, occupancy, and the services and clients that earn the most.",
+      "periodDays": "{days} days",
+      "statRevenue": "Revenue",
+      "statCompleted": "Completed visits",
+      "statCancellationRate": "Cancellation rate",
+      "statNewClients": "New clients",
+      "statOccupancy": "Schedule occupancy",
+      "sectionTopServices": "Top-earning services",
+      "sectionTopClients": "Top-earning clients",
+      "noData": "Not enough data for this period.",
+      "bookingsCount": "{count, plural, one {1 booking} other {# bookings}}"
+    },
     "leads": {
       "title": "Leads",
       "subtitle": "Customers who asked about a service but never completed a booking — generated on demand, not live.",
@@ -471,16 +511,34 @@
           "body": "Replies, schedules, and confirms on its own while you take care of the customer already in the chair."
         },
         {
+          "icon": "sparkle",
+          "tag": "Nail Salon / Nail Designer",
+          "headline": "Your booking calendar never floods your WhatsApp again.",
+          "body": "The client picks a time and confirms on her own — you just get a ready-made schedule to work through."
+        },
+        {
+          "icon": "drop",
+          "tag": "Aesthetics / Waxing / Massage",
+          "headline": "Your client books, reschedules, and confirms on her own.",
+          "body": "You just get a ready-made schedule — no back-and-forth messages to find a time."
+        },
+        {
           "icon": "paw",
           "tag": "Pet Shop",
           "headline": "Your hands are busy with the pets. Zappigo's aren't.",
           "body": "Never miss another bath-and-groom booking because there was no time to check the phone."
         },
         {
-          "icon": "sparkle",
-          "tag": "Aesthetics / Massage",
-          "headline": "Your client books, reschedules, and confirms on her own.",
-          "body": "You just get a ready-made schedule — no back-and-forth messages to find a time."
+          "icon": "dumbbell",
+          "tag": "Personal Trainer / Gym",
+          "headline": "Your client books the session without having to call you.",
+          "body": "Fewer 'what time do you have free' messages, more time training the people already on your calendar."
+        },
+        {
+          "icon": "car",
+          "tag": "Car Wash / Auto Detailing",
+          "headline": "While one car dries, the next one's already booked.",
+          "body": "The customer books a time over WhatsApp, no call and no waiting for a reply."
         }
       ]
     },
@@ -623,6 +681,25 @@
       "How does Zappigo work?",
       "Talk to the sales team"
     ],
+    "chatDemo": {
+      "contactName": "Ana's Salon",
+      "contactStatus": "online",
+      "caption": "No link, no app to download — the client books right inside the chat they already have open.",
+      "messages": [
+        { "from": "customer", "text": "Hi! Do you have an opening for a haircut tomorrow afternoon?", "time": "2:02 PM" },
+        { "from": "bot", "text": "We do! Tomorrow afternoon I have 3pm or 4:30pm, which works for you?", "time": "2:02 PM" },
+        { "from": "customer", "text": "4:30pm works", "time": "2:03 PM" },
+        { "from": "bot", "text": "All set ✅ Booked: Men's haircut, tomorrow at 4:30pm with Bruno. I'll remind you beforehand!", "time": "2:03 PM" }
+      ]
+    },
+    "bookingDemo": {
+      "sectionTitle": "Two ways to book",
+      "sectionSubtitle": "Chatting over WhatsApp, or straight through a form on your site — the client picks whichever they prefer.",
+      "mockService": "Haircut",
+      "mockStaff": "Bruno",
+      "mockDate": "Sep 9, 2026",
+      "caption": "A ready-made booking form to drop into your site, no coding needed."
+    },
     "footer": {
       "login": "Log in",
       "signup": "Create account",

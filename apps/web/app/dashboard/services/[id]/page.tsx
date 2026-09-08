@@ -67,6 +67,7 @@ export default async function EditServicePage({ params }: { params: { id: string
           <StaffAbsenceForm action={addStaffAbsence.bind(null, service.id)} staffNames={service.staffNames} />
 
           {absences.length > 0 ? (
+            <div className="dash-table-wrap">
             <table className="dash-table" style={{ marginTop: 16 }}>
               <thead>
                 <tr>
@@ -91,6 +92,7 @@ export default async function EditServicePage({ params }: { params: { id: string
                 ))}
               </tbody>
             </table>
+            </div>
           ) : (
             <p style={{ color: '#999', fontSize: 13, marginTop: 16 }}>{t('noAbsences')}</p>
           )}

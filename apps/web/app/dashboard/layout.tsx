@@ -5,6 +5,7 @@ import { requireSession } from '../../lib/auth-server';
 import { SignOutButton } from './sign-out-button';
 import { CompanySwitcher } from './company-switcher';
 import { NavLinks } from './nav-links';
+import { MobileBottomTabs } from './mobile-bottom-tabs';
 import { LocaleSwitcher } from '../locale-switcher';
 import { stopImpersonating } from './impersonate-actions';
 import './dashboard.css';
@@ -27,7 +28,27 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <div className="dash-shell">
+      {/* Checkbox-driven off-canvas drawer — no client JS needed for the
+          open/close toggle itself (this layout stays a server component).
+          Must be the first child so the CSS ~ sibling combinator below
+          (dashboard.css) can reach the topbar/backdrop/nav that follow it. */}
+      <input type="checkbox" id="dash-nav-toggle" className="dash-nav-toggle-input" />
+      <header className="dash-mobile-topbar">
+        <label htmlFor="dash-nav-toggle" className="dash-mobile-menu-btn" aria-label="Menu">
+          <span style={{ display: 'inline-flex', width: 22, height: 22 }} dangerouslySetInnerHTML={{ __html: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' }} />
+        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 15 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset, no need for next/image here */}
+          <img src="/zappigo-icon.png" alt="" width={24} height={24} style={{ borderRadius: 7 }} />
+          Zappigo
+        </div>
+        <span style={{ width: 22 }} />
+      </header>
+      <label htmlFor="dash-nav-toggle" className="dash-nav-backdrop" aria-hidden="true" />
       <nav className="dash-nav">
+        <label htmlFor="dash-nav-toggle" className="dash-nav-close" aria-label="Fechar menu">
+          ✕
+        </label>
         <div className="dash-nav-brand" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset, no need for next/image here */}
@@ -78,6 +99,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <SignOutButton />
       </nav>
       <main className="dash-main">{children}</main>
+      <MobileBottomTabs />
     </div>
   );
 }

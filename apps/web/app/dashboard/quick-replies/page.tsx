@@ -31,6 +31,7 @@ export default async function QuickRepliesPage() {
         <TemplateForm action={createTemplate} submitLabel={t('createLabel')} />
       </div>
 
+      <div className="dash-table-wrap">
       <table className="dash-table">
         <thead>
           <tr>
@@ -77,6 +78,7 @@ export default async function QuickRepliesPage() {
           )}
         </tbody>
       </table>
+      </div>
     </>
   );
 }

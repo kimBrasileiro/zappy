@@ -26,7 +26,11 @@
       "integrations": "Integrations",
       "billing": "Billing",
       "support": "Support",
-      "more": "More"
+      "more": "More",
+      "courtAgenda": "Agenda",
+      "classGrid": "Classes",
+      "courts": "Courts",
+      "students": "Students"
     },
     "impersonation": {
       "viewingAs": "Viewing as <b>{name}</b>.",
@@ -35,6 +39,8 @@
     "home": {
       "title": "Overview",
       "subtitle": "Your company's summary, updated now.",
+      "greeting": "Hi! 👋 Welcome to {name}'s dashboard.",
+      "greetingSubtitle": "Here's a quick summary of how your company is doing.",
       "profileCardTitle": "Company name and description",
       "profileCardBody": "The name shows up to customers on the widget's WhatsApp button (e.g. \"Hi, I'd like to book with {name}\") and is how the bot identifies itself in conversations. The description shows up on your public page (see below).",
       "checklistTitle": "Getting started",
@@ -73,6 +79,7 @@
       "noConversations": "No conversations yet.",
       "companyNamePlaceholder": "Company name",
       "companyDescriptionPlaceholder": "Short company description — shown on your public page (e.g. Pet shop with bathing, grooming, and vet visits in the X neighborhood)",
+      "companyAddressPlaceholder": "Address (e.g. 123 Harmonia St — Vila Madalena, São Paulo) — the assistant tells the customer this on the first message",
       "saveButton": "Save",
       "saving": "Saving...",
       "errorNameRequired": "Name is required."
@@ -185,6 +192,7 @@
       "deactivate": "Deactivate",
       "delete": "Delete",
       "noServices": "No services yet.",
+      "categoryUncategorized": "Other",
       "badge24h": "24h",
       "cancellationNotice": "Cancellation up to {hours}h before",
       "cancellationFeeNote": " — {fee} fee",
@@ -202,6 +210,16 @@
       "formNameLabel": "Name",
       "formNamePlaceholder": "Haircut",
       "formDescriptionLabel": "Description (optional)",
+      "formCategoryLabel": "Category (optional)",
+      "formCategoryPlaceholder": "E.g. Hair, Bath & Grooming, Nails...",
+      "formPhotoLabel": "Photo (optional)",
+      "formPhotoHint": "JPEG, PNG or WebP, up to 5MB. Shown on the public booking form.",
+      "formVariantsLabel": "Price/duration variants (optional)",
+      "formVariantsHint": "Use this when the price or time changes by size, pet size, hair length, etc. Leave empty if this service has a single price and duration (already filled in above).",
+      "formVariantLabelPlaceholder": "E.g. Small, Medium, Large",
+      "formVariantPricePlaceholder": "Price",
+      "formVariantDurationPlaceholder": "Min.",
+      "formVariantsAdd": "+ add variant",
       "formDurationLabel": "Duration",
       "formDurationUnitLabel": "Unit",
       "unitMinutes": "minutes",
@@ -237,6 +255,7 @@
       "errorInvalidDuration": "Invalid duration.",
       "errorInvalidPrice": "Invalid price.",
       "errorStaffRequired": "Add at least one staff member responsible for this service.",
+      "errorInvalidVariant": "Every variant needs a name, a valid price, and a valid duration.",
       "errorServiceNotFound": "Service not found.",
       "errorChooseStaff": "Choose a staff member for this service.",
       "errorChooseDate": "Choose a valid date.",
@@ -310,17 +329,29 @@
     },
     "reports": {
       "title": "Reports",
-      "subtitle": "Revenue, occupancy, and the services and clients that earn the most.",
-      "periodDays": "{days} days",
+      "subtitle": "Revenue, occupancy, and what each service, client and staff member earned",
+      "periodWeek": "This week",
+      "periodMonth": "This month",
+      "periodCustomTitle": "Custom period",
+      "periodFromLabel": "From",
+      "periodToLabel": "To",
+      "periodApplyButton": "Apply",
       "statRevenue": "Revenue",
       "statCompleted": "Completed visits",
       "statCancellationRate": "Cancellation rate",
       "statNewClients": "New clients",
       "statOccupancy": "Schedule occupancy",
-      "sectionTopServices": "Top-earning services",
-      "sectionTopClients": "Top-earning clients",
-      "noData": "Not enough data for this period.",
-      "bookingsCount": "{count, plural, one {1 booking} other {# bookings}}"
+      "sectionByStaff": "By staff member",
+      "sectionTopServices": "By service",
+      "sectionTopClients": "By client",
+      "tableStaffName": "Staff member",
+      "tableStaffBookings": "Bookings",
+      "tableStaffHours": "Hours worked",
+      "tableStaffRevenue": "Revenue",
+      "tableServiceName": "Service",
+      "tableClientName": "Client",
+      "anonymous": "Anonymous",
+      "noData": "Not enough data for this period."
     },
     "leads": {
       "title": "Leads",
@@ -406,6 +437,8 @@
       "whatsappButtonBody": "Prefer a ready-made button with an icon instead of a plain link? Paste this HTML anywhere on your site — it works standalone, with no dependency on your own CSS or scripts:",
       "whatsappButtonLabel": "Chat on WhatsApp",
       "whatsappNotConfiguredButton": "Zappigo's shared WhatsApp number hasn't been configured on this instance yet — once it is, the button will show up here automatically.",
+      "bookingEmbedCardTitle": "Booking form for your site",
+      "bookingEmbedCardBody": "The same booking form from your Zappigo page, embedded right on your site. Paste this code wherever you want the form to appear — it resizes itself automatically, nothing else to configure:",
       "chatScriptCardTitle": "Chat script",
       "chatScriptBody": "One line of <code>script</code>, no other changes to your site — paste it right before the closing <code>body</code> tag. Never done this before? See below how to do it depending on where your site was built:",
       "wordpressSummary": "My site is WordPress",
@@ -453,6 +486,76 @@
       "whatsappErrorSubscribeFailed": "The credentials are valid, but we couldn't subscribe that number to receive messages in our system. Try again in a few minutes.",
       "whatsappErrorAlreadyConnected": "Your company already has a different number connected. Disconnect it before connecting a different one.",
       "whatsappErrorNumberTaken": "That number is already connected to another company on Zappigo. Double-check the Phone Number ID or contact support."
+    },
+    "sports": {
+      "courtsTitle": "Courts",
+      "courtsSubtitle": "The courts at your venue. Each court has its own class grid.",
+      "courtName": "Court name",
+      "courtNamePlaceholder": "e.g. Court 4",
+      "addCourt": "Add court",
+      "noCourts": "No courts yet.",
+      "activeClasses": "Active classes",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "classesTitle": "Classes",
+      "classesSubtitle": "The weekly class grid. Each row repeats every week; students book a seat on a specific date.",
+      "needCourtFirst": "Add a court first.",
+      "court": "Court",
+      "weekday": "Weekday",
+      "startTime": "Start",
+      "durationMinutes": "Duration (min)",
+      "sport": "Sport",
+      "level": "Level",
+      "capacity": "Seats",
+      "price": "Price",
+      "instructor": "Instructor (optional)",
+      "addClass": "Add class",
+      "time": "Time",
+      "class": "Class",
+      "pause": "Pause",
+      "resume": "Resume",
+      "remove": "Remove",
+      "level_iniciante": "Beginner",
+      "level_intermediario": "Intermediate",
+      "level_avancado": "Advanced",
+      "error_nameRequired": "Enter the court name.",
+      "error_nameTaken": "A court with this name already exists.",
+      "error_invalid": "Check the fields — a value is invalid.",
+      "error_overlap": "This court already has a class at that day and time.",
+      "agendaTitle": "Court agenda",
+      "agendaSubtitle": "Classes, group bookings and free slots — per court, day by day.",
+      "today": "Today",
+      "closedThatDay": "Closed that day.",
+      "nothingToday": "Nothing scheduled.",
+      "free": "free",
+      "openClassHere": "Open a class here",
+      "openClassButton": "Open class",
+      "openClassHint": "Becomes a fixed class every {weekday}. Fine-tune it later in Classes.",
+      "groupReservation": "Group booking",
+      "people": "{n} people",
+      "cancelReservation": "Cancel booking",
+      "sessionCancelled": "cancelled that day",
+      "cancelSession": "Cancel class that day",
+      "restoreSession": "Reopen class that day",
+      "attended": "Attended",
+      "noShow": "No-show",
+      "studentLevels": "Level per sport",
+      "noLevel": "Not set",
+      "saveLevel": "Save",
+      "weekday_sun": "Sun",
+      "weekday_mon": "Mon",
+      "weekday_tue": "Tue",
+      "weekday_wed": "Wed",
+      "weekday_thu": "Thu",
+      "weekday_fri": "Fri",
+      "weekday_sat": "Sat",
+      "weekdayFull_sun": "Sunday",
+      "weekdayFull_mon": "Monday",
+      "weekdayFull_tue": "Tuesday",
+      "weekdayFull_wed": "Wednesday",
+      "weekdayFull_thu": "Thursday",
+      "weekdayFull_fri": "Friday",
+      "weekdayFull_sat": "Saturday"
     }
   },
   "metadata": {
@@ -473,7 +576,10 @@
       "automatic FAQ",
       "AI chat for businesses"
     ],
-    "keywordsFree": ["free whatsapp scheduling", "free appointment scheduling system"],
+    "keywordsFree": [
+      "free whatsapp scheduling",
+      "free appointment scheduling system"
+    ],
     "ogLocale": "en_US"
   },
   "marketing": {
@@ -686,10 +792,26 @@
       "contactStatus": "online",
       "caption": "No link, no app to download — the client books right inside the chat they already have open.",
       "messages": [
-        { "from": "customer", "text": "Hi! Do you have an opening for a haircut tomorrow afternoon?", "time": "2:02 PM" },
-        { "from": "bot", "text": "We do! Tomorrow afternoon I have 3pm or 4:30pm, which works for you?", "time": "2:02 PM" },
-        { "from": "customer", "text": "4:30pm works", "time": "2:03 PM" },
-        { "from": "bot", "text": "All set ✅ Booked: Men's haircut, tomorrow at 4:30pm with Bruno. I'll remind you beforehand!", "time": "2:03 PM" }
+        {
+          "from": "customer",
+          "text": "Hi! Do you have an opening for a haircut tomorrow afternoon?",
+          "time": "2:02 PM"
+        },
+        {
+          "from": "bot",
+          "text": "We do! Tomorrow afternoon I have 3pm or 4:30pm, which works for you?",
+          "time": "2:02 PM"
+        },
+        {
+          "from": "customer",
+          "text": "4:30pm works",
+          "time": "2:03 PM"
+        },
+        {
+          "from": "bot",
+          "text": "All set ✅ Booked: Men's haircut, tomorrow at 4:30pm with Bruno. I'll remind you beforehand!",
+          "time": "2:03 PM"
+        }
       ]
     },
     "bookingDemo": {
@@ -725,6 +847,8 @@
     "servicePlaceholder": "Select a service",
     "staffLabel": "Staff member",
     "staffAnyOption": "No preference",
+    "variantLabel": "Option",
+    "variantPlaceholder": "Select an option",
     "dateLabel": "Date",
     "checkAvailabilityButton": "See available times",
     "checkingAvailability": "Looking up available times...",
@@ -929,48 +1053,194 @@
   "legal": {
     "backLink": "← Back to Zappigo",
     "lastUpdatedPrefix": "Last updated:",
-    "disclaimer": "⚠️ Reference template as a starting point — not yet reviewed by a lawyer. Fill in the bracketed fields with the company's real details and get legal review before using this with real charges.",
     "termsTitle": "Terms of Use",
     "privacyTitle": "Privacy Policy",
     "terms": {
       "sections": [
-        { "title": "1. Parties and acceptance", "body": "<p style=\"margin:0 0 12px\">These Terms of Use (\"Terms\") govern the use of the Zappigo platform (\"Zappigo\", \"we\") by you (\"Customer\"). Questions about these Terms: <strong>suporte@zappigo.com.br</strong>.</p><p style=\"margin:0 0 12px\">By clicking \"Create account\" (or equivalent) and actually completing signup, you declare that you have read, understood, and fully accepted these Terms and the <a href=\"/privacy\" style=\"color:#2563eb\">Privacy Policy</a> — a valid and binding electronic acceptance under art. 107 of the Brazilian Civil Code and Law No. 14.063/2020, regardless of a physical signature.</p>" },
-        { "title": "2. Subject of the agreement", "body": "<p style=\"margin:0 0 12px\">Zappigo is a multi-tenant platform that lets the Customer configure an AI virtual assistant to answer end-customer questions, book appointments, and escalate conversations to human support, integrable via a chat widget on a website and/or WhatsApp.</p>" },
-        { "title": "3. Registration and account", "body": "<p style=\"margin:0 0 12px\">To use Zappigo, you must provide true, complete, and up-to-date information, and you're responsible for keeping your password confidential and for all activity on your account. You represent that you have the legal authority to enter into this agreement on behalf of the company you're registering.</p>" },
-        { "title": "4. Access plan and pricing", "body": "<p style=\"margin:0 0 12px\">Zappigo is currently <strong>free to use, with no credit card required</strong>, for an indefinite period while the platform's launch and validation phase in Brazil lasts. This does not constitute a promise of permanent free access, nor a vested right to keep using the platform for free.</p><p style=\"margin:0 0 12px\">Zappigo reserves the right, at its sole discretion, to: (i) begin charging for use of the platform, whether through paid plans with recurring monthly billing processed by Stripe, or through another billing model; and/or (ii) suspend, discontinue, or substantially modify the platform, in whole or in part, at any time. Any such change will be communicated to the Customer at least <strong>30 (thirty) days in advance</strong>, by registered email and/or notice on the dashboard itself, before it takes effect.</p><p style=\"margin:0 0 12px\">If Zappigo begins charging for use, the prices in effect at the time will be available at <strong>zappigo.com.br/#precos</strong>. Customers already active keep the price in effect on the date billing starts applying to them until the end of the current cycle — any later adjustment follows the 30-day advance notice below, never retroactively. The Customer may choose not to move to a paid plan, in which case access may be suspended at the end of the notice period above. Once active, paid plans may be adjusted with at least 30 days' advance notice, applicable from the next billing cycle onward; failure to pay an invoice may result in access being suspended until the account is brought current.</p>" },
-        { "title": "5. License to use", "body": "<p style=\"margin:0 0 12px\">Zappigo grants the Customer a limited, non-exclusive, non-transferable, and revocable license to access and use the platform solely for the purposes set out in these Terms, for the duration of the agreement. Copying, modifying, reverse engineering, decompiling, sublicensing, or reselling the platform (including under a white-label model) without Zappigo's express written authorization is prohibited.</p>" },
-        { "title": "6. Customer's obligations", "body": "<p style=\"margin:0 0 12px\">You agree not to use Zappigo to:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li>send spam or illegal, discriminatory content, or content that violates third-party rights;</li><li>attempt to access data belonging to other companies registered on the platform;</li><li>use Zappigo's shared WhatsApp number for purposes other than supporting your own customers;</li><li>send messages to end customers who haven't consented to receive them through that channel;</li><li>overload or attempt to compromise the platform's infrastructure.</li></ul><p style=\"margin:0 0 12px\"><strong>LGPD compliance.</strong> The Customer is responsible for having its own legal basis to process its end customers' data and for complying with the LGPD in its relationship with them, to the extent Zappigo acts as a data processor for that data (see <a href=\"/privacy\" style=\"color:#2563eb\">Privacy Policy</a>, section 2).</p><p style=\"margin:0 0 12px\"><strong>Transparency about AI.</strong> The Customer is responsible for not misleading its end customers about the fact that they're talking to an automated assistant, when directly asked about it.</p><p style=\"margin:0 0 12px\"><strong>Shared WhatsApp number.</strong> While the Customer is on the plan that uses Zappigo's shared WhatsApp number, it's responsible for obtaining prior consent from its own end customers to be contacted through that channel, as required by Meta's commercial policies. Spam reports, blocking, or banning of the number caused by one Customer's conduct may affect the channel's availability for the others — Zappigo is not liable for unavailability arising from third-party action (Meta) triggered by any Customer's misuse, and that Customer is liable for damages caused to the others in that scenario.</p><p style=\"margin:0 0 12px\"><strong>Reasonable use limit.</strong> To make the free offering viable and contain AI processing costs, we apply a monthly cap on automated messages per Customer (currently 500 end-customer messages/month, adjustable at our discretion). Once the cap is reached, new conversations for the current month are routed directly to human support instead of continuing to be processed by AI. Customers needing a higher volume can request a custom limit through the contact listed in section 1.</p>" },
-        { "title": "7. Zappigo's obligations", "body": "<p style=\"margin:0 0 12px\">Zappigo commits to making reasonable efforts to keep the platform available and working correctly, to give advance notice of scheduled maintenance that may cause significant unavailability, to comply with the LGPD in handling the data it processes as a controller (see Privacy Policy), to adopt security measures appropriate to the size of the operation, and to provide support through the channel listed in section 1. We do not guarantee uninterrupted availability — see section 12 (Disclaimer of warranties).</p>" },
-        { "title": "8. Artificial intelligence — limitations and liability", "body": "<p style=\"margin:0 0 12px\">Zappigo's virtual assistant is based on third-party language models and may, in some cases, generate incomplete, outdated, or incorrect responses, despite technical efforts to reduce that risk (e.g. responses grounded in the services, prices, and FAQ the Customer has actually registered). The Customer is responsible for reviewing and keeping up to date the catalog of services, prices, and FAQ configured on the platform, and for checking any critical information with the end customer before treating it as final. Zappigo does not guarantee the accuracy of AI-generated content and is not liable for commitments the Customer itself is unable to fulfill as a result of an incorrect response from the assistant.</p>" },
-        { "title": "9. Intellectual property", "body": "<p style=\"margin:0 0 12px\">Zappigo and all of its software, brand, and content belong to us. The content you register (services, FAQs, customer data) remains your property; you grant Zappigo a limited license to process it solely to provide the contracted service.</p>" },
-        { "title": "10. Confidentiality", "body": "<p style=\"margin:0 0 12px\">Each party agrees to keep confidential the other party's confidential information obtained under this agreement (including, for the Customer, configuration data, catalog, and customer data; and, for Zappigo, non-public technical and business aspects of the platform), using it only for the purposes of this agreement, for 3 (three) years after it ends — except for information that is already public, that the party already legitimately held before disclosure, or whose disclosure is required by law or court order.</p>" },
-        { "title": "11. Limitation of liability", "body": "<p style=\"margin:0 0 12px\">To the maximum extent permitted by law, our liability for damages arising from use of the platform is limited to the amount paid by the Customer in the 3 (three) months preceding the event — or, during the free-use period described in section 4, to R$ 500.00 (five hundred reais) — excluding lost profits, indirect damages, and third-party failures (e.g. unavailability of WhatsApp/Meta, the AI provider, or other subprocessors). This limitation does not affect rights that cannot be excluded by law, including those under Brazil's Consumer Protection Code, nor does it apply to damages arising from willful misconduct or gross negligence.</p>" },
-        { "title": "12. Disclaimer of warranties", "body": "<p style=\"margin:0 0 12px\">Zappigo is provided \"as is\" and \"as available\". We make reasonable efforts to keep the service available and accurate, but we do not guarantee uninterrupted or error-free operation, nor any specific business results from using the platform.</p>" },
-        { "title": "13. Indemnification", "body": "<p style=\"margin:0 0 12px\">The Customer agrees to indemnify and hold Zappigo harmless from third-party claims, losses, or damages arising from: use of the platform in violation of these Terms or the law; content registered by the Customer (services, FAQ, cancellation policies); or sending messages to end customers without the consent required in section 6 — including any resulting claims from those end customers or sanctions applied by Meta/WhatsApp triggered by the Customer's own conduct.</p>" },
-        { "title": "14. Term and termination", "body": "<p style=\"margin:0 0 12px\">You may cancel your subscription at any time from the dashboard (Subscription → Cancel subscription), with no penalty. Cancellation stops automatic renewal; access remains active until the end of the period already paid for. There are no refunds for amounts already paid, except where required by law (e.g. the right of withdrawal within 7 days of the first purchase, under art. 49 of Brazil's Consumer Protection Code, where applicable).</p><p style=\"margin:0 0 12px\">We may suspend or terminate your account in case of a breach of these Terms, unresolved non-payment, or use that puts the platform or other users at risk, with prior notice whenever possible. Once an account is closed (by cancellation or termination), the Customer may request an export of its data (conversation history, bookings, and records) within 30 days of closure, after which the data follows the retention period described in the Privacy Policy.</p>" },
-        { "title": "15. Data protection", "body": "<p style=\"margin:0 0 12px\">Zappigo's processing of personal data — yours and your end customers' — follows our <a href=\"/privacy\" style=\"color:#2563eb\">Privacy Policy</a>, which forms an integral part of these Terms.</p>" },
-        { "title": "16. Changes to these Terms", "body": "<p style=\"margin:0 0 12px\">We may update these Terms from time to time, with at least 30 days' advance notice for material changes, by registered email and/or notice on the dashboard. Continued use of the platform after a change takes effect constitutes acceptance of the new Terms.</p>" },
-        { "title": "17. Governing law and jurisdiction", "body": "<p style=\"margin:0 0 12px\">These Terms are governed by Brazilian law. The courts of the <strong>São Paulo/SP</strong> district (Brazil) are chosen to settle any disputes, with waiver of any other, however privileged it may be, except for the consumer's home jurisdiction where the law so requires.</p>" },
-        { "title": "18. Final provisions", "body": "<p style=\"margin:0 0 12px\">These Terms, together with the Privacy Policy, constitute the entire agreement between the parties regarding their subject matter, superseding prior understandings. If any clause is held invalid or unenforceable, the remaining clauses stay in full force. One party's tolerance of a breach of any obligation by the other does not imply a waiver of the right to demand compliance later. Neither party will be liable for delay or default caused by a force majeure event, under art. 393 of the Brazilian Civil Code. The Customer may not assign this agreement to third parties without Zappigo's prior authorization; Zappigo may freely assign it in the event of a corporate reorganization, merger, acquisition, or sale of assets, without this reducing the rights already granted to the Customer.</p>" }
+        {
+          "title": "1. Parties and acceptance",
+          "body": "<p style=\"margin:0 0 12px\">These Terms of Use (\"Terms\") govern the use of the Zappigo platform (\"Zappigo\", \"we\") by you (\"Customer\"). Questions about these Terms: <strong>suporte@zappigo.com.br</strong>.</p><p style=\"margin:0 0 12px\">By clicking \"Create account\" (or equivalent) and actually completing signup, you declare that you have read, understood, and fully accepted these Terms and the <a href=\"/privacy\" style=\"color:#2563eb\">Privacy Policy</a> — a valid and binding electronic acceptance under art. 107 of the Brazilian Civil Code and Law No. 14.063/2020, regardless of a physical signature.</p>"
+        },
+        {
+          "title": "2. Subject of the agreement",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo is a multi-tenant platform that lets the Customer configure an AI virtual assistant to answer end-customer questions, book appointments, and escalate conversations to human support, integrable via a chat widget on a website and/or WhatsApp.</p>"
+        },
+        {
+          "title": "3. Registration and account",
+          "body": "<p style=\"margin:0 0 12px\">To use Zappigo, you must provide true, complete, and up-to-date information, and you're responsible for keeping your password confidential and for all activity on your account. You represent that you have the legal authority to enter into this agreement on behalf of the company you're registering.</p>"
+        },
+        {
+          "title": "4. Access plan and pricing",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo is currently <strong>free to use, with no credit card required</strong>, for an indefinite period while the platform's launch and validation phase in Brazil lasts. This does not constitute a promise of permanent free access, nor a vested right to keep using the platform for free.</p><p style=\"margin:0 0 12px\">Zappigo reserves the right, at its sole discretion, to: (i) begin charging for use of the platform, whether through paid plans with recurring monthly billing processed by Stripe, or through another billing model; and/or (ii) suspend, discontinue, or substantially modify the platform, in whole or in part, at any time. Any such change will be communicated to the Customer at least <strong>30 (thirty) days in advance</strong>, by registered email and/or notice on the dashboard itself, before it takes effect.</p><p style=\"margin:0 0 12px\">If Zappigo begins charging for use, the prices in effect at the time will be available at <strong>zappigo.com.br/#precos</strong>. Customers already active keep the price in effect on the date billing starts applying to them until the end of the current cycle — any later adjustment follows the 30-day advance notice below, never retroactively. The Customer may choose not to move to a paid plan, in which case access may be suspended at the end of the notice period above. Once active, paid plans may be adjusted with at least 30 days' advance notice, applicable from the next billing cycle onward; failure to pay an invoice may result in access being suspended until the account is brought current.</p>"
+        },
+        {
+          "title": "5. License to use",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo grants the Customer a limited, non-exclusive, non-transferable, and revocable license to access and use the platform solely for the purposes set out in these Terms, for the duration of the agreement. Copying, modifying, reverse engineering, decompiling, sublicensing, or reselling the platform (including under a white-label model) without Zappigo's express written authorization is prohibited.</p>"
+        },
+        {
+          "title": "6. Customer's obligations",
+          "body": "<p style=\"margin:0 0 12px\">You agree not to use Zappigo to:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li>send spam or illegal, discriminatory content, or content that violates third-party rights;</li><li>attempt to access data belonging to other companies registered on the platform;</li><li>use Zappigo's shared WhatsApp number for purposes other than supporting your own customers;</li><li>send messages to end customers who haven't consented to receive them through that channel;</li><li>overload or attempt to compromise the platform's infrastructure.</li></ul><p style=\"margin:0 0 12px\"><strong>LGPD compliance.</strong> The Customer is responsible for having its own legal basis to process its end customers' data and for complying with the LGPD in its relationship with them, to the extent Zappigo acts as a data processor for that data (see <a href=\"/privacy\" style=\"color:#2563eb\">Privacy Policy</a>, section 2).</p><p style=\"margin:0 0 12px\"><strong>Transparency about AI.</strong> The Customer is responsible for not misleading its end customers about the fact that they're talking to an automated assistant, when directly asked about it.</p><p style=\"margin:0 0 12px\"><strong>Shared WhatsApp number.</strong> While the Customer is on the plan that uses Zappigo's shared WhatsApp number, it's responsible for obtaining prior consent from its own end customers to be contacted through that channel, as required by Meta's commercial policies. Spam reports, blocking, or banning of the number caused by one Customer's conduct may affect the channel's availability for the others — Zappigo is not liable for unavailability arising from third-party action (Meta) triggered by any Customer's misuse, and that Customer is liable for damages caused to the others in that scenario.</p><p style=\"margin:0 0 12px\"><strong>Reasonable use limit.</strong> To make the free offering viable and contain AI processing costs, we apply a monthly cap on automated messages per Customer (currently 500 end-customer messages/month, adjustable at our discretion). Once the cap is reached, new conversations for the current month are routed directly to human support instead of continuing to be processed by AI. Customers needing a higher volume can request a custom limit through the contact listed in section 1.</p>"
+        },
+        {
+          "title": "7. Zappigo's obligations",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo commits to making reasonable efforts to keep the platform available and working correctly, to give advance notice of scheduled maintenance that may cause significant unavailability, to comply with the LGPD in handling the data it processes as a controller (see Privacy Policy), to adopt security measures appropriate to the size of the operation, and to provide support through the channel listed in section 1. We do not guarantee uninterrupted availability — see section 12 (Disclaimer of warranties).</p>"
+        },
+        {
+          "title": "8. Artificial intelligence — limitations and liability",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo's virtual assistant is based on third-party language models and may, in some cases, generate incomplete, outdated, or incorrect responses, despite technical efforts to reduce that risk (e.g. responses grounded in the services, prices, and FAQ the Customer has actually registered). The Customer is responsible for reviewing and keeping up to date the catalog of services, prices, and FAQ configured on the platform, and for checking any critical information with the end customer before treating it as final. Zappigo does not guarantee the accuracy of AI-generated content and is not liable for commitments the Customer itself is unable to fulfill as a result of an incorrect response from the assistant.</p>"
+        },
+        {
+          "title": "9. Intellectual property",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo and all of its software, brand, and content belong to us. The content you register (services, FAQs, customer data) remains your property; you grant Zappigo a limited license to process it solely to provide the contracted service.</p>"
+        },
+        {
+          "title": "10. Confidentiality",
+          "body": "<p style=\"margin:0 0 12px\">Each party agrees to keep confidential the other party's confidential information obtained under this agreement (including, for the Customer, configuration data, catalog, and customer data; and, for Zappigo, non-public technical and business aspects of the platform), using it only for the purposes of this agreement, for 3 (three) years after it ends — except for information that is already public, that the party already legitimately held before disclosure, or whose disclosure is required by law or court order.</p>"
+        },
+        {
+          "title": "11. Limitation of liability",
+          "body": "<p style=\"margin:0 0 12px\">To the maximum extent permitted by law, our liability for damages arising from use of the platform is limited to the amount paid by the Customer in the 3 (three) months preceding the event — or, during the free-use period described in section 4, to R$ 500.00 (five hundred reais) — excluding lost profits, indirect damages, and third-party failures (e.g. unavailability of WhatsApp/Meta, the AI provider, or other subprocessors). This limitation does not affect rights that cannot be excluded by law, including those under Brazil's Consumer Protection Code, nor does it apply to damages arising from willful misconduct or gross negligence.</p>"
+        },
+        {
+          "title": "12. Disclaimer of warranties",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo is provided \"as is\" and \"as available\". We make reasonable efforts to keep the service available and accurate, but we do not guarantee uninterrupted or error-free operation, nor any specific business results from using the platform.</p>"
+        },
+        {
+          "title": "13. Indemnification",
+          "body": "<p style=\"margin:0 0 12px\">The Customer agrees to indemnify and hold Zappigo harmless from third-party claims, losses, or damages arising from: use of the platform in violation of these Terms or the law; content registered by the Customer (services, FAQ, cancellation policies); or sending messages to end customers without the consent required in section 6 — including any resulting claims from those end customers or sanctions applied by Meta/WhatsApp triggered by the Customer's own conduct.</p>"
+        },
+        {
+          "title": "14. Term and termination",
+          "body": "<p style=\"margin:0 0 12px\">You may cancel your subscription at any time from the dashboard (Subscription → Cancel subscription), with no penalty. Cancellation stops automatic renewal; access remains active until the end of the period already paid for. There are no refunds for amounts already paid, except where required by law (e.g. the right of withdrawal within 7 days of the first purchase, under art. 49 of Brazil's Consumer Protection Code, where applicable).</p><p style=\"margin:0 0 12px\">We may suspend or terminate your account in case of a breach of these Terms, unresolved non-payment, or use that puts the platform or other users at risk, with prior notice whenever possible. Once an account is closed (by cancellation or termination), the Customer may request an export of its data (conversation history, bookings, and records) within 30 days of closure, after which the data follows the retention period described in the Privacy Policy.</p>"
+        },
+        {
+          "title": "15. Data protection",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo's processing of personal data — yours and your end customers' — follows our <a href=\"/privacy\" style=\"color:#2563eb\">Privacy Policy</a>, which forms an integral part of these Terms.</p>"
+        },
+        {
+          "title": "16. Changes to these Terms",
+          "body": "<p style=\"margin:0 0 12px\">We may update these Terms from time to time, with at least 30 days' advance notice for material changes, by registered email and/or notice on the dashboard. Continued use of the platform after a change takes effect constitutes acceptance of the new Terms.</p>"
+        },
+        {
+          "title": "17. Governing law and jurisdiction",
+          "body": "<p style=\"margin:0 0 12px\">These Terms are governed by Brazilian law. The courts of the <strong>São Paulo/SP</strong> district (Brazil) are chosen to settle any disputes, with waiver of any other, however privileged it may be, except for the consumer's home jurisdiction where the law so requires.</p>"
+        },
+        {
+          "title": "18. Final provisions",
+          "body": "<p style=\"margin:0 0 12px\">These Terms, together with the Privacy Policy, constitute the entire agreement between the parties regarding their subject matter, superseding prior understandings. If any clause is held invalid or unenforceable, the remaining clauses stay in full force. One party's tolerance of a breach of any obligation by the other does not imply a waiver of the right to demand compliance later. Neither party will be liable for delay or default caused by a force majeure event, under art. 393 of the Brazilian Civil Code. The Customer may not assign this agreement to third parties without Zappigo's prior authorization; Zappigo may freely assign it in the event of a corporate reorganization, merger, acquisition, or sale of assets, without this reducing the rights already granted to the Customer.</p>"
+        }
       ]
     },
     "privacy": {
       "sections": [
-        { "title": "1. Controller identification", "body": "<p style=\"margin:0 0 12px\">Zappigo processes personal data as described in this Policy, in compliance with Brazil's General Data Protection Law (LGPD, Law 13.709/2018). Given the operation's current size, we don't maintain a dedicated formal Data Protection Officer (DPO) — the contact below fills that role and is the channel for exercising rights and asking questions about this Policy: <strong>suporte@zappigo.com.br</strong>.</p>" },
-        { "title": "2. Dual nature of the processing: controller and processor", "body": "<p style=\"margin:0 0 12px\">Zappigo plays two different roles, depending on whose data is involved:</p><p style=\"margin:0 0 12px\"><strong>As controller</strong>, with respect to the data of the Customer company itself and its users (whoever creates and uses the dashboard account) — collected to provide the directly contracted service.</p><p style=\"margin:0 0 12px\"><strong>As processor</strong>, with respect to the data of the Customer's end customers (people who chat with the virtual assistant) — this data is collected on the Customer's behalf, and the Customer is the controller toward its own customers; Zappigo processes it strictly following the instructions and purposes set by the Customer.</p>" },
-        { "title": "3. Data processed and purposes", "body": "<p style=\"margin:0 0 12px\"><strong>Of the Customer company and its users:</strong> name, email, phone (optional), password (stored encrypted), and payment data — processed directly by Stripe; Zappigo never stores card numbers. Used to create and maintain your account, process charges (where applicable), and provide support.</p><p style=\"margin:0 0 12px\"><strong>Of the Customer's end customers:</strong> name, phone, email (when provided), conversation history, and booking data. Used solely to operate the virtual assistant the Customer has configured (answering questions, booking appointments, escalating to human support).</p><p style=\"margin:0 0 12px\"><strong>Sensitive data.</strong> If the Customer operates in a segment involving health data (e.g. clinics, pet care with veterinary history), the assistant may incidentally collect information classified as sensitive data under art. 5, II of the LGPD (e.g. reason for visit, symptoms). In these cases, it's the Customer's responsibility — not Zappigo's — to obtain specific, explicit consent from the data subject for that processing (art. 11, LGPD) before entering that information into the conversation with the assistant; Zappigo remains a processor, handling that data only to provide the service the Customer has configured.</p><p style=\"margin:0 0 12px\"><strong>Minors.</strong> Zappigo does not intentionally collect data from minors under 18 directly. When the Customer operates in a segment whose end customers may be minors (e.g. pediatric clinics), it's the Customer's responsibility to obtain a legal guardian's consent before providing the minor's data to the assistant, under art. 14 of the LGPD.</p>" },
-        { "title": "4. Legal basis for processing", "body": "<p style=\"margin:0 0 12px\">For the Customer and its users, we process data based on performance of the service agreement entered into with Zappigo (Art. 7, V, LGPD), compliance with a legal or regulatory obligation (e.g. tax), legitimate interest for fraud prevention and service improvement, and consent where applicable.</p><p style=\"margin:0 0 12px\">For the Customer's end customers, the applicable legal basis is, as a rule, performance of the agreement between them and the Customer itself (e.g. booking a service) — not an agreement with Zappigo, consistent with the processor role described in section 2.</p>" },
-        { "title": "5. Data retention", "body": "<p style=\"margin:0 0 12px\">We keep data for as long as the account is active. After the account is closed (cancellation or termination), data is kept for up to <strong>90 (ninety) days</strong> — during which the Customer may request the export provided for in the Terms of Use — and is then deleted or anonymized, except for an additional period required by legal obligation (e.g. tax, typically 5 years) or necessary to defend legal rights in proceedings.</p>" },
-        { "title": "6. Artificial intelligence: processing and limitations", "body": "<p style=\"margin:0 0 12px\">The virtual assistant processes conversation messages (and the catalog/FAQ registered by the Customer) through the <strong>Google Gemini</strong> API to generate responses. We use Gemini's paid API (billed usage, not the free tier) — under Gemini API's current Terms of Service, data sent via the paid API <strong>is not used by Google to train or improve its models</strong>, and is logged only for a limited period for abuse detection and prevention. We recommend checking Google's current terms directly for the most up-to-date detail on these guarantees. On the reliability of generated responses, see Terms of Use, section 8.</p>" },
-        { "title": "7. Recipients and processors", "body": "<p style=\"margin:0 0 12px\">To operate the platform, we share data with the following service providers (subprocessors), each processing data only to the extent necessary for its function, under contractual confidentiality obligations:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li><strong>Stripe</strong> — payment processing;</li><li><strong>Google Gemini</strong> — natural language processing for the AI assistant;</li><li><strong>Resend</strong> — sending transactional emails;</li><li><strong>Meta / WhatsApp Cloud API</strong> — WhatsApp messaging;</li><li><strong>Google Analytics</strong> — aggregated site usage metrics (see section 11).</li></ul><p style=\"margin:0 0 12px\"><strong>International data transfer (Art. 33, LGPD).</strong> Google and Meta are companies headquartered in the United States, so data processed by these subprocessors may be transferred internationally, under the contractual and security guarantees offered by these providers.</p>" },
-        { "title": "8. Data subject rights", "body": "<p style=\"margin:0 0 12px\">Under Art. 18 of the LGPD, you (or the Customer's end customer) may request confirmation of the existence of processing, access, correction, anonymization, portability, deletion of data, information about data sharing, and withdrawal of consent. Requests can be made to <strong>suporte@zappigo.com.br</strong>.</p>" },
-        { "title": "9. Security measures", "body": "<p style=\"margin:0 0 12px\">We adopt reasonable technical and organizational measures — encryption in transit, access control, and isolation between different companies' accounts — to protect data against unauthorized access, loss, or alteration. In the event of a security incident that could pose a relevant risk or harm to data subjects, we will notify the ANPD and affected data subjects within a reasonable period, under art. 48 of the LGPD.</p>" },
-        { "title": "10. Relationship with the Customer as processor", "body": "<p style=\"margin:0 0 12px\">The Terms of Use (section 6) already set out the Customer's obligations as controller of its own end customers' data, and the conditions under which Zappigo processes that data as a processor — we don't currently maintain a separate data processing agreement (DPA); this relationship is governed by the Terms of Use together with this Policy.</p>" },
-        { "title": "11. Cookies and analytics", "body": "<p style=\"margin:0 0 12px\">We use strictly necessary cookies to keep your dashboard session authenticated and to remember your language preference. We also use <strong>Google Analytics (GA4)</strong> to understand, in aggregate, how the site is used (pages visited, traffic source) — we don't use advertising tracking cookies. Browsing data collected by Google Analytics is processed under <a href=\"https://policies.google.com/privacy\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">Google's privacy policy</a>.</p>" },
-        { "title": "12. Minors", "body": "<p style=\"margin:0 0 12px\">Zappigo is a B2B service, contracted by companies, and is not directed at minors. For data about a Customer's end customers who are minors and happen to chat with the assistant, see section 3.</p>" },
-        { "title": "13. Changes to this Policy", "body": "<p style=\"margin:0 0 12px\">We may update this Policy from time to time; the current version is always available on this page, with the last-updated date at the top. Material changes will be communicated with at least 30 days' advance notice, by registered email and/or notice on the dashboard.</p>" },
-        { "title": "14. Complaints and remedies", "body": "<p style=\"margin:0 0 12px\">If you believe your data wasn't handled correctly, contact us first at <strong>suporte@zappigo.com.br</strong> so we can resolve it directly. You also have the right to file a complaint with Brazil's National Data Protection Authority (ANPD) — <a href=\"https://www.gov.br/anpd\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">gov.br/anpd</a>.</p>" }
+        {
+          "title": "1. Controller identification",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo processes personal data as described in this Policy, in compliance with Brazil's General Data Protection Law (LGPD, Law 13.709/2018). Given the operation's current size, we don't maintain a dedicated formal Data Protection Officer (DPO) — the contact below fills that role and is the channel for exercising rights and asking questions about this Policy: <strong>suporte@zappigo.com.br</strong>.</p>"
+        },
+        {
+          "title": "2. Dual nature of the processing: controller and processor",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo plays two different roles, depending on whose data is involved:</p><p style=\"margin:0 0 12px\"><strong>As controller</strong>, with respect to the data of the Customer company itself and its users (whoever creates and uses the dashboard account) — collected to provide the directly contracted service.</p><p style=\"margin:0 0 12px\"><strong>As processor</strong>, with respect to the data of the Customer's end customers (people who chat with the virtual assistant) — this data is collected on the Customer's behalf, and the Customer is the controller toward its own customers; Zappigo processes it strictly following the instructions and purposes set by the Customer.</p>"
+        },
+        {
+          "title": "3. Data processed and purposes",
+          "body": "<p style=\"margin:0 0 12px\"><strong>Of the Customer company and its users:</strong> name, email, phone (optional), password (stored encrypted), and payment data — processed directly by Stripe; Zappigo never stores card numbers. Used to create and maintain your account, process charges (where applicable), and provide support.</p><p style=\"margin:0 0 12px\"><strong>Of the Customer's end customers:</strong> name, phone, email (when provided), conversation history, and booking data. Used solely to operate the virtual assistant the Customer has configured (answering questions, booking appointments, escalating to human support).</p><p style=\"margin:0 0 12px\"><strong>Sensitive data.</strong> If the Customer operates in a segment involving health data (e.g. clinics, pet care with veterinary history), the assistant may incidentally collect information classified as sensitive data under art. 5, II of the LGPD (e.g. reason for visit, symptoms). In these cases, it's the Customer's responsibility — not Zappigo's — to obtain specific, explicit consent from the data subject for that processing (art. 11, LGPD) before entering that information into the conversation with the assistant; Zappigo remains a processor, handling that data only to provide the service the Customer has configured.</p><p style=\"margin:0 0 12px\"><strong>Minors.</strong> Zappigo does not intentionally collect data from minors under 18 directly. When the Customer operates in a segment whose end customers may be minors (e.g. pediatric clinics), it's the Customer's responsibility to obtain a legal guardian's consent before providing the minor's data to the assistant, under art. 14 of the LGPD.</p>"
+        },
+        {
+          "title": "4. Legal basis for processing",
+          "body": "<p style=\"margin:0 0 12px\">For the Customer and its users, we process data based on performance of the service agreement entered into with Zappigo (Art. 7, V, LGPD), compliance with a legal or regulatory obligation (e.g. tax), legitimate interest for fraud prevention and service improvement, and consent where applicable.</p><p style=\"margin:0 0 12px\">For the Customer's end customers, the applicable legal basis is, as a rule, performance of the agreement between them and the Customer itself (e.g. booking a service) — not an agreement with Zappigo, consistent with the processor role described in section 2.</p>"
+        },
+        {
+          "title": "5. Data retention",
+          "body": "<p style=\"margin:0 0 12px\">We keep data for as long as the account is active. After the account is closed (cancellation or termination), data is kept for up to <strong>90 (ninety) days</strong> — during which the Customer may request the export provided for in the Terms of Use — and is then deleted or anonymized, except for an additional period required by legal obligation (e.g. tax, typically 5 years) or necessary to defend legal rights in proceedings.</p>"
+        },
+        {
+          "title": "6. Artificial intelligence: processing and limitations",
+          "body": "<p style=\"margin:0 0 12px\">The virtual assistant processes conversation messages (and the catalog/FAQ registered by the Customer) through the <strong>Google Gemini</strong> API to generate responses. We use Gemini's paid API (billed usage, not the free tier) — under Gemini API's current Terms of Service, data sent via the paid API <strong>is not used by Google to train or improve its models</strong>, and is logged only for a limited period for abuse detection and prevention. We recommend checking Google's current terms directly for the most up-to-date detail on these guarantees. On the reliability of generated responses, see Terms of Use, section 8.</p>"
+        },
+        {
+          "title": "7. Recipients and processors",
+          "body": "<p style=\"margin:0 0 12px\">To operate the platform, we share data with the following service providers (subprocessors), each processing data only to the extent necessary for its function, under contractual confidentiality obligations:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li><strong>Stripe</strong> — payment processing;</li><li><strong>Google Gemini</strong> — natural language processing for the AI assistant;</li><li><strong>Resend</strong> — sending transactional emails;</li><li><strong>Meta / WhatsApp Cloud API</strong> — WhatsApp messaging;</li><li><strong>Google Analytics</strong> — aggregated site usage metrics (see section 11).</li></ul><p style=\"margin:0 0 12px\"><strong>International data transfer (Art. 33, LGPD).</strong> Google and Meta are companies headquartered in the United States, so data processed by these subprocessors may be transferred internationally, under the contractual and security guarantees offered by these providers.</p>"
+        },
+        {
+          "title": "8. Data subject rights",
+          "body": "<p style=\"margin:0 0 12px\">Under Art. 18 of the LGPD, you (or the Customer's end customer) may request confirmation of the existence of processing, access, correction, anonymization, portability, deletion of data, information about data sharing, and withdrawal of consent. Requests can be made to <strong>suporte@zappigo.com.br</strong>.</p>"
+        },
+        {
+          "title": "9. Security measures",
+          "body": "<p style=\"margin:0 0 12px\">We adopt reasonable technical and organizational measures — encryption in transit, access control, and isolation between different companies' accounts — to protect data against unauthorized access, loss, or alteration. In the event of a security incident that could pose a relevant risk or harm to data subjects, we will notify the ANPD and affected data subjects within a reasonable period, under art. 48 of the LGPD.</p>"
+        },
+        {
+          "title": "10. Relationship with the Customer as processor",
+          "body": "<p style=\"margin:0 0 12px\">The Terms of Use (section 6) already set out the Customer's obligations as controller of its own end customers' data, and the conditions under which Zappigo processes that data as a processor — we don't currently maintain a separate data processing agreement (DPA); this relationship is governed by the Terms of Use together with this Policy.</p>"
+        },
+        {
+          "title": "11. Cookies and analytics",
+          "body": "<p style=\"margin:0 0 12px\">We use strictly necessary cookies to keep your dashboard session authenticated and to remember your language preference. We also use <strong>Google Analytics (GA4)</strong> to understand, in aggregate, how the site is used (pages visited, traffic source) — we don't use advertising tracking cookies. Browsing data collected by Google Analytics is processed under <a href=\"https://policies.google.com/privacy\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">Google's privacy policy</a>.</p>"
+        },
+        {
+          "title": "12. Minors",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo is a B2B service, contracted by companies, and is not directed at minors. For data about a Customer's end customers who are minors and happen to chat with the assistant, see section 3.</p>"
+        },
+        {
+          "title": "13. Changes to this Policy",
+          "body": "<p style=\"margin:0 0 12px\">We may update this Policy from time to time; the current version is always available on this page, with the last-updated date at the top. Material changes will be communicated with at least 30 days' advance notice, by registered email and/or notice on the dashboard.</p>"
+        },
+        {
+          "title": "14. Complaints and remedies",
+          "body": "<p style=\"margin:0 0 12px\">If you believe your data wasn't handled correctly, contact us first at <strong>suporte@zappigo.com.br</strong> so we can resolve it directly. You also have the right to file a complaint with Brazil's National Data Protection Authority (ANPD) — <a href=\"https://www.gov.br/anpd\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">gov.br/anpd</a>.</p>"
+        }
       ]
     }
+  },
+  "classBooking": {
+    "tabClasses": "Classes",
+    "tabCourt": "Book a court",
+    "tabEvent": "Event",
+    "phoneLabel": "Your phone (with area code)",
+    "nameLabel": "Full name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Email (optional)",
+    "sportLabel": "Sport",
+    "levelLabel": "Your level",
+    "level_iniciante": "Beginner",
+    "level_intermediario": "Intermediate",
+    "level_avancado": "Advanced",
+    "loading": "Loading…",
+    "noSessions": "No classes with open spots in the coming days for this choice. Try another level or sport.",
+    "seatsLeft": "{n, plural, one {# spot} other {# spots}}",
+    "payOnSite": "pay on site",
+    "recommended": "fits your level",
+    "confirming": "Confirming…",
+    "confirmClass": "Reserve my spot",
+    "successTitle": "All set! 🎉",
+    "successClass": "Your spot is confirmed:\n{sport} · {day} at {time} · {court}",
+    "successCourt": "Court booked:\n{court} · {day} at {time}",
+    "successEvent": "Request received! Our team will contact you soon.",
+    "another": "Make another booking",
+    "courtIntro": "Want to play with your group? Pick a free time and book the whole court. Pay on site.",
+    "dateLabel": "Date",
+    "peopleLabel": "People",
+    "durationLabel": "Duration",
+    "minutes": "{n} min",
+    "closedThatDay": "We are closed that day.",
+    "noFree": "No free times on this date for this duration.",
+    "confirmCourt": "Book {court} at {time}",
+    "eventIntro": "Company event, birthday or something else? Tell us what you need and our team will get in touch.",
+    "eventTypeLabel": "Event type",
+    "event_empresa": "Company",
+    "event_aniversario": "Birthday",
+    "event_outro": "Other",
+    "eventDateLabel": "Preferred date",
+    "eventDatePlaceholder": "e.g. Nov 15, afternoon",
+    "notesLabel": "Details (optional)",
+    "sendEvent": "Send request",
+    "errorFull": "That class just filled up. Pick another time.",
+    "errorAlreadyEnrolled": "You are already enrolled in this class.",
+    "errorTimeConflict": "You already have another class at that time.",
+    "errorInvalidPhone": "Check the phone number — it needs an area code.",
+    "errorMissingName": "Enter your full name.",
+    "errorRateLimited": "Too many attempts. Wait a moment and try again.",
+    "errorSlotTaken": "That time was just taken. Pick another.",
+    "errorGeneric": "Could not complete this right now. Please try again."
   }
 }

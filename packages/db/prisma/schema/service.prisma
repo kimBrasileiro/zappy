@@ -44,6 +44,25 @@ model Service {
   // an entry here). Keyed by the exact spelling in staffNames — see
   // lib/bot/services.ts#resolveStaffDuration.
   staffDurations  Json     @default("{}") @map("staff_durations")
+  // Free-text, company-defined — never a fixed enum per vertical (a
+  // barbearia's "Cabelo"/"Barba" and a pet shop's "Banho e Tosa" are just
+  // different strings the same field holds). Used to group the dashboard
+  // list and the public booking form's service picker; a service with no
+  // category falls into an "Outros" bucket in both, not an error.
+  category        String?
+  // Public URL of an uploaded photo (GCS, see lib/storage.ts) — shown on the
+  // dashboard service card and the public booking form's service picker.
+  // Null just means no photo was uploaded, same non-event as no category.
+  photoUrl        String?  @map("photo_url")
+  // Price/duration variations under one service — a pet's bath priced by
+  // size, a haircut by hair length, or genuinely anything else a company
+  // wants to label itself: [{label, priceCents, durationMinutes}, ...].
+  // Empty (the default) means "no variants" — the base priceCents/
+  // durationMinutes above apply exactly as they did before this existed,
+  // same zero-migration-risk pattern as staffNames: [] meaning "no staff
+  // concept". See lib/bot/services.ts#resolveVariant, the single place that
+  // reads this alongside the base fields.
+  variants        Json     @default("[]")
   active          Boolean  @default(true)
   createdBy       String?  @map("created_by") @db.Uuid
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

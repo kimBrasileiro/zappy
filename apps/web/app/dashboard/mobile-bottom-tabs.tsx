@@ -17,13 +17,15 @@ const ICON_INBOX = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.or
 const ICON_USERS = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2.3" stroke="currentColor" stroke-width="2"/><path d="M15.5 14.2c2.6.4 4.5 2.6 4.5 5.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const ICON_MENU = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 
-export function MobileBottomTabs() {
+export function MobileBottomTabs({ modality = 'appointments' }: { modality?: string }) {
   const pathname = usePathname();
   const t = useTranslations('dashboard.nav');
 
   const tabs = [
     { href: '/dashboard', label: t('home'), icon: ICON_HOME },
-    { href: '/dashboard/bookings', label: t('bookings'), icon: ICON_CALENDAR },
+    modality === 'sports_classes'
+      ? { href: '/dashboard/agenda-quadras', label: t('courtAgenda'), icon: ICON_CALENDAR }
+      : { href: '/dashboard/bookings', label: t('bookings'), icon: ICON_CALENDAR },
     { href: '/dashboard/inbox', label: t('inbox'), icon: ICON_INBOX },
     { href: '/dashboard/clients', label: t('clients'), icon: ICON_USERS },
   ];

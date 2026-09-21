@@ -102,6 +102,12 @@ model Company {
   whatsappRoutes     WhatsAppRoute[]
   staffAbsences      StaffAbsence[]
   leads              Lead[]
+  // Sports-court modality (sports.prisma) — empty for every other company.
+  courts               Court[]
+  sportClasses         SportClass[]
+  classEnrollments     ClassEnrollment[]
+  customerSportLevels  CustomerSportLevel[]
+  courtReservations    CourtReservation[]
 
   @@map("companies")
 }

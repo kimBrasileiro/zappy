@@ -5,6 +5,8 @@ import { prisma } from '@zappigo/db';
 import { MarketingHome } from './marketing-home';
 import { LocaleSwitcher } from './locale-switcher';
 import { BookingPanel } from './booking-panel';
+import { ClassBookingPanel } from './class-booking-panel';
+import { isSportsCompany } from '../lib/modality';
 import { listServices } from '../lib/bot/services';
 import { getDeploymentTimezone, toWallClock } from '../lib/format-time';
 import { PRICING_CURRENCY_CODE } from '../lib/pricing';
@@ -76,6 +78,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(t('whatsappGreeting', { name: company.name }))}`
       : null;
   const description = company ? (company.config as { description?: string } | null)?.description || t('defaultDescription') : null;
+  const address = company ? (company.config as { address?: string } | null)?.address?.trim() || null : null;
 
   return (
     <main
@@ -108,15 +111,22 @@ export default async function HomePage({ searchParams }: PageProps) {
         {company ? (
           <>
             <h1 style={{ fontSize: 32, margin: '0 0 16px' }}>{company.name}</h1>
-            <p style={{ color: '#555', fontSize: 16, lineHeight: 1.7, margin: '0 0 32px' }}>{description}</p>
+            <p style={{ color: '#555', fontSize: 16, lineHeight: 1.7, margin: address ? '0 0 8px' : '0 0 32px' }}>{description}</p>
+            {address && (
+              <p style={{ color: '#888', fontSize: 13.5, margin: '0 0 32px' }}>📍 {address}</p>
+            )}
 
-            <BookingPanel
-              companySlug={companySlug}
-              services={services}
-              minDate={minDate}
-              locale={locale}
-              currencyCode={PRICING_CURRENCY_CODE}
-            />
+            {isSportsCompany(company) ? (
+              <ClassBookingPanel companySlug={companySlug} minDate={minDate} locale={locale} currencyCode={PRICING_CURRENCY_CODE} />
+            ) : (
+              <BookingPanel
+                companySlug={companySlug}
+                services={services}
+                minDate={minDate}
+                locale={locale}
+                currencyCode={PRICING_CURRENCY_CODE}
+              />
+            )}
 
             {waLink && (
               <div style={{ maxWidth: 420, margin: '32px auto 0' }}>

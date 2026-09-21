@@ -33,24 +33,6 @@ export async function LegalPage({
       <h1 style={{ fontSize: 30, margin: '20px 0 4px' }}>{title}</h1>
       <p style={{ color: '#888', fontSize: 13, margin: '0 0 28px' }}>{t('lastUpdatedPrefix')} {lastUpdated}</p>
 
-      {/* Not legal advice — a placeholder-filled starting point, not a
-          substitute for review by an actual lawyer before this touches real
-          payments. Deliberately loud so it doesn't get missed and
-          accidentally shipped as-is. */}
-      <div
-        style={{
-          background: '#fef3c7',
-          border: '1px solid #fde68a',
-          borderRadius: 10,
-          padding: '14px 18px',
-          fontSize: 13.5,
-          color: '#92400e',
-          marginBottom: 32,
-        }}
-      >
-        {t('disclaimer')}
-      </div>
-
       <div style={{ fontSize: 14.5, color: '#333' }}>{children}</div>
     </main>
   );

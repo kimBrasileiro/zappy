@@ -1,0 +1,151 @@
+// Sports-court modality (companies with config.modality = 'sports_classes',
+// see apps/web/lib/modality.ts). Deliberately separate from Service/Booking:
+// a class session has N seats, not one exclusive slot, so it can't share
+// Booking's unique (service_id, scheduled_at, staff_name) index — and keeping
+// it in its own tables means the barbearia/pet shop code paths can't be
+// affected by anything here.
+
+model Court {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company      Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  classes      SportClass[]
+  reservations CourtReservation[]
+
+  @@index([companyId])
+  @@map("courts")
+}
+
+// The weekly grid: one row = "this court, this weekday, this time, this
+// sport at this level". Dated sessions are DERIVED from these (weekday match
+// minus ClassSessionOverride), never materialized as rows.
+model SportClass {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String  @map("company_id") @db.Uuid
+  courtId         String  @map("court_id") @db.Uuid
+  // beach_tennis | futevolei | volei — see lib/sports/constants.ts
+  sport           String
+  // iniciante | intermediario | avancado
+  level           String
+  // 0 = Sunday .. 6 = Saturday (same convention as Date#getDay / the
+  // sun..sat keys of businessHours)
+  weekday         Int
+  // Wall-clock "HH:MM" in this deployment's own timezone, same convention
+  // as Booking.scheduledAt (converted via wallClockToUtc, never stored UTC).
+  startTime       String  @map("start_time")
+  durationMinutes Int     @map("duration_minutes")
+  capacity        Int
+  priceCents      Int     @map("price_cents")
+  instructorName  String? @map("instructor_name")
+  active          Boolean @default(true)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company     Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  court       Court                  @relation(fields: [courtId], references: [id])
+  enrollments ClassEnrollment[]
+  overrides   ClassSessionOverride[]
+
+  @@index([companyId])
+  @@index([courtId, weekday, startTime])
+  @@map("sport_classes")
+}
+
+// "This class doesn't happen on this date" (rain, holiday) — a row per
+// cancelled day instead of materializing every session.
+model ClassSessionOverride {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  classId   String   @map("class_id") @db.Uuid
+  date      DateTime @db.Date
+  status    String   @default("cancelled")
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  class SportClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, date])
+  @@map("class_session_overrides")
+}
+
+// idx_class_enrollments_unique_confirmed (partial UNIQUE (class_id, date,
+// customer_id) WHERE status = 'confirmed') is hand-written into the
+// migration SQL — Prisma has no partial-index syntax, same as
+// idx_bookings_no_double_book. Seat capacity itself is enforced inside
+// lib/sports/classes.ts#enrollInClass (row lock + count), not by the DB.
+model ClassEnrollment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId  String   @map("company_id") @db.Uuid
+  classId    String   @map("class_id") @db.Uuid
+  customerId String   @map("customer_id") @db.Uuid
+  date       DateTime @db.Date
+  // confirmed | cancelled | attended | no_show
+  status     String   @default("confirmed")
+  // Snapshotted at enrollment — later price edits on the class must not
+  // rewrite history (same reasoning as Booking.priceCents).
+  priceCents Int      @map("price_cents")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company  Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  class    SportClass @relation(fields: [classId], references: [id])
+  customer Customer   @relation(fields: [customerId], references: [id])
+
+  @@index([companyId])
+  @@index([classId, date])
+  @@index([customerId])
+  @@map("class_enrollments")
+}
+
+// The player's self-declared (or dashboard-edited) level per sport — what
+// the chat/form use to recommend classes.
+model CustomerSportLevel {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId  String   @map("company_id") @db.Uuid
+  customerId String   @map("customer_id") @db.Uuid
+  sport      String
+  level      String
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, sport])
+  @@index([companyId])
+  @@map("customer_sport_levels")
+}
+
+// A group renting a free court slot (friends playing together) — exclusive
+// occupation of the court, unlike a class session. idx_court_reservations_
+// no_double (partial UNIQUE (court_id, starts_at) WHERE status = 'confirmed')
+// is hand-written in the migration as a backstop; the real overlap check
+// (against classes AND other reservations) is lib/sports/courts.ts.
+model CourtReservation {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  courtId         String   @map("court_id") @db.Uuid
+  customerId      String?  @map("customer_id") @db.Uuid
+  startsAt        DateTime @map("starts_at") @db.Timestamptz(6)
+  durationMinutes Int      @map("duration_minutes")
+  participants    Int?
+  kind            String   @default("group_play")
+  // confirmed | cancelled
+  status          String   @default("confirmed")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  court    Court     @relation(fields: [courtId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([companyId])
+  @@index([courtId, startsAt])
+  @@map("court_reservations")
+}

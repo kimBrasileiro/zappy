@@ -8,6 +8,7 @@ import { NavLinks } from './nav-links';
 import { MobileBottomTabs } from './mobile-bottom-tabs';
 import { LocaleSwitcher } from '../locale-switcher';
 import { stopImpersonating } from './impersonate-actions';
+import { getModality } from '../../lib/modality';
 import './dashboard.css';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -25,6 +26,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const impersonatedCompany = isImpersonating
     ? await prisma.company.findUnique({ where: { id: companyId }, select: { name: true } })
     : null;
+
+  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { config: true } });
+  const modality = getModality(company ?? { config: null });
 
   return (
     <div className="dash-shell">
@@ -55,7 +59,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             <img src="/zappigo-icon.png" alt="" width={28} height={28} style={{ borderRadius: 9, flexShrink: 0 }} />
             Zappigo
           </div>
-          <span style={{ fontSize: 11.5, fontWeight: 400, color: '#8b8f9a', wordBreak: 'break-all' }}>{email}</span>
+          <span style={{ fontSize: 11.5, fontWeight: 400, color: '#6b7280', wordBreak: 'break-all' }}>{email}</span>
         </div>
         {isSuperAdmin && <CompanySwitcher companies={companies} currentCompanyId={companyId} />}
         <div style={{ padding: '0 8px 10px' }}>
@@ -66,8 +70,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             style={{
               margin: '0 8px 10px',
               padding: '8px 10px',
-              background: '#78350f',
-              color: '#fde68a',
+              background: '#fffbeb',
+              border: '1px solid #fde68a',
+              color: '#92400e',
               borderRadius: 8,
               fontSize: 11.5,
               lineHeight: 1.5,
@@ -80,7 +85,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#fde68a',
+                  color: '#92400e',
                   textDecoration: 'underline',
                   cursor: 'pointer',
                   padding: 0,
@@ -94,12 +99,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             </form>
           </div>
         )}
-        <NavLinks />
+        <NavLinks modality={modality} />
         <div className="dash-nav-spacer" />
         <SignOutButton />
       </nav>
       <main className="dash-main">{children}</main>
-      <MobileBottomTabs />
+      <MobileBottomTabs modality={modality} />
     </div>
   );
 }

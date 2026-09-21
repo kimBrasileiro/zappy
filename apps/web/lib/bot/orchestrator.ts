@@ -31,6 +31,12 @@ import {
   loadHistory,
 } from './conversation';
 import { BUSINESS_TOOLS, executeBusinessTool } from './tool-definitions';
+import { isSportsCompany } from '../modality';
+import { SPORTS_TOOLS, executeSportsTool, sportsButtonsFor } from './sports-tools';
+import { ASK_SPORT_QUESTION, buildSportsSystemPrompt, sportsOpeningQuickReplies } from './sports-prompt';
+import { getPlayerLevels } from '../sports/classes';
+import { resolvePlayerId } from '../sports/customers';
+import { SPORT_LABELS } from '../sports/constants';
 import type { TicketMetadata } from './ticket-metadata';
 import { normalizeTimePhrases } from './time-normalizer';
 import { getDeploymentTimezone, toWallClock } from '../format-time';
@@ -211,10 +217,23 @@ export async function* orchestrate(
   // but is deliberately not answered here — it's picked up normally on
   // their next message once the fixed menu below has set expectations.
   if (input.isNewContext) {
-    const greeting = `Olá, sou a assistente virtual da ${company.name}. Em que posso ajudar?`;
+    // Same config bag botName/extraInstructions read further down — read
+    // early here too since this greeting short-circuits before that point.
+    const newContextAddress = (company.config as { address?: string } | null)?.address?.trim();
+    // Sports-court companies open by asking the sport (then the level, next
+    // turn) instead of the generic appointments menu.
+    const sportsContext = isSportsCompany(company);
+    const greeting = sportsContext
+      ? `Olá, sou a assistente virtual da ${company.name}${newContextAddress ? `, situada em ${newContextAddress}` : ''}. ${ASK_SPORT_QUESTION}`
+      : newContextAddress
+        ? `Olá, sou a assistente virtual da ${company.name}, situada em ${newContextAddress}. Em que posso ajudar?`
+        : `Olá, sou a assistente virtual da ${company.name}. Em que posso ajudar?`;
     yield greeting;
     await appendMessage(ticket.id, company.id, 'bot', greeting);
-    return { quickReplies: NEW_CONTEXT_QUICK_REPLIES, escalated: isEscalated(ticket) };
+    return {
+      quickReplies: sportsContext ? Object.values(SPORT_LABELS) : NEW_CONTEXT_QUICK_REPLIES,
+      escalated: isEscalated(ticket),
+    };
   }
 
   // G11 — only once an agent has actually replied (in_progress) does the bot
@@ -248,8 +267,9 @@ export async function* orchestrate(
 
   const languageCode = input.language ?? resolveLanguage(company);
   const language = LANGUAGE_NAMES[languageCode] ?? languageCode;
-  const config = company.config as { botName?: string; extraInstructions?: string } | null;
+  const config = company.config as { botName?: string; extraInstructions?: string; address?: string } | null;
   const botName = config?.botName ?? 'Assistente';
+  const companyAddress = config?.address?.trim() || null;
   // This deployment's own local "today" (see lib/format-time.ts) — consistent
   // with services.ts treating businessHours/slots in the same timezone.
   // Matters near UTC midnight (21:00-23:59 local time for a UTC-3 or UTC+1
@@ -260,8 +280,13 @@ export async function* orchestrate(
   const todayLocal = toWallClock(deploymentTimezone, today);
   const todayIso = `${todayLocal.year}-${String(todayLocal.month0 + 1).padStart(2, '0')}-${String(todayLocal.day).padStart(2, '0')}`;
   const todayWeekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: deploymentTimezone }).format(today);
-  const systemPrompt = [
+  const appointmentsSystemPrompt = [
     `Você é ${botName}, o assistente de suporte da empresa ${company.name}.`,
+    ...(companyAddress
+      ? [
+          `Endereço da empresa: ${companyAddress}. Se essa for a primeira mensagem da conversa (sem histórico anterior), comece confirmando o nome da empresa e esse endereço antes de continuar — ex: "Você está falando com a ${company.name}, na ${companyAddress}." Isso não é necessário nas mensagens seguintes, só na primeira.`,
+        ]
+      : []),
     `Responda SEMPRE em ${language}, de forma clara, direta e simpática — todo o texto da sua resposta deve estar em ${language}, mesmo que o cliente escreva em outro idioma ou que as instruções abaixo estejam em português.`,
     `Hoje é ${todayWeekday}, ${todayIso} (formato YYYY-MM-DD).`,
     'Se o cliente pedir explicitamente para falar com um atendente, uma pessoa real ou suporte humano, OU se você não souber responder com certeza mesmo depois de checar list_faqs/list_services, chame a tool escalate_human IMEDIATAMENTE — nunca apenas diga que vai encaminhar sem ter chamado a tool, e nunca invente informações.',
@@ -288,11 +313,13 @@ export async function* orchestrate(
       : []),
     'Quando o cliente pedir para ver serviços, horários disponíveis ou quiser agendar, chame a tool correspondente IMEDIATAMENTE nesta mesma resposta — nunca diga "vou verificar" ou peça confirmação antes de chamar a tool, apenas chame.',
     'Ao confirmar um agendamento, nunca exiba o bookingId interno pro cliente — mencione só o serviço, data, hora e preço.',
+    'Sempre que informar os detalhes finais de um agendamento ao cliente (confirmado, reservado aguardando confirmação manual, ou reagendado), formate com emoji e uma linha por dado, nesse estilo: "📅 Data: [data por extenso, ex: 24/05 (sexta-feira)]", "🕐 Horário: [hora]", "💰 Valor: [preço]" — e "👤 Profissional: [nome]" só quando create_booking tiver retornado um staffName, e "🏷️ Variação: [label]" só quando tiver retornado um "variant". Coloque essas linhas depois de uma frase curta confirmando (ou explicando a reserva pendente), cada uma em sua própria linha. Não invente um emoji de local (📍) — esse app não tem endereço por agendamento.',
     'IMPORTANTE sobre horário: qualquer campo chamado exatamente "scheduledAt" retornado por uma tool está em UTC, não no horário de Brasília — NUNCA leia a hora desse campo pra falar com o cliente (dá erro de até 3 horas). Sempre que existir um campo irmão "scheduledAtLocal" ou "rescheduledFrom" no mesmo resultado, é ESSE que já vem certo em horário de Brasília e é o único que pode aparecer na sua resposta.',
     'O resultado de create_booking pode vir com "requiresManualConfirmation": true. Se vier true, NÃO diga que o agendamento está confirmado — diga que o horário foi reservado e que alguém do time vai entrar em contato pelo telefone informado pelo cliente para confirmar o agendamento e os detalhes do serviço. Se vier false (ou ausente), confirme normalmente que o agendamento está confirmado.',
     'Não existe uma tool separada para "editar" um agendamento existente — se o cliente já tem um horário marcado e quer mudar de data/hora (reagendar), trate como um agendamento novo: chame check_availability pra nova data e depois create_booking normalmente. IMPORTANTE: create_booking NUNCA cancela um agendamento existente sozinho. Se o cliente já tem um agendamento confirmado pra esse mesmo serviço, create_booking retorna erro "existing_booking_conflict" (com os dados do agendamento existente) em vez de criar o novo — nesse caso, NUNCA chame create_booking de novo automaticamente: primeiro lembre o cliente do agendamento que ele já tem e pergunte explicitamente se ele quer reagendar aquele agendamento pro novo horário (chame create_booking de novo com confirmReplaceExisting: true SÓ depois que ele confirmar isso) ou se prefere manter o antigo como está. Exceção: se a própria mensagem do cliente que motivou essa tentativa já deixou claro que a intenção é reagendar/remarcar um horário existente (ex: "preciso remarcar minha consulta"), essa frase já conta como a confirmação — pode chamar create_booking de novo com confirmReplaceExisting: true direto, sem perguntar de novo. Se o resultado de create_booking vier com "rescheduledFrom" preenchido, isso confirma que o agendamento antigo foi cancelado e o novo está confirmado (ou reservado, se requiresManualConfirmation vier true) — avise o cliente disso, nunca dê a entender que agora ele tem dois agendamentos.',
     'Se list_services trouxer "cancellationPolicy" pra um serviço, use esse texto exato pra responder perguntas do cliente sobre cancelamento/multa desse serviço — não invente prazos ou valores diferentes. Se não vier "cancellationPolicy", esse serviço não tem restrição: pode cancelar a qualquer momento sem multa.',
     'Alguns serviços têm mais de uma pessoa que atende (list_services retorna "staffOptions" nesses casos). Se houver staffOptions, pergunte ao cliente se ele tem preferência de profissional antes ou depois de checar disponibilidade — se ele já disser um nome, passe staffName em check_availability/create_booking; se disser "tanto faz" ou não tiver preferência, não passe staffName e deixe o sistema alocar automaticamente (o retorno de create_booking traz "staffName" com quem foi escolhido — sempre informe isso ao cliente). Se o cliente pedir um profissional específico e create_booking retornar erro "slot_unavailable" ou "staff_absent", NUNCA troque de profissional por conta própria — informe que esse horário/dia não está disponível com essa pessoa e, se a mensagem de erro mencionar outro profissional livre, pergunte se o cliente aceita trocar; só chame create_booking de novo com outro staffName se o cliente concordar.',
+    'Alguns serviços têm variações de preço e duração (list_services retorna "variantOptions" nesses casos — ex: porte do pet, tamanho de cabelo, cada empresa usa os labels que quiser). Se houver variantOptions, é OBRIGATÓRIO perguntar qual variação o cliente quer ANTES de chamar check_availability — nunca assuma uma, mesmo que só uma pareça óbvia pela conversa. Ignore o priceCents/durationMinutes do nível principal do serviço nesse caso — cada variante tem seu próprio preço e duração, e é isso que deve ser dito ao cliente. Passe o label exato (igual ao que veio em variantOptions) no campo "variant" de check_availability e create_booking. Se create_booking retornar erro "variant_required" ou "unknown_variant", pergunte de novo qual das opções listadas na mensagem de erro o cliente quer, nunca invente um label parecido.',
     // Per-company refinement on top of everything above — e.g. the "zappigo"
     // company itself (seeded in migrations/*_seed_zappigo_company) uses this
     // to override the FAQ x Serviços rule: its only cadastrado Service is a
@@ -301,6 +328,23 @@ export async function* orchestrate(
     // list_services like a normal tenant's catalog would.
     ...(config?.extraInstructions ? [config.extraInstructions] : []),
   ].join(' ');
+
+  // Sports-court companies run on their own prompt + tool set
+  // (lib/bot/sports-*.ts); every other company keeps the appointments prompt
+  // above, byte for byte.
+  const isSports = isSportsCompany(company);
+  const systemPrompt = isSports
+    ? buildSportsSystemPrompt({
+        botName,
+        companyName: company.name,
+        languageName: language,
+        todayWeekday,
+        todayIso,
+        companyAddress,
+        playerLevels: await getPlayerLevels(company.id, await resolvePlayerId(customer.id)),
+        extraInstructions: config?.extraInstructions,
+      })
+    : appointmentsSystemPrompt;
 
   // Only the copy the model sees is normalized — what's persisted via
   // appendMessage above stays the customer's literal text, so the dashboard
@@ -312,13 +356,15 @@ export async function* orchestrate(
   ];
 
   let full = '';
-  let toolsForThisRound = BUSINESS_TOOLS;
+  const activeTools = isSports ? SPORTS_TOOLS : BUSINESS_TOOLS;
+  let toolsForThisRound = activeTools;
   let toolRoundsUsed = 0;
   const toolNamesUsed: string[] = [];
   let slotButtons: string[] = [];
   let faqButtons: string[] = [];
   let serviceButtons: string[] = [];
   let bookingButtons: string[] = [];
+  let sportsButtons: string[] = [];
   // Starts true if the ticket was already flagged before this turn (e.g.
   // escalate_human ran on an earlier message and nobody's picked it up yet)
   // — the bot keeps answering in that state (see G11 above), but the
@@ -394,11 +440,25 @@ export async function* orchestrate(
     // (chaining across rounds, e.g. list_services then check_availability).
     const toolCall = toolCalls[0]!;
     toolNamesUsed.push(toolCall.name);
-    const toolResultContent = await executeBusinessTool(toolCall, {
+    const toolResultContent = await (isSports ? executeSportsTool : executeBusinessTool)(toolCall, {
       companyId: company.id,
       ticketId: ticket.id,
       customerId: customer.id,
     });
+
+    if (isSports) {
+      const buttons = sportsButtonsFor(toolCall.name, toolResultContent);
+      if (buttons) sportsButtons = buttons;
+      // request_event escalates the ticket itself (lib/sports/events.ts) —
+      // mirror escalate_human's flag so the widget shows "aguardando atendente".
+      if (toolCall.name === 'request_event') {
+        try {
+          if ((JSON.parse(toolResultContent) as { success?: boolean }).success) escalated = true;
+        } catch {
+          // non-JSON result — leave the flag alone
+        }
+      }
+    }
 
     if (toolCall.name === 'check_availability') {
       // The model gets the full JSON (with ISO datetimes) via the 'tool'
@@ -504,7 +564,7 @@ export async function* orchestrate(
     ];
     // Tools stay available for the next round until the round cap is hit —
     // only then is the model forced to answer in text with no more tools.
-    toolsForThisRound = toolRoundsUsed >= MAX_TOOL_ROUNDS ? [] : BUSINESS_TOOLS;
+    toolsForThisRound = toolRoundsUsed >= MAX_TOOL_ROUNDS ? [] : activeTools;
     full = ''; // discard anything from the tool-call round (there shouldn't be real content alongside a tool call)
   }
 
@@ -540,6 +600,12 @@ export async function* orchestrate(
   } else if (faqButtons.length > 0) {
     // Same reasoning — real cadastrado questions, not a generic guess.
     quickReplies = faqButtons;
+  }
+
+  if (isSports) {
+    const opening = sportsOpeningQuickReplies(full);
+    if (sportsButtons.length > 0) quickReplies = sportsButtons;
+    else if (opening) quickReplies = opening;
   }
 
   await appendMessage(ticket.id, company.id, 'bot', full, {

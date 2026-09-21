@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma, Prisma } from '@zappigo/db';
 import { requireSession } from '../../../lib/auth-server';
+import { uploadServicePhoto } from '../../../lib/storage';
 import type { BusinessHours } from './service-form';
 
 export interface ServiceFormState {
@@ -75,6 +76,52 @@ function parseStaffRows(formData: FormData): { staffNames: string[]; staffDurati
   return { staffNames, staffDurations };
 }
 
+export interface ServiceVariantInput {
+  label: string;
+  priceCents: number;
+  durationMinutes: number;
+}
+
+// Same indexed-rows shape as parseStaffRows, but every row is required to
+// be fully filled in (no partial/free variant) — a row with an empty label
+// AND nothing else typed is silently skipped (the "add" button was clicked
+// then never used), but a row with a label and an invalid/missing price or
+// duration is a real error, not silently dropped.
+function parseVariantRows(formData: FormData): ServiceVariantInput[] | 'invalid' {
+  const variants: ServiceVariantInput[] = [];
+  for (let idx = 0; formData.has(`variantLabel_${idx}`); idx++) {
+    const label = String(formData.get(`variantLabel_${idx}`) ?? '').trim();
+    const priceRaw = String(formData.get(`variantPrice_${idx}`) ?? '').trim();
+    const durationRaw = String(formData.get(`variantDuration_${idx}`) ?? '').trim();
+    if (!label && !priceRaw && !durationRaw) continue;
+
+    const priceCents = Math.round(Number(priceRaw.replace(',', '.')) * 100);
+    const durationMinutes = Math.round(Number(durationRaw));
+    if (!label || !Number.isFinite(priceCents) || priceCents < 0 || !Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+      return 'invalid';
+    }
+    variants.push({ label, priceCents, durationMinutes });
+  }
+  return variants;
+}
+
+// Best-effort, same reasoning as every other secondary-effect call in this
+// codebase (Google Calendar event creation, notifyBookingCreated's WhatsApp
+// send): a photo is a nice-to-have on top of an already-valid service, so a
+// storage failure logs and returns null rather than undoing (or blocking)
+// the create/update the caller already committed to.
+async function uploadPhotoBestEffort(formData: FormData, companyId: string, serviceId: string): Promise<string | null> {
+  const file = formData.get('photo');
+  if (!(file instanceof File) || file.size === 0) return null;
+
+  const result = await uploadServicePhoto(companyId, serviceId, file);
+  if (result.error) {
+    console.error(`[services] photo upload failed for service ${serviceId}: ${result.error}`);
+    return null;
+  }
+  return result.url ?? null;
+}
+
 function parseBusinessHours(formData: FormData): BusinessHours | null {
   // Mutually exclusive with is24h — the 24h checkbox hides this section in
   // the form entirely, and businessHours is meaningless once every day/time
@@ -105,6 +152,7 @@ export async function createService(
 
   const name = String(formData.get('name') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim() || null;
+  const category = String(formData.get('category') ?? '').trim() || null;
   const durationMinutes = parseDurationMinutes(formData);
   const priceCents = parsePriceCents(formData);
   const bookingMode = String(formData.get('bookingMode') ?? 'auto') === 'manual' ? 'manual' : 'auto';
@@ -113,17 +161,20 @@ export async function createService(
   const cancellationNoticeHours = parseCancellationNoticeHours(formData);
   const cancellationFeeCents = parseCancellationFeeCents(formData);
   const { staffNames, staffDurations } = parseStaffRows(formData);
+  const variants = parseVariantRows(formData);
 
   if (!name) return { error: t('errorNameRequired') };
   if (durationMinutes === null) return { error: t('errorInvalidDuration') };
   if (priceCents === null) return { error: t('errorInvalidPrice') };
   if (staffNames.length === 0) return { error: t('errorStaffRequired') };
+  if (variants === 'invalid') return { error: t('errorInvalidVariant') };
 
-  await prisma.service.create({
+  const service = await prisma.service.create({
     data: {
       companyId,
       name,
       description,
+      category,
       durationMinutes,
       priceCents,
       bookingMode,
@@ -133,9 +184,15 @@ export async function createService(
       cancellationFeeCents,
       staffNames,
       staffDurations,
+      variants: variants as unknown as Prisma.InputJsonValue,
       createdBy: userId,
     },
   });
+
+  // Needs the service's own id for the storage object path, so this can
+  // only happen right after creation, not as part of the same insert.
+  const photoUrl = await uploadPhotoBestEffort(formData, companyId, service.id);
+  if (photoUrl) await prisma.service.update({ where: { id: service.id }, data: { photoUrl } });
 
   revalidatePath('/dashboard/services');
   redirect('/dashboard/services');
@@ -154,6 +211,7 @@ export async function updateService(
 
   const name = String(formData.get('name') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim() || null;
+  const category = String(formData.get('category') ?? '').trim() || null;
   const durationMinutes = parseDurationMinutes(formData);
   const priceCents = parsePriceCents(formData);
   const bookingMode = String(formData.get('bookingMode') ?? 'auto') === 'manual' ? 'manual' : 'auto';
@@ -162,17 +220,22 @@ export async function updateService(
   const cancellationNoticeHours = parseCancellationNoticeHours(formData);
   const cancellationFeeCents = parseCancellationFeeCents(formData);
   const { staffNames, staffDurations } = parseStaffRows(formData);
+  const variants = parseVariantRows(formData);
 
   if (!name) return { error: t('errorNameRequired') };
   if (durationMinutes === null) return { error: t('errorInvalidDuration') };
   if (priceCents === null) return { error: t('errorInvalidPrice') };
   if (staffNames.length === 0) return { error: t('errorStaffRequired') };
+  if (variants === 'invalid') return { error: t('errorInvalidVariant') };
+
+  const photoUrl = await uploadPhotoBestEffort(formData, companyId, serviceId);
 
   await prisma.service.update({
     where: { id: serviceId },
     data: {
       name,
       description,
+      category,
       durationMinutes,
       priceCents,
       bookingMode,
@@ -182,6 +245,8 @@ export async function updateService(
       cancellationFeeCents,
       staffNames,
       staffDurations,
+      variants: variants as unknown as Prisma.InputJsonValue,
+      ...(photoUrl ? { photoUrl } : {}),
     },
   });
 

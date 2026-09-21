@@ -26,7 +26,11 @@
       "integrations": "Integraciones",
       "billing": "Suscripción",
       "support": "Soporte",
-      "more": "Más"
+      "more": "Más",
+      "courtAgenda": "Agenda",
+      "classGrid": "Clases",
+      "courts": "Canchas",
+      "students": "Alumnos"
     },
     "impersonation": {
       "viewingAs": "Viendo como <b>{name}</b>.",
@@ -35,6 +39,8 @@
     "home": {
       "title": "Resumen",
       "subtitle": "Resumen de tu empresa, actualizado ahora.",
+      "greeting": "¡Hola! 👋 Bienvenido al panel de {name}.",
+      "greetingSubtitle": "Aquí tienes un resumen rápido de cómo va tu empresa.",
       "profileCardTitle": "Nombre y descripción de la empresa",
       "profileCardBody": "El nombre aparece para el cliente en el botón de WhatsApp del widget (ej: \"Hola, quiero agendar servicios con {name}\") y es como el bot se identifica en las conversaciones. La descripción aparece en tu página pública (mira abajo).",
       "checklistTitle": "Primeros pasos",
@@ -73,6 +79,7 @@
       "noConversations": "Todavía no hay conversaciones.",
       "companyNamePlaceholder": "Nombre de la empresa",
       "companyDescriptionPlaceholder": "Descripción breve de la empresa — aparece en tu página pública (ej: Pet shop con baño, peluquería y consultas veterinarias en el barrio X)",
+      "companyAddressPlaceholder": "Dirección (ej: Rua Harmonia, 123 — Vila Madalena, São Paulo) — el asistente se lo dice al cliente en el primer mensaje",
       "saveButton": "Guardar",
       "saving": "Guardando...",
       "errorNameRequired": "El nombre es obligatorio."
@@ -185,6 +192,7 @@
       "deactivate": "Desactivar",
       "delete": "Eliminar",
       "noServices": "Todavía no hay servicios.",
+      "categoryUncategorized": "Otros",
       "badge24h": "24h",
       "cancellationNotice": "Cancelación hasta {hours}h antes",
       "cancellationFeeNote": " — multa de {fee}",
@@ -202,6 +210,16 @@
       "formNameLabel": "Nombre",
       "formNamePlaceholder": "Corte de cabello",
       "formDescriptionLabel": "Descripción (opcional)",
+      "formCategoryLabel": "Categoría (opcional)",
+      "formCategoryPlaceholder": "Ej: Cabello, Baño y Corte, Uñas...",
+      "formPhotoLabel": "Foto (opcional)",
+      "formPhotoHint": "JPEG, PNG o WebP, hasta 5MB. Aparece en el formulario de reservas público.",
+      "formVariantsLabel": "Variaciones de precio y duración (opcional)",
+      "formVariantsHint": "Úsalo cuando el precio o el tiempo cambian según tamaño, porte de mascota, largo de cabello, etc. Déjalo vacío si este servicio tiene un precio y duración únicos (ya completados arriba).",
+      "formVariantLabelPlaceholder": "Ej: Pequeño, Mediano, Grande",
+      "formVariantPricePlaceholder": "Precio",
+      "formVariantDurationPlaceholder": "Min.",
+      "formVariantsAdd": "+ agregar variación",
       "formDurationLabel": "Duración",
       "formDurationUnitLabel": "Unidad",
       "unitMinutes": "minutos",
@@ -237,6 +255,7 @@
       "errorInvalidDuration": "Duración inválida.",
       "errorInvalidPrice": "Precio inválido.",
       "errorStaffRequired": "Agrega al menos un profesional responsable de este servicio.",
+      "errorInvalidVariant": "Cada variación necesita un nombre, un precio y una duración válidos.",
       "errorServiceNotFound": "Servicio no encontrado.",
       "errorChooseStaff": "Elige una persona del equipo de este servicio.",
       "errorChooseDate": "Elige una fecha válida.",
@@ -310,17 +329,29 @@
     },
     "reports": {
       "title": "Informes",
-      "subtitle": "Facturación, ocupación y los servicios y clientes que más rinden.",
-      "periodDays": "{days} días",
+      "subtitle": "Facturación, ocupación, y lo que cada servicio, cliente y profesional generó",
+      "periodWeek": "Esta semana",
+      "periodMonth": "Este mes",
+      "periodCustomTitle": "Período personalizado",
+      "periodFromLabel": "Desde",
+      "periodToLabel": "Hasta",
+      "periodApplyButton": "Aplicar",
       "statRevenue": "Facturación",
       "statCompleted": "Atenciones completadas",
       "statCancellationRate": "Tasa de cancelación",
       "statNewClients": "Nuevos clientes",
       "statOccupancy": "Ocupación de la agenda",
-      "sectionTopServices": "Servicios que más rinden",
-      "sectionTopClients": "Clientes que más rinden",
-      "noData": "No hay datos suficientes en este período.",
-      "bookingsCount": "{count, plural, one {1 cita} other {# citas}}"
+      "sectionByStaff": "Por profesional",
+      "sectionTopServices": "Por servicio",
+      "sectionTopClients": "Por cliente",
+      "tableStaffName": "Profesional",
+      "tableStaffBookings": "Atenciones",
+      "tableStaffHours": "Horas trabajadas",
+      "tableStaffRevenue": "Facturación",
+      "tableServiceName": "Servicio",
+      "tableClientName": "Cliente",
+      "anonymous": "Anónimo",
+      "noData": "No hay datos suficientes en este período."
     },
     "leads": {
       "title": "Leads",
@@ -406,6 +437,8 @@
       "whatsappButtonBody": "¿Prefieres un botón listo, con ícono, en vez de un enlace simple? Pega este HTML en cualquier parte de tu sitio — funciona solo, sin depender de ningún CSS o script tuyo:",
       "whatsappButtonLabel": "Habla por WhatsApp",
       "whatsappNotConfiguredButton": "El número compartido de WhatsApp de Zappigo aún no se ha configurado en esta instancia — en cuanto lo esté, el botón aparece aquí automáticamente.",
+      "bookingEmbedCardTitle": "Formulario de reservas para tu web",
+      "bookingEmbedCardBody": "El mismo formulario de reservas de tu página Zappigo, incorporado directo en tu web. Pega este código donde quieras que aparezca — ajusta su propia altura solo, sin necesidad de configurar nada más:",
       "chatScriptCardTitle": "Script del chat",
       "chatScriptBody": "Una línea de <code>script</code>, sin cambios en el resto del sitio — pégala antes del cierre de la etiqueta <code>body</code>. ¿Nunca hiciste esto? Mira abajo cómo hacerlo según dónde está hecho tu sitio:",
       "wordpressSummary": "Mi sitio es WordPress",
@@ -453,6 +486,76 @@
       "whatsappErrorSubscribeFailed": "Las credenciales son válidas, pero no pudimos suscribir ese número para recibir mensajes en nuestro sistema. Intenta de nuevo en unos minutos.",
       "whatsappErrorAlreadyConnected": "Tu empresa ya tiene otro número conectado. Desconéctalo antes de conectar uno diferente.",
       "whatsappErrorNumberTaken": "Ese número ya está conectado a otra empresa en Zappigo. Revisa el Phone Number ID o contacta con soporte."
+    },
+    "sports": {
+      "courtsTitle": "Canchas",
+      "courtsSubtitle": "Las canchas de tu espacio. Cada cancha tiene su propia grilla de clases.",
+      "courtName": "Nombre de la cancha",
+      "courtNamePlaceholder": "Ej: Cancha 4",
+      "addCourt": "Agregar cancha",
+      "noCourts": "Aún no hay canchas.",
+      "activeClasses": "Clases activas",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "classesTitle": "Clases",
+      "classesSubtitle": "La grilla semanal de clases. Cada fila se repite cada semana; los alumnos reservan un cupo en una fecha específica.",
+      "needCourtFirst": "Primero agrega una cancha.",
+      "court": "Cancha",
+      "weekday": "Día de la semana",
+      "startTime": "Inicio",
+      "durationMinutes": "Duración (min)",
+      "sport": "Deporte",
+      "level": "Nivel",
+      "capacity": "Cupos",
+      "price": "Precio",
+      "instructor": "Profesor (opcional)",
+      "addClass": "Agregar clase",
+      "time": "Horario",
+      "class": "Clase",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "remove": "Quitar",
+      "level_iniciante": "Principiante",
+      "level_intermediario": "Intermedio",
+      "level_avancado": "Avanzado",
+      "error_nameRequired": "Ingresa el nombre de la cancha.",
+      "error_nameTaken": "Ya existe una cancha con ese nombre.",
+      "error_invalid": "Revisa los campos — algún valor no es válido.",
+      "error_overlap": "Esa cancha ya tiene una clase en ese día y horario.",
+      "agendaTitle": "Agenda de canchas",
+      "agendaSubtitle": "Clases, reservas de grupo y horarios libres — por cancha, día a día.",
+      "today": "Hoy",
+      "closedThatDay": "Cerrado ese día.",
+      "nothingToday": "Nada programado.",
+      "free": "libre",
+      "openClassHere": "Abrir clase aquí",
+      "openClassButton": "Abrir clase",
+      "openClassHint": "Se convierte en una clase fija cada {weekday}. Ajústala luego en Clases.",
+      "groupReservation": "Reserva de grupo",
+      "people": "{n} personas",
+      "cancelReservation": "Cancelar reserva",
+      "sessionCancelled": "cancelada ese día",
+      "cancelSession": "Cancelar clase ese día",
+      "restoreSession": "Reabrir clase ese día",
+      "attended": "Asistió",
+      "noShow": "No asistió",
+      "studentLevels": "Nivel por deporte",
+      "noLevel": "Sin definir",
+      "saveLevel": "Guardar",
+      "weekday_sun": "Dom",
+      "weekday_mon": "Lun",
+      "weekday_tue": "Mar",
+      "weekday_wed": "Mié",
+      "weekday_thu": "Jue",
+      "weekday_fri": "Vie",
+      "weekday_sat": "Sáb",
+      "weekdayFull_sun": "Domingo",
+      "weekdayFull_mon": "Lunes",
+      "weekdayFull_tue": "Martes",
+      "weekdayFull_wed": "Miércoles",
+      "weekdayFull_thu": "Jueves",
+      "weekdayFull_fri": "Viernes",
+      "weekdayFull_sat": "Sábado"
     }
   },
   "metadata": {
@@ -473,7 +576,10 @@
       "FAQ automático",
       "chat con IA para empresas"
     ],
-    "keywordsFree": ["agenda por whatsapp gratis", "sistema de citas gratis"],
+    "keywordsFree": [
+      "agenda por whatsapp gratis",
+      "sistema de citas gratis"
+    ],
     "ogLocale": "es_ES"
   },
   "marketing": {
@@ -686,10 +792,26 @@
       "contactStatus": "en línea",
       "caption": "Sin link, sin app que descargar — el cliente agenda directo en la conversación que ya tiene abierta.",
       "messages": [
-        { "from": "customer", "text": "¡Hola! ¿Tienen horario para un corte mañana por la tarde?", "time": "14:02" },
-        { "from": "bot", "text": "¡Sí! Mañana por la tarde tengo las 15h o las 16:30h, ¿cuál prefieres?", "time": "14:02" },
-        { "from": "customer", "text": "Las 16:30h está bien", "time": "14:03" },
-        { "from": "bot", "text": "Listo ✅ Agendado: Corte, mañana a las 16:30h con Bruno. ¡Te aviso antes!", "time": "14:03" }
+        {
+          "from": "customer",
+          "text": "¡Hola! ¿Tienen horario para un corte mañana por la tarde?",
+          "time": "14:02"
+        },
+        {
+          "from": "bot",
+          "text": "¡Sí! Mañana por la tarde tengo las 15h o las 16:30h, ¿cuál prefieres?",
+          "time": "14:02"
+        },
+        {
+          "from": "customer",
+          "text": "Las 16:30h está bien",
+          "time": "14:03"
+        },
+        {
+          "from": "bot",
+          "text": "Listo ✅ Agendado: Corte, mañana a las 16:30h con Bruno. ¡Te aviso antes!",
+          "time": "14:03"
+        }
       ]
     },
     "bookingDemo": {
@@ -725,6 +847,8 @@
     "servicePlaceholder": "Selecciona un servicio",
     "staffLabel": "Profesional",
     "staffAnyOption": "Sin preferencia",
+    "variantLabel": "Opción",
+    "variantPlaceholder": "Selecciona una opción",
     "dateLabel": "Fecha",
     "checkAvailabilityButton": "Ver horarios",
     "checkingAvailability": "Buscando horarios...",
@@ -929,48 +1053,194 @@
   "legal": {
     "backLink": "← Volver a Zappigo",
     "lastUpdatedPrefix": "Última actualización:",
-    "disclaimer": "⚠️ Modelo de referencia como punto de partida — todavía no fue revisado por un abogado. Complete los campos entre corchetes con los datos reales de la empresa y pase por revisión jurídica antes de usarlo con cobros reales.",
     "termsTitle": "Términos de Uso",
     "privacyTitle": "Política de Privacidad",
     "terms": {
       "sections": [
-        { "title": "1. Partes y aceptación", "body": "<p style=\"margin:0 0 12px\">Estos Términos de Uso (\"Términos\") rigen el uso de la plataforma Zappigo (\"Zappigo\", \"nosotros\") por parte de usted (\"Contratante\"). Dudas sobre estos Términos: <strong>suporte@zappigo.com.br</strong>.</p><p style=\"margin:0 0 12px\">Al hacer clic en \"Crear cuenta\" (o equivalente) y completar efectivamente el registro, usted declara haber leído, comprendido y aceptado íntegramente estos Términos y la <a href=\"/privacy\" style=\"color:#2563eb\">Política de Privacidad</a> — aceptación electrónica válida y vinculante en los términos del art. 107 del Código Civil brasileño y de la Ley n.º 14.063/2020, independientemente de firma física.</p>" },
-        { "title": "2. Objeto del contrato", "body": "<p style=\"margin:0 0 12px\">Zappigo es una plataforma multi-tenant que permite a la Contratante configurar un asistente virtual de IA para responder dudas de clientes finales, agendar horarios y derivar conversaciones a atención humana, integrable mediante widget de chat en el sitio web y/o WhatsApp.</p>" },
-        { "title": "3. Registro y cuenta", "body": "<p style=\"margin:0 0 12px\">Para usar Zappigo, usted debe proporcionar información verdadera, completa y actualizada, y es responsable de mantener la confidencialidad de su contraseña y de todas las actividades realizadas en su cuenta. Usted declara tener capacidad legal para contratar en nombre de la empresa que está registrando.</p>" },
-        { "title": "4. Plan de acceso y precio", "body": "<p style=\"margin:0 0 12px\">Actualmente, el uso de Zappigo es <strong>gratuito, sin necesidad de tarjeta de crédito</strong>, por tiempo indeterminado, mientras dure la fase de lanzamiento y validación de la plataforma en Brasil. Esto no constituye una promesa de gratuidad permanente ni un derecho adquirido a seguir usando la plataforma de forma gratuita.</p><p style=\"margin:0 0 12px\">Zappigo se reserva el derecho, a su exclusivo criterio, de: (i) empezar a cobrar por el uso de la plataforma, ya sea mediante planes pagos con cobro mensual recurrente procesado por Stripe, ya sea por otro modelo de cobro; y/o (ii) suspender, cerrar o modificar sustancialmente la plataforma, en todo o en parte, en cualquier momento. Cualquiera de estos cambios será comunicado a la Contratante con al menos <strong>30 (treinta) días de anticipación</strong>, por correo electrónico registrado y/o aviso en el propio panel, antes de entrar en vigor.</p><p style=\"margin:0 0 12px\">Si Zappigo empieza a cobrar por el uso, los precios vigentes en ese momento estarán disponibles en <strong>zappigo.com.br/#precos</strong>. Las Contratantes ya activas mantienen el precio vigente en la fecha en que el cobro comience a aplicarles hasta el fin del ciclo en curso — cualquier ajuste posterior sigue el aviso previo de 30 días indicado abajo, nunca retroactivo. La Contratante podrá optar por no adherirse al plan pago, en cuyo caso el acceso podrá suspenderse al término del plazo de aviso mencionado. Una vez activos, los planes pagos pueden ser reajustados mediante aviso previo de al menos 30 días, aplicable a partir del próximo ciclo de facturación; la falta de pago de una factura puede resultar en la suspensión del acceso hasta su regularización.</p>" },
-        { "title": "5. Licencia de uso", "body": "<p style=\"margin:0 0 12px\">Zappigo otorga a la Contratante una licencia limitada, no exclusiva, intransferible y revocable para acceder y usar la plataforma exclusivamente para los fines previstos en estos Términos, durante la vigencia del contrato. Está prohibido copiar, modificar, realizar ingeniería inversa, descompilar, sublicenciar o revender la plataforma (incluso en modelo white-label) sin autorización expresa y por escrito de Zappigo.</p>" },
-        { "title": "6. Obligaciones de la Contratante", "body": "<p style=\"margin:0 0 12px\">Usted acepta no usar Zappigo para:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li>enviar spam o contenido ilegal, discriminatorio o que viole derechos de terceros;</li><li>intentar acceder a datos de otras empresas registradas en la plataforma;</li><li>usar el número de WhatsApp compartido de Zappigo para fines distintos de la atención a sus propios clientes;</li><li>enviar mensajes a clientes finales que no hayan consentido recibirlos por ese canal;</li><li>sobrecargar o intentar comprometer la infraestructura de la plataforma.</li></ul><p style=\"margin:0 0 12px\"><strong>Cumplimiento de la LGPD.</strong> La Contratante es responsable de contar con base legal propia para tratar los datos de sus clientes finales y de cumplir con la LGPD en su relación con ellos, en la medida en que Zappigo actúa como encargada de esos datos (ver <a href=\"/privacy\" style=\"color:#2563eb\">Política de Privacidad</a>, sección 2).</p><p style=\"margin:0 0 12px\"><strong>Transparencia sobre IA.</strong> Es responsabilidad de la Contratante no inducir a error a sus clientes finales sobre el hecho de estar conversando con un asistente automatizado, cuando se les pregunte directamente al respecto.</p><p style=\"margin:0 0 12px\"><strong>Número de WhatsApp compartido.</strong> Mientras la Contratante esté en el plan que usa el número de WhatsApp compartido de Zappigo, es responsable de obtener el consentimiento previo de sus propios clientes finales para el contacto por ese canal, conforme lo exigen las políticas comerciales de Meta. Las denuncias de spam, bloqueo o baneo del número causados por la conducta de una Contratante pueden afectar la disponibilidad del canal para las demás — Zappigo no se responsabiliza por la indisponibilidad derivada de acciones de terceros (Meta) motivadas por el uso indebido de cualquier Contratante, y la Contratante responde por los perjuicios causados a las demás en ese escenario.</p><p style=\"margin:0 0 12px\"><strong>Límite de uso razonable.</strong> Para viabilizar la oferta gratuita y contener los costos de procesamiento por IA, aplicamos un tope de mensajes automáticos por mes por Contratante (actualmente 500 mensajes de clientes finales/mes, ajustable a nuestro criterio). Al alcanzar el tope, las nuevas conversaciones del mes en curso se derivan directamente a atención humana en lugar de seguir siendo procesadas por la IA. Las Contratantes que necesiten un volumen mayor pueden solicitar un límite personalizado por el contacto indicado en la sección 1.</p>" },
-        { "title": "7. Obligaciones de Zappigo", "body": "<p style=\"margin:0 0 12px\">Zappigo se compromete a realizar esfuerzos razonables para mantener la plataforma disponible y funcionando correctamente, a avisar previamente sobre mantenimientos programados que puedan causar indisponibilidad relevante, a cumplir con la LGPD en el tratamiento de los datos que trata como controladora (ver Política de Privacidad), a adoptar medidas de seguridad acordes con el tamaño de la operación, y a brindar soporte por el canal indicado en la sección 1. No garantizamos disponibilidad ininterrumpida — ver sección 12 (Exclusión de garantías).</p>" },
-        { "title": "8. Inteligencia artificial — limitaciones y responsabilidad", "body": "<p style=\"margin:0 0 12px\">El asistente virtual de Zappigo se basa en modelos de lenguaje de terceros y puede, en algunos casos, generar respuestas incompletas, desactualizadas o incorrectas, a pesar de los esfuerzos técnicos para reducir ese riesgo (ej.: respuestas basadas en los servicios, precios y FAQ efectivamente registrados por la Contratante). La Contratante es responsable de revisar y mantener actualizado el catálogo de servicios, precios y FAQ configurado en la plataforma, y de verificar con el cliente final cualquier información crítica antes de considerarla definitiva. Zappigo no garantiza la exactitud del contenido generado por la IA y no se responsabiliza por compromisos que la propia Contratante no pueda cumplir como consecuencia de una respuesta incorrecta del asistente.</p>" },
-        { "title": "9. Propiedad intelectual", "body": "<p style=\"margin:0 0 12px\">Zappigo y todo su software, marca y contenido son de nuestra propiedad. El contenido que usted registra (servicios, FAQ, datos de clientes) sigue siendo de su propiedad; usted otorga a Zappigo una licencia limitada para procesarlo exclusivamente con el fin de prestar el servicio contratado.</p>" },
-        { "title": "10. Confidencialidad", "body": "<p style=\"margin:0 0 12px\">Cada parte se compromete a mantener en secreto la información confidencial de la otra parte obtenida en razón de este contrato (incluyendo, en el caso de la Contratante, datos de configuración, catálogo y clientes; y, en el caso de Zappigo, aspectos técnicos y comerciales no públicos de la plataforma), utilizándola solo para los fines de este contrato, por un plazo de 3 (tres) años tras su finalización — salvo información que ya sea pública, que la parte ya poseyera legítimamente antes de la divulgación, o cuya divulgación sea exigida por ley u orden judicial.</p>" },
-        { "title": "11. Limitación de responsabilidad", "body": "<p style=\"margin:0 0 12px\">En la máxima medida permitida por la ley, nuestra responsabilidad por daños derivados del uso de la plataforma queda limitada al valor pagado por la Contratante en los 3 (tres) meses anteriores al evento — o, durante el período de uso gratuito descrito en la sección 4, al valor de R$ 500,00 (quinientos reales) — excluyendo lucro cesante, daños indirectos y fallas de terceros (ej.: indisponibilidad de WhatsApp/Meta, del proveedor de IA u otros subencargados). Esta limitación no afecta los derechos que no pueden excluirse por ley, incluidos los previstos en el Código de Defensa del Consumidor brasileño, ni se aplica a daños derivados de dolo o culpa grave.</p>" },
-        { "title": "12. Exclusión de garantías", "body": "<p style=\"margin:0 0 12px\">Zappigo se proporciona \"tal cual\" y \"según disponibilidad\". Realizamos esfuerzos razonables para mantener el servicio disponible y preciso, pero no garantizamos una operación ininterrumpida o libre de errores, ni resultados específicos de negocio derivados del uso de la plataforma.</p>" },
-        { "title": "13. Indemnización", "body": "<p style=\"margin:0 0 12px\">La Contratante acepta indemnizar y eximir a Zappigo de reclamaciones, pérdidas o daños de terceros derivados de: el uso de la plataforma en infracción de estos Términos o de la ley; contenido registrado por la Contratante (servicios, FAQ, políticas de cancelación); o el envío de mensajes a clientes finales sin el consentimiento exigido en la sección 6 — incluyendo eventuales reclamaciones de esos clientes finales o sanciones aplicadas por Meta/WhatsApp motivadas por la conducta de la propia Contratante.</p>" },
-        { "title": "14. Vigencia y resolución", "body": "<p style=\"margin:0 0 12px\">Usted puede cancelar su suscripción en cualquier momento desde el panel (Suscripción → Cancelar suscripción), sin multa. La cancelación interrumpe la renovación automática; el acceso permanece activo hasta el fin del período ya pagado. No hay reembolso de valores ya pagados, salvo cuando lo exija la ley (ej.: derecho de arrepentimiento dentro de los 7 días posteriores a la primera contratación, en los términos del art. 49 del Código de Defensa del Consumidor brasileño, cuando corresponda).</p><p style=\"margin:0 0 12px\">Podemos suspender o cerrar su cuenta en caso de incumplimiento de estos Términos, mora no regularizada, o uso que ponga en riesgo la plataforma u otros usuarios, mediante notificación previa siempre que sea posible. Una vez cerrada la cuenta (por cancelación o rescisión), la Contratante puede solicitar la exportación de sus datos (historial de conversaciones, citas y registros) dentro de los 30 días posteriores al cierre, transcurridos los cuales los datos siguen el plazo de retención descrito en la Política de Privacidad.</p>" },
-        { "title": "15. Protección de datos", "body": "<p style=\"margin:0 0 12px\">El tratamiento de datos personales por parte de Zappigo — los suyos y los de sus clientes finales — sigue nuestra <a href=\"/privacy\" style=\"color:#2563eb\">Política de Privacidad</a>, parte integrante de estos Términos.</p>" },
-        { "title": "16. Modificaciones a estos Términos", "body": "<p style=\"margin:0 0 12px\">Podemos actualizar estos Términos periódicamente, con aviso previo de al menos 30 días para cambios materiales, por correo electrónico registrado y/o aviso en el panel. El uso continuado de la plataforma después de que el cambio entre en vigor constituye la aceptación de los nuevos Términos.</p>" },
-        { "title": "17. Ley aplicable y jurisdicción", "body": "<p style=\"margin:0 0 12px\">Estos Términos se rigen por las leyes brasileñas. Se elige el fuero de la comarca de <strong>São Paulo/SP</strong> (Brasil) para dirimir eventuales controversias, con renuncia a cualquier otro, por más privilegiado que sea, salvo el fuero del domicilio del consumidor cuando la ley así lo exija.</p>" },
-        { "title": "18. Disposiciones finales", "body": "<p style=\"margin:0 0 12px\">Estos Términos, junto con la Política de Privacidad, constituyen el acuerdo íntegro entre las partes sobre su objeto, sustituyendo entendimientos anteriores. Si alguna cláusula fuera considerada inválida o inaplicable, las demás permanecen en pleno vigor. La tolerancia de una parte respecto del incumplimiento de cualquier obligación por la otra no implica renuncia al derecho de exigirla posteriormente. Ninguna de las partes será responsable por atraso o incumplimiento causado por un evento de fuerza mayor, en los términos del art. 393 del Código Civil brasileño. La Contratante no puede ceder este contrato a terceros sin autorización previa de Zappigo; Zappigo puede cederlo libremente en caso de reorganización societaria, fusión, adquisición o venta de activos, sin que ello reduzca los derechos ya garantizados a la Contratante.</p>" }
+        {
+          "title": "1. Partes y aceptación",
+          "body": "<p style=\"margin:0 0 12px\">Estos Términos de Uso (\"Términos\") rigen el uso de la plataforma Zappigo (\"Zappigo\", \"nosotros\") por parte de usted (\"Contratante\"). Dudas sobre estos Términos: <strong>suporte@zappigo.com.br</strong>.</p><p style=\"margin:0 0 12px\">Al hacer clic en \"Crear cuenta\" (o equivalente) y completar efectivamente el registro, usted declara haber leído, comprendido y aceptado íntegramente estos Términos y la <a href=\"/privacy\" style=\"color:#2563eb\">Política de Privacidad</a> — aceptación electrónica válida y vinculante en los términos del art. 107 del Código Civil brasileño y de la Ley n.º 14.063/2020, independientemente de firma física.</p>"
+        },
+        {
+          "title": "2. Objeto del contrato",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo es una plataforma multi-tenant que permite a la Contratante configurar un asistente virtual de IA para responder dudas de clientes finales, agendar horarios y derivar conversaciones a atención humana, integrable mediante widget de chat en el sitio web y/o WhatsApp.</p>"
+        },
+        {
+          "title": "3. Registro y cuenta",
+          "body": "<p style=\"margin:0 0 12px\">Para usar Zappigo, usted debe proporcionar información verdadera, completa y actualizada, y es responsable de mantener la confidencialidad de su contraseña y de todas las actividades realizadas en su cuenta. Usted declara tener capacidad legal para contratar en nombre de la empresa que está registrando.</p>"
+        },
+        {
+          "title": "4. Plan de acceso y precio",
+          "body": "<p style=\"margin:0 0 12px\">Actualmente, el uso de Zappigo es <strong>gratuito, sin necesidad de tarjeta de crédito</strong>, por tiempo indeterminado, mientras dure la fase de lanzamiento y validación de la plataforma en Brasil. Esto no constituye una promesa de gratuidad permanente ni un derecho adquirido a seguir usando la plataforma de forma gratuita.</p><p style=\"margin:0 0 12px\">Zappigo se reserva el derecho, a su exclusivo criterio, de: (i) empezar a cobrar por el uso de la plataforma, ya sea mediante planes pagos con cobro mensual recurrente procesado por Stripe, ya sea por otro modelo de cobro; y/o (ii) suspender, cerrar o modificar sustancialmente la plataforma, en todo o en parte, en cualquier momento. Cualquiera de estos cambios será comunicado a la Contratante con al menos <strong>30 (treinta) días de anticipación</strong>, por correo electrónico registrado y/o aviso en el propio panel, antes de entrar en vigor.</p><p style=\"margin:0 0 12px\">Si Zappigo empieza a cobrar por el uso, los precios vigentes en ese momento estarán disponibles en <strong>zappigo.com.br/#precos</strong>. Las Contratantes ya activas mantienen el precio vigente en la fecha en que el cobro comience a aplicarles hasta el fin del ciclo en curso — cualquier ajuste posterior sigue el aviso previo de 30 días indicado abajo, nunca retroactivo. La Contratante podrá optar por no adherirse al plan pago, en cuyo caso el acceso podrá suspenderse al término del plazo de aviso mencionado. Una vez activos, los planes pagos pueden ser reajustados mediante aviso previo de al menos 30 días, aplicable a partir del próximo ciclo de facturación; la falta de pago de una factura puede resultar en la suspensión del acceso hasta su regularización.</p>"
+        },
+        {
+          "title": "5. Licencia de uso",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo otorga a la Contratante una licencia limitada, no exclusiva, intransferible y revocable para acceder y usar la plataforma exclusivamente para los fines previstos en estos Términos, durante la vigencia del contrato. Está prohibido copiar, modificar, realizar ingeniería inversa, descompilar, sublicenciar o revender la plataforma (incluso en modelo white-label) sin autorización expresa y por escrito de Zappigo.</p>"
+        },
+        {
+          "title": "6. Obligaciones de la Contratante",
+          "body": "<p style=\"margin:0 0 12px\">Usted acepta no usar Zappigo para:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li>enviar spam o contenido ilegal, discriminatorio o que viole derechos de terceros;</li><li>intentar acceder a datos de otras empresas registradas en la plataforma;</li><li>usar el número de WhatsApp compartido de Zappigo para fines distintos de la atención a sus propios clientes;</li><li>enviar mensajes a clientes finales que no hayan consentido recibirlos por ese canal;</li><li>sobrecargar o intentar comprometer la infraestructura de la plataforma.</li></ul><p style=\"margin:0 0 12px\"><strong>Cumplimiento de la LGPD.</strong> La Contratante es responsable de contar con base legal propia para tratar los datos de sus clientes finales y de cumplir con la LGPD en su relación con ellos, en la medida en que Zappigo actúa como encargada de esos datos (ver <a href=\"/privacy\" style=\"color:#2563eb\">Política de Privacidad</a>, sección 2).</p><p style=\"margin:0 0 12px\"><strong>Transparencia sobre IA.</strong> Es responsabilidad de la Contratante no inducir a error a sus clientes finales sobre el hecho de estar conversando con un asistente automatizado, cuando se les pregunte directamente al respecto.</p><p style=\"margin:0 0 12px\"><strong>Número de WhatsApp compartido.</strong> Mientras la Contratante esté en el plan que usa el número de WhatsApp compartido de Zappigo, es responsable de obtener el consentimiento previo de sus propios clientes finales para el contacto por ese canal, conforme lo exigen las políticas comerciales de Meta. Las denuncias de spam, bloqueo o baneo del número causados por la conducta de una Contratante pueden afectar la disponibilidad del canal para las demás — Zappigo no se responsabiliza por la indisponibilidad derivada de acciones de terceros (Meta) motivadas por el uso indebido de cualquier Contratante, y la Contratante responde por los perjuicios causados a las demás en ese escenario.</p><p style=\"margin:0 0 12px\"><strong>Límite de uso razonable.</strong> Para viabilizar la oferta gratuita y contener los costos de procesamiento por IA, aplicamos un tope de mensajes automáticos por mes por Contratante (actualmente 500 mensajes de clientes finales/mes, ajustable a nuestro criterio). Al alcanzar el tope, las nuevas conversaciones del mes en curso se derivan directamente a atención humana en lugar de seguir siendo procesadas por la IA. Las Contratantes que necesiten un volumen mayor pueden solicitar un límite personalizado por el contacto indicado en la sección 1.</p>"
+        },
+        {
+          "title": "7. Obligaciones de Zappigo",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo se compromete a realizar esfuerzos razonables para mantener la plataforma disponible y funcionando correctamente, a avisar previamente sobre mantenimientos programados que puedan causar indisponibilidad relevante, a cumplir con la LGPD en el tratamiento de los datos que trata como controladora (ver Política de Privacidad), a adoptar medidas de seguridad acordes con el tamaño de la operación, y a brindar soporte por el canal indicado en la sección 1. No garantizamos disponibilidad ininterrumpida — ver sección 12 (Exclusión de garantías).</p>"
+        },
+        {
+          "title": "8. Inteligencia artificial — limitaciones y responsabilidad",
+          "body": "<p style=\"margin:0 0 12px\">El asistente virtual de Zappigo se basa en modelos de lenguaje de terceros y puede, en algunos casos, generar respuestas incompletas, desactualizadas o incorrectas, a pesar de los esfuerzos técnicos para reducir ese riesgo (ej.: respuestas basadas en los servicios, precios y FAQ efectivamente registrados por la Contratante). La Contratante es responsable de revisar y mantener actualizado el catálogo de servicios, precios y FAQ configurado en la plataforma, y de verificar con el cliente final cualquier información crítica antes de considerarla definitiva. Zappigo no garantiza la exactitud del contenido generado por la IA y no se responsabiliza por compromisos que la propia Contratante no pueda cumplir como consecuencia de una respuesta incorrecta del asistente.</p>"
+        },
+        {
+          "title": "9. Propiedad intelectual",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo y todo su software, marca y contenido son de nuestra propiedad. El contenido que usted registra (servicios, FAQ, datos de clientes) sigue siendo de su propiedad; usted otorga a Zappigo una licencia limitada para procesarlo exclusivamente con el fin de prestar el servicio contratado.</p>"
+        },
+        {
+          "title": "10. Confidencialidad",
+          "body": "<p style=\"margin:0 0 12px\">Cada parte se compromete a mantener en secreto la información confidencial de la otra parte obtenida en razón de este contrato (incluyendo, en el caso de la Contratante, datos de configuración, catálogo y clientes; y, en el caso de Zappigo, aspectos técnicos y comerciales no públicos de la plataforma), utilizándola solo para los fines de este contrato, por un plazo de 3 (tres) años tras su finalización — salvo información que ya sea pública, que la parte ya poseyera legítimamente antes de la divulgación, o cuya divulgación sea exigida por ley u orden judicial.</p>"
+        },
+        {
+          "title": "11. Limitación de responsabilidad",
+          "body": "<p style=\"margin:0 0 12px\">En la máxima medida permitida por la ley, nuestra responsabilidad por daños derivados del uso de la plataforma queda limitada al valor pagado por la Contratante en los 3 (tres) meses anteriores al evento — o, durante el período de uso gratuito descrito en la sección 4, al valor de R$ 500,00 (quinientos reales) — excluyendo lucro cesante, daños indirectos y fallas de terceros (ej.: indisponibilidad de WhatsApp/Meta, del proveedor de IA u otros subencargados). Esta limitación no afecta los derechos que no pueden excluirse por ley, incluidos los previstos en el Código de Defensa del Consumidor brasileño, ni se aplica a daños derivados de dolo o culpa grave.</p>"
+        },
+        {
+          "title": "12. Exclusión de garantías",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo se proporciona \"tal cual\" y \"según disponibilidad\". Realizamos esfuerzos razonables para mantener el servicio disponible y preciso, pero no garantizamos una operación ininterrumpida o libre de errores, ni resultados específicos de negocio derivados del uso de la plataforma.</p>"
+        },
+        {
+          "title": "13. Indemnización",
+          "body": "<p style=\"margin:0 0 12px\">La Contratante acepta indemnizar y eximir a Zappigo de reclamaciones, pérdidas o daños de terceros derivados de: el uso de la plataforma en infracción de estos Términos o de la ley; contenido registrado por la Contratante (servicios, FAQ, políticas de cancelación); o el envío de mensajes a clientes finales sin el consentimiento exigido en la sección 6 — incluyendo eventuales reclamaciones de esos clientes finales o sanciones aplicadas por Meta/WhatsApp motivadas por la conducta de la propia Contratante.</p>"
+        },
+        {
+          "title": "14. Vigencia y resolución",
+          "body": "<p style=\"margin:0 0 12px\">Usted puede cancelar su suscripción en cualquier momento desde el panel (Suscripción → Cancelar suscripción), sin multa. La cancelación interrumpe la renovación automática; el acceso permanece activo hasta el fin del período ya pagado. No hay reembolso de valores ya pagados, salvo cuando lo exija la ley (ej.: derecho de arrepentimiento dentro de los 7 días posteriores a la primera contratación, en los términos del art. 49 del Código de Defensa del Consumidor brasileño, cuando corresponda).</p><p style=\"margin:0 0 12px\">Podemos suspender o cerrar su cuenta en caso de incumplimiento de estos Términos, mora no regularizada, o uso que ponga en riesgo la plataforma u otros usuarios, mediante notificación previa siempre que sea posible. Una vez cerrada la cuenta (por cancelación o rescisión), la Contratante puede solicitar la exportación de sus datos (historial de conversaciones, citas y registros) dentro de los 30 días posteriores al cierre, transcurridos los cuales los datos siguen el plazo de retención descrito en la Política de Privacidad.</p>"
+        },
+        {
+          "title": "15. Protección de datos",
+          "body": "<p style=\"margin:0 0 12px\">El tratamiento de datos personales por parte de Zappigo — los suyos y los de sus clientes finales — sigue nuestra <a href=\"/privacy\" style=\"color:#2563eb\">Política de Privacidad</a>, parte integrante de estos Términos.</p>"
+        },
+        {
+          "title": "16. Modificaciones a estos Términos",
+          "body": "<p style=\"margin:0 0 12px\">Podemos actualizar estos Términos periódicamente, con aviso previo de al menos 30 días para cambios materiales, por correo electrónico registrado y/o aviso en el panel. El uso continuado de la plataforma después de que el cambio entre en vigor constituye la aceptación de los nuevos Términos.</p>"
+        },
+        {
+          "title": "17. Ley aplicable y jurisdicción",
+          "body": "<p style=\"margin:0 0 12px\">Estos Términos se rigen por las leyes brasileñas. Se elige el fuero de la comarca de <strong>São Paulo/SP</strong> (Brasil) para dirimir eventuales controversias, con renuncia a cualquier otro, por más privilegiado que sea, salvo el fuero del domicilio del consumidor cuando la ley así lo exija.</p>"
+        },
+        {
+          "title": "18. Disposiciones finales",
+          "body": "<p style=\"margin:0 0 12px\">Estos Términos, junto con la Política de Privacidad, constituyen el acuerdo íntegro entre las partes sobre su objeto, sustituyendo entendimientos anteriores. Si alguna cláusula fuera considerada inválida o inaplicable, las demás permanecen en pleno vigor. La tolerancia de una parte respecto del incumplimiento de cualquier obligación por la otra no implica renuncia al derecho de exigirla posteriormente. Ninguna de las partes será responsable por atraso o incumplimiento causado por un evento de fuerza mayor, en los términos del art. 393 del Código Civil brasileño. La Contratante no puede ceder este contrato a terceros sin autorización previa de Zappigo; Zappigo puede cederlo libremente en caso de reorganización societaria, fusión, adquisición o venta de activos, sin que ello reduzca los derechos ya garantizados a la Contratante.</p>"
+        }
       ]
     },
     "privacy": {
       "sections": [
-        { "title": "1. Identificación de la controladora", "body": "<p style=\"margin:0 0 12px\">Zappigo trata datos personales conforme a lo descrito en esta Política, de acuerdo con la Ley General de Protección de Datos brasileña (LGPD, Ley 13.709/2018). Dado el tamaño actual de la operación, no mantenemos un Encargado de Datos (DPO) formal dedicado — el contacto de abajo cumple ese rol y es el canal para el ejercicio de derechos y dudas sobre esta Política: <strong>suporte@zappigo.com.br</strong>.</p>" },
-        { "title": "2. Naturaleza dual del tratamiento: controladora y encargada", "body": "<p style=\"margin:0 0 12px\">Zappigo actúa en dos roles diferentes, según de quién sean los datos:</p><p style=\"margin:0 0 12px\"><strong>Como controladora</strong>, respecto de los datos de la propia empresa Contratante y de sus usuarios (quienes crean y usan la cuenta en el panel) — recolectados para prestar el servicio contratado directamente.</p><p style=\"margin:0 0 12px\"><strong>Como encargada</strong>, respecto de los datos de los clientes finales de la Contratante (personas que conversan con el asistente virtual) — esos datos se recolectan en nombre de la Contratante, que es la controladora frente a sus propios clientes; Zappigo los trata estrictamente siguiendo las instrucciones y finalidades definidas por la Contratante.</p>" },
-        { "title": "3. Datos tratados y finalidades", "body": "<p style=\"margin:0 0 12px\"><strong>De la empresa Contratante y sus usuarios:</strong> nombre, email, teléfono (opcional), contraseña (almacenada de forma cifrada) y datos de pago — procesados directamente por Stripe, Zappigo nunca almacena el número de tarjeta. Se usan para crear y mantener su cuenta, procesar cobros (cuando corresponda) y brindar soporte.</p><p style=\"margin:0 0 12px\"><strong>De los clientes finales de la Contratante:</strong> nombre, teléfono, email (cuando se informe), historial de conversaciones y datos de citas. Se usan exclusivamente para operar el asistente virtual configurado por la Contratante (responder dudas, agendar horarios, derivar a atención humana).</p><p style=\"margin:0 0 12px\"><strong>Dato sensible.</strong> Si la Contratante opera en un segmento que involucre datos de salud (ej.: clínicas, cuidado de mascotas con historial veterinario), el asistente puede recolectar incidentalmente información clasificada como dato sensible por el art. 5º, II de la LGPD (ej.: motivo de consulta, síntomas). En esos casos, es responsabilidad de la Contratante — no de Zappigo — obtener el consentimiento específico y destacado del titular para ese tratamiento (art. 11, LGPD) antes de ingresar esa información en la conversación con el asistente; Zappigo permanece como encargada, tratando ese dato solo para prestar el servicio configurado por la Contratante.</p><p style=\"margin:0 0 12px\"><strong>Menores de edad.</strong> Zappigo no recolecta intencionalmente datos de menores de 18 años directamente. Cuando la Contratante opera en un segmento cuyos clientes finales puedan ser menores (ej.: clínicas pediátricas), es responsabilidad de la Contratante obtener el consentimiento de un responsable legal antes de proporcionar datos del menor al asistente, en los términos del art. 14 de la LGPD.</p>" },
-        { "title": "4. Base legal del tratamiento", "body": "<p style=\"margin:0 0 12px\">Para la Contratante y sus usuarios, tratamos datos con base en la ejecución del contrato de prestación de servicio firmado con Zappigo (Art. 7º, V, LGPD), el cumplimiento de una obligación legal o regulatoria (ej.: fiscal), el interés legítimo para prevención de fraude y mejora del servicio, y el consentimiento cuando corresponda.</p><p style=\"margin:0 0 12px\">Para los clientes finales de la Contratante, la base legal aplicable es, por regla general, la ejecución del contrato firmado entre ellos y la propia Contratante (ej.: el agendamiento de un servicio) — no un contrato con Zappigo, coherente con el rol de encargada descrito en la sección 2.</p>" },
-        { "title": "5. Retención de datos", "body": "<p style=\"margin:0 0 12px\">Mantenemos los datos mientras la cuenta esté activa. Tras el cierre de la cuenta (cancelación o rescisión), los datos se conservan hasta por <strong>90 (noventa) días</strong> — plazo en el que la Contratante puede solicitar la exportación prevista en los Términos de Uso — y luego se eliminan o anonimizan, salvo plazo adicional exigido por obligación legal (ej.: fiscal, típicamente 5 años) o necesario para la defensa de derechos en procesos.</p>" },
-        { "title": "6. Inteligencia artificial: procesamiento y limitaciones", "body": "<p style=\"margin:0 0 12px\">El asistente virtual procesa los mensajes de la conversación (y el catálogo/FAQ registrado por la Contratante) a través de la API de <strong>Google Gemini</strong> para generar respuestas. Utilizamos la API paga de Gemini (uso facturado, no el nivel gratuito) — según los Términos de Servicio vigentes de la API Gemini, los datos enviados vía API paga <strong>no son utilizados por Google para entrenar o mejorar sus modelos</strong>, y solo se registran por un período limitado para detección y prevención de abuso. Recomendamos consultar directamente los términos vigentes de Google para el detalle más actualizado de esas garantías. Sobre la fiabilidad de las respuestas generadas, ver Términos de Uso, sección 8.</p>" },
-        { "title": "7. Destinatarios y encargados", "body": "<p style=\"margin:0 0 12px\">Para operar la plataforma, compartimos datos con los siguientes proveedores de servicios (subencargados), cada uno tratando datos solo en la medida necesaria para su función, bajo obligaciones contractuales de confidencialidad:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li><strong>Stripe</strong> — procesamiento de pagos;</li><li><strong>Google Gemini</strong> — procesamiento de lenguaje natural del asistente de IA;</li><li><strong>Resend</strong> — envío de emails transaccionales;</li><li><strong>Meta / WhatsApp Cloud API</strong> — mensajería vía WhatsApp;</li><li><strong>Google Analytics</strong> — métricas agregadas de uso del sitio (ver sección 11).</li></ul><p style=\"margin:0 0 12px\"><strong>Transferencia internacional de datos (Art. 33, LGPD).</strong> Google y Meta son empresas con sede en Estados Unidos, por lo que los datos procesados por esos subencargados pueden transferirse internacionalmente, bajo las garantías contractuales y de seguridad ofrecidas por esos proveedores.</p>" },
-        { "title": "8. Derechos de los titulares", "body": "<p style=\"margin:0 0 12px\">En los términos del Art. 18 de la LGPD, usted (o el cliente final de la Contratante) puede solicitar confirmación de la existencia de tratamiento, acceso, corrección, anonimización, portabilidad, eliminación de datos, información sobre el intercambio de datos y revocación del consentimiento. Las solicitudes pueden hacerse a <strong>suporte@zappigo.com.br</strong>.</p>" },
-        { "title": "9. Medidas de seguridad", "body": "<p style=\"margin:0 0 12px\">Adoptamos medidas técnicas y organizativas razonables — cifrado en tránsito, control de acceso y aislamiento entre cuentas de diferentes empresas — para proteger los datos contra acceso no autorizado, pérdida o alteración. En caso de un incidente de seguridad que pueda acarrear un riesgo o daño relevante a los titulares, notificaremos a la ANPD y a los titulares afectados en un plazo razonable, en los términos del art. 48 de la LGPD.</p>" },
-        { "title": "10. Relación con la Contratante como encargada", "body": "<p style=\"margin:0 0 12px\">Los Términos de Uso (sección 6) ya establecen las obligaciones de la Contratante en su calidad de controladora de los datos de sus propios clientes finales, y las condiciones en que Zappigo trata esos datos como encargada — actualmente no mantenemos un instrumento de tratamiento de datos (DPA) separado; esa relación se rige por los Términos de Uso y por esta Política en conjunto.</p>" },
-        { "title": "11. Cookies y analítica", "body": "<p style=\"margin:0 0 12px\">Usamos cookies estrictamente necesarias para mantener su sesión autenticada en el panel y para recordar su preferencia de idioma. También usamos <strong>Google Analytics (GA4)</strong> para entender de forma agregada cómo se usa el sitio (páginas visitadas, origen del acceso) — no usamos cookies de rastreo publicitario. Los datos de navegación recolectados por Google Analytics se tratan conforme a la <a href=\"https://policies.google.com/privacy\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">política de privacidad de Google</a>.</p>" },
-        { "title": "12. Menores de edad", "body": "<p style=\"margin:0 0 12px\">Zappigo es un servicio B2B, contratado por empresas, y no está dirigido a menores de edad. Sobre los datos de clientes finales menores de edad que eventualmente conversen con el asistente de una Contratante, ver sección 3.</p>" },
-        { "title": "13. Cambios a esta Política", "body": "<p style=\"margin:0 0 12px\">Podemos actualizar esta Política periódicamente; la versión vigente siempre está disponible en esta página, con la fecha de la última actualización en la parte superior. Los cambios materiales se comunicarán con un aviso previo de al menos 30 días, por correo electrónico registrado y/o aviso en el panel.</p>" },
-        { "title": "14. Reclamaciones y recursos", "body": "<p style=\"margin:0 0 12px\">Si usted considera que sus datos no fueron tratados correctamente, contáctenos primero en <strong>suporte@zappigo.com.br</strong> para que podamos resolverlo directamente. También tiene derecho a presentar una petición ante la Autoridad Nacional de Protección de Datos de Brasil (ANPD) — <a href=\"https://www.gov.br/anpd\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">gov.br/anpd</a>.</p>" }
+        {
+          "title": "1. Identificación de la controladora",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo trata datos personales conforme a lo descrito en esta Política, de acuerdo con la Ley General de Protección de Datos brasileña (LGPD, Ley 13.709/2018). Dado el tamaño actual de la operación, no mantenemos un Encargado de Datos (DPO) formal dedicado — el contacto de abajo cumple ese rol y es el canal para el ejercicio de derechos y dudas sobre esta Política: <strong>suporte@zappigo.com.br</strong>.</p>"
+        },
+        {
+          "title": "2. Naturaleza dual del tratamiento: controladora y encargada",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo actúa en dos roles diferentes, según de quién sean los datos:</p><p style=\"margin:0 0 12px\"><strong>Como controladora</strong>, respecto de los datos de la propia empresa Contratante y de sus usuarios (quienes crean y usan la cuenta en el panel) — recolectados para prestar el servicio contratado directamente.</p><p style=\"margin:0 0 12px\"><strong>Como encargada</strong>, respecto de los datos de los clientes finales de la Contratante (personas que conversan con el asistente virtual) — esos datos se recolectan en nombre de la Contratante, que es la controladora frente a sus propios clientes; Zappigo los trata estrictamente siguiendo las instrucciones y finalidades definidas por la Contratante.</p>"
+        },
+        {
+          "title": "3. Datos tratados y finalidades",
+          "body": "<p style=\"margin:0 0 12px\"><strong>De la empresa Contratante y sus usuarios:</strong> nombre, email, teléfono (opcional), contraseña (almacenada de forma cifrada) y datos de pago — procesados directamente por Stripe, Zappigo nunca almacena el número de tarjeta. Se usan para crear y mantener su cuenta, procesar cobros (cuando corresponda) y brindar soporte.</p><p style=\"margin:0 0 12px\"><strong>De los clientes finales de la Contratante:</strong> nombre, teléfono, email (cuando se informe), historial de conversaciones y datos de citas. Se usan exclusivamente para operar el asistente virtual configurado por la Contratante (responder dudas, agendar horarios, derivar a atención humana).</p><p style=\"margin:0 0 12px\"><strong>Dato sensible.</strong> Si la Contratante opera en un segmento que involucre datos de salud (ej.: clínicas, cuidado de mascotas con historial veterinario), el asistente puede recolectar incidentalmente información clasificada como dato sensible por el art. 5º, II de la LGPD (ej.: motivo de consulta, síntomas). En esos casos, es responsabilidad de la Contratante — no de Zappigo — obtener el consentimiento específico y destacado del titular para ese tratamiento (art. 11, LGPD) antes de ingresar esa información en la conversación con el asistente; Zappigo permanece como encargada, tratando ese dato solo para prestar el servicio configurado por la Contratante.</p><p style=\"margin:0 0 12px\"><strong>Menores de edad.</strong> Zappigo no recolecta intencionalmente datos de menores de 18 años directamente. Cuando la Contratante opera en un segmento cuyos clientes finales puedan ser menores (ej.: clínicas pediátricas), es responsabilidad de la Contratante obtener el consentimiento de un responsable legal antes de proporcionar datos del menor al asistente, en los términos del art. 14 de la LGPD.</p>"
+        },
+        {
+          "title": "4. Base legal del tratamiento",
+          "body": "<p style=\"margin:0 0 12px\">Para la Contratante y sus usuarios, tratamos datos con base en la ejecución del contrato de prestación de servicio firmado con Zappigo (Art. 7º, V, LGPD), el cumplimiento de una obligación legal o regulatoria (ej.: fiscal), el interés legítimo para prevención de fraude y mejora del servicio, y el consentimiento cuando corresponda.</p><p style=\"margin:0 0 12px\">Para los clientes finales de la Contratante, la base legal aplicable es, por regla general, la ejecución del contrato firmado entre ellos y la propia Contratante (ej.: el agendamiento de un servicio) — no un contrato con Zappigo, coherente con el rol de encargada descrito en la sección 2.</p>"
+        },
+        {
+          "title": "5. Retención de datos",
+          "body": "<p style=\"margin:0 0 12px\">Mantenemos los datos mientras la cuenta esté activa. Tras el cierre de la cuenta (cancelación o rescisión), los datos se conservan hasta por <strong>90 (noventa) días</strong> — plazo en el que la Contratante puede solicitar la exportación prevista en los Términos de Uso — y luego se eliminan o anonimizan, salvo plazo adicional exigido por obligación legal (ej.: fiscal, típicamente 5 años) o necesario para la defensa de derechos en procesos.</p>"
+        },
+        {
+          "title": "6. Inteligencia artificial: procesamiento y limitaciones",
+          "body": "<p style=\"margin:0 0 12px\">El asistente virtual procesa los mensajes de la conversación (y el catálogo/FAQ registrado por la Contratante) a través de la API de <strong>Google Gemini</strong> para generar respuestas. Utilizamos la API paga de Gemini (uso facturado, no el nivel gratuito) — según los Términos de Servicio vigentes de la API Gemini, los datos enviados vía API paga <strong>no son utilizados por Google para entrenar o mejorar sus modelos</strong>, y solo se registran por un período limitado para detección y prevención de abuso. Recomendamos consultar directamente los términos vigentes de Google para el detalle más actualizado de esas garantías. Sobre la fiabilidad de las respuestas generadas, ver Términos de Uso, sección 8.</p>"
+        },
+        {
+          "title": "7. Destinatarios y encargados",
+          "body": "<p style=\"margin:0 0 12px\">Para operar la plataforma, compartimos datos con los siguientes proveedores de servicios (subencargados), cada uno tratando datos solo en la medida necesaria para su función, bajo obligaciones contractuales de confidencialidad:</p><ul style=\"margin:0 0 12px;padding-left:22px\"><li><strong>Stripe</strong> — procesamiento de pagos;</li><li><strong>Google Gemini</strong> — procesamiento de lenguaje natural del asistente de IA;</li><li><strong>Resend</strong> — envío de emails transaccionales;</li><li><strong>Meta / WhatsApp Cloud API</strong> — mensajería vía WhatsApp;</li><li><strong>Google Analytics</strong> — métricas agregadas de uso del sitio (ver sección 11).</li></ul><p style=\"margin:0 0 12px\"><strong>Transferencia internacional de datos (Art. 33, LGPD).</strong> Google y Meta son empresas con sede en Estados Unidos, por lo que los datos procesados por esos subencargados pueden transferirse internacionalmente, bajo las garantías contractuales y de seguridad ofrecidas por esos proveedores.</p>"
+        },
+        {
+          "title": "8. Derechos de los titulares",
+          "body": "<p style=\"margin:0 0 12px\">En los términos del Art. 18 de la LGPD, usted (o el cliente final de la Contratante) puede solicitar confirmación de la existencia de tratamiento, acceso, corrección, anonimización, portabilidad, eliminación de datos, información sobre el intercambio de datos y revocación del consentimiento. Las solicitudes pueden hacerse a <strong>suporte@zappigo.com.br</strong>.</p>"
+        },
+        {
+          "title": "9. Medidas de seguridad",
+          "body": "<p style=\"margin:0 0 12px\">Adoptamos medidas técnicas y organizativas razonables — cifrado en tránsito, control de acceso y aislamiento entre cuentas de diferentes empresas — para proteger los datos contra acceso no autorizado, pérdida o alteración. En caso de un incidente de seguridad que pueda acarrear un riesgo o daño relevante a los titulares, notificaremos a la ANPD y a los titulares afectados en un plazo razonable, en los términos del art. 48 de la LGPD.</p>"
+        },
+        {
+          "title": "10. Relación con la Contratante como encargada",
+          "body": "<p style=\"margin:0 0 12px\">Los Términos de Uso (sección 6) ya establecen las obligaciones de la Contratante en su calidad de controladora de los datos de sus propios clientes finales, y las condiciones en que Zappigo trata esos datos como encargada — actualmente no mantenemos un instrumento de tratamiento de datos (DPA) separado; esa relación se rige por los Términos de Uso y por esta Política en conjunto.</p>"
+        },
+        {
+          "title": "11. Cookies y analítica",
+          "body": "<p style=\"margin:0 0 12px\">Usamos cookies estrictamente necesarias para mantener su sesión autenticada en el panel y para recordar su preferencia de idioma. También usamos <strong>Google Analytics (GA4)</strong> para entender de forma agregada cómo se usa el sitio (páginas visitadas, origen del acceso) — no usamos cookies de rastreo publicitario. Los datos de navegación recolectados por Google Analytics se tratan conforme a la <a href=\"https://policies.google.com/privacy\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">política de privacidad de Google</a>.</p>"
+        },
+        {
+          "title": "12. Menores de edad",
+          "body": "<p style=\"margin:0 0 12px\">Zappigo es un servicio B2B, contratado por empresas, y no está dirigido a menores de edad. Sobre los datos de clientes finales menores de edad que eventualmente conversen con el asistente de una Contratante, ver sección 3.</p>"
+        },
+        {
+          "title": "13. Cambios a esta Política",
+          "body": "<p style=\"margin:0 0 12px\">Podemos actualizar esta Política periódicamente; la versión vigente siempre está disponible en esta página, con la fecha de la última actualización en la parte superior. Los cambios materiales se comunicarán con un aviso previo de al menos 30 días, por correo electrónico registrado y/o aviso en el panel.</p>"
+        },
+        {
+          "title": "14. Reclamaciones y recursos",
+          "body": "<p style=\"margin:0 0 12px\">Si usted considera que sus datos no fueron tratados correctamente, contáctenos primero en <strong>suporte@zappigo.com.br</strong> para que podamos resolverlo directamente. También tiene derecho a presentar una petición ante la Autoridad Nacional de Protección de Datos de Brasil (ANPD) — <a href=\"https://www.gov.br/anpd\" target=\"_blank\" rel=\"noopener\" style=\"color:#2563eb\">gov.br/anpd</a>.</p>"
+        }
       ]
     }
+  },
+  "classBooking": {
+    "tabClasses": "Clases",
+    "tabCourt": "Reservar cancha",
+    "tabEvent": "Evento",
+    "phoneLabel": "Tu teléfono (con código de área)",
+    "nameLabel": "Nombre completo",
+    "namePlaceholder": "Tu nombre",
+    "emailLabel": "Correo (opcional)",
+    "sportLabel": "Deporte",
+    "levelLabel": "Tu nivel",
+    "level_iniciante": "Principiante",
+    "level_intermediario": "Intermedio",
+    "level_avancado": "Avanzado",
+    "loading": "Cargando…",
+    "noSessions": "No hay clases con cupo en los próximos días para esta opción. Prueba otro nivel o deporte.",
+    "seatsLeft": "{n, plural, one {# cupo} other {# cupos}}",
+    "payOnSite": "pago en el lugar",
+    "recommended": "para tu nivel",
+    "confirming": "Confirmando…",
+    "confirmClass": "Reservar mi cupo",
+    "successTitle": "¡Listo! 🎉",
+    "successClass": "Tu cupo está confirmado:\n{sport} · {day} a las {time} · {court}",
+    "successCourt": "Cancha reservada:\n{court} · {day} a las {time}",
+    "successEvent": "¡Recibimos tu solicitud! Nuestro equipo te contactará pronto.",
+    "another": "Hacer otra reserva",
+    "courtIntro": "¿Quieres jugar con tu grupo? Elige un horario libre y reserva la cancha entera. Pago en el lugar.",
+    "dateLabel": "Fecha",
+    "peopleLabel": "Nº de personas",
+    "durationLabel": "Duración",
+    "minutes": "{n} min",
+    "closedThatDay": "Estamos cerrados ese día.",
+    "noFree": "No hay horarios libres en esta fecha para esa duración.",
+    "confirmCourt": "Reservar {court} a las {time}",
+    "eventIntro": "¿Evento de empresa, cumpleaños u otro? Cuéntanos qué necesitas y nuestro equipo te contactará.",
+    "eventTypeLabel": "Tipo de evento",
+    "event_empresa": "Empresa",
+    "event_aniversario": "Cumpleaños",
+    "event_outro": "Otro",
+    "eventDateLabel": "Fecha deseada",
+    "eventDatePlaceholder": "ej: 15/11, por la tarde",
+    "notesLabel": "Detalles (opcional)",
+    "sendEvent": "Enviar solicitud",
+    "errorFull": "Esa clase acaba de llenarse. Elige otro horario.",
+    "errorAlreadyEnrolled": "Ya estás inscrito en esta clase.",
+    "errorTimeConflict": "Ya tienes otra clase en ese horario.",
+    "errorInvalidPhone": "Revisa el teléfono — necesita código de área.",
+    "errorMissingName": "Ingresa tu nombre completo.",
+    "errorRateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+    "errorSlotTaken": "Ese horario se acaba de ocupar. Elige otro.",
+    "errorGeneric": "No se pudo completar ahora. Inténtalo de nuevo."
   }
 }

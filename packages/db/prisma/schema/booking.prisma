@@ -30,6 +30,13 @@ model Booking {
   // matching event. Null for every booking made before this existed, and
   // for any company without Calendar connected; both are normal, not gaps.
   googleCalendarEventId String? @map("google_calendar_event_id")
+  // Presence = already sent — not a boolean, so a cron sweep (see
+  // api/cron/booking-reminders) that runs again inside the same window
+  // never double-sends. Both null for every booking made before reminders
+  // existed; that's a missed reminder for whatever's already close to its
+  // scheduledAt when this ships, not a bug to backfill.
+  reminderDaySentAt  DateTime? @map("reminder_day_sent_at") @db.Timestamptz(6)
+  reminderHourSentAt DateTime? @map("reminder_hour_sent_at") @db.Timestamptz(6)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)

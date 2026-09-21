@@ -39,6 +39,17 @@ const nextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
         ],
       },
+      {
+        // The booking-form embed (dashboard/instalacao's generated <iframe>
+        // snippet) exists specifically to be framed on an arbitrary
+        // customer site, unlike every other route here. A CSP
+        // frame-ancestors directive takes precedence over X-Frame-Options
+        // in every modern browser when both are present, so this narrowly
+        // overrides the site-wide SAMEORIGIN above for just this path
+        // instead of loosening it everywhere.
+        source: '/embed/:path*',
+        headers: [{ key: 'Content-Security-Policy', value: 'frame-ancestors *' }],
+      },
     ];
   },
   experimental: {

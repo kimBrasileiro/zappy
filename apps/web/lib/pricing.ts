@@ -25,4 +25,4 @@ function price(envVar: string, fallbackAmount: string): string {
 }
 
 export const PRICE_FREE = price('NEXT_PUBLIC_PRICING_AMOUNT_FREE', '0');
-export const PRICE_BASICO = price('NEXT_PUBLIC_PRICING_AMOUNT_BASICO', '19');
+export const PRICE_BASICO = price('NEXT_PUBLIC_PRICING_AMOUNT_BASICO', '49');

@@ -131,9 +131,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
   if (route.needsConfirmation) {
+    const confirmAddress = (route.company.config as { address?: string } | null)?.address?.trim();
+    const confirmCompanyLabel = confirmAddress ? `${route.company.name}, na ${confirmAddress}` : route.company.name;
     await sendWhatsAppQuickReplies(
       inbound.fromWaPhoneNumber,
-      `Olá! Você gostaria de agendar serviços ou suporte com a ${route.company.name}? Se for outra empresa, é só me dizer o nome dela.`,
+      `Olá! Você gostaria de agendar serviços ou suporte com a ${confirmCompanyLabel}? Se for outra empresa, é só me dizer o nome dela.`,
       ['Sim', 'Não'],
       credentials,
     );

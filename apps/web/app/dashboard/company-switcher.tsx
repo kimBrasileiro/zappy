@@ -17,9 +17,9 @@ export function CompanySwitcher({
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
         style={{
           width: '100%',
-          background: '#1f2937',
-          color: '#fff',
-          border: '1px solid #374151',
+          background: '#f9fafb',
+          color: '#111827',
+          border: '1px solid #e5e7eb',
           borderRadius: 8,
           padding: '7px 8px',
           fontSize: 12.5,

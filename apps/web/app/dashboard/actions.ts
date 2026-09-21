@@ -26,13 +26,14 @@ export async function updateCompanyProfile(
   const name = String(formData.get('name') ?? '').trim();
   if (!name) return { error: t('errorNameRequired') };
   const description = String(formData.get('description') ?? '').trim();
+  const address = String(formData.get('address') ?? '').trim();
 
   const company = await prisma.company.findUnique({ where: { id: companyId }, select: { config: true } });
   const config = (company?.config as Record<string, unknown> | null) ?? {};
 
   await prisma.company.update({
     where: { id: companyId },
-    data: { name, config: { ...config, description } as Prisma.InputJsonValue },
+    data: { name, config: { ...config, description, address } as Prisma.InputJsonValue },
   });
 
   revalidatePath('/dashboard');

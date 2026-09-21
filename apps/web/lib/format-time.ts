@@ -130,3 +130,10 @@ export function formatDateTime(date: Date, locale: string, timeZone: string = ge
 export function formatDate(date: Date, locale: string, timeZone: string = getDeploymentTimezone()): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone }).format(date);
 }
+
+// Time-only (e.g. "14:30") — for WhatsApp template params (see
+// lib/notifications.ts, api/cron/booking-reminders), which need date and
+// time as two separate {{n}} placeholders rather than one combined string.
+export function formatTime(date: Date, locale: string, timeZone: string = getDeploymentTimezone()): string {
+  return new Intl.DateTimeFormat(locale, { timeStyle: 'short', timeZone }).format(date);
+}

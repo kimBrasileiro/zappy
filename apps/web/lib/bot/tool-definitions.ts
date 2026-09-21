@@ -40,6 +40,11 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
           description:
             'Opcional, formato HH:MM (24h). Preencha SEMPRE que o cliente já tiver dito um horário específico (ex: "10h", "14:30") — o resultado vem em requestedTimeResult.available, checado de verdade, não apenas "apareceu na lista de sugestões". NUNCA diga que um horário pedido pelo cliente está indisponível só porque ele não apareceu em morningSlots/afternoonSlots — essas listas são só até 3 sugestões cada, um horário pode estar livre e mesmo assim não estar nelas.',
         },
+        variant: {
+          type: 'string',
+          description:
+            'Obrigatório SÓ pra serviços cujo list_services trouxe "variantOptions" (variações de preço/duração, ex: porte de pet, tamanho de cabelo). Passe o label exato de uma das opções — sem isso a tool retorna erro "variant_required". Serviços sem variantOptions ignoram esse campo.',
+        },
       },
       required: ['serviceName', 'date'],
     },
@@ -62,6 +67,11 @@ export const BUSINESS_TOOLS: ToolDefinition[] = [
           type: 'string',
           description:
             'Opcional. Só existe pra serviços com mais de uma pessoa na equipe (staffOptions em list_services). Se o cliente escolheu um profissional específico, passe o nome exato — se der conflito, a tool rejeita em vez de trocar de profissional sozinha. Se o cliente disse "tanto faz", NÃO preencha: a tool aloca automaticamente quem estiver livre e informa quem foi escolhido no retorno.',
+        },
+        variant: {
+          type: 'string',
+          description:
+            'Obrigatório SÓ pra serviços cujo list_services trouxe "variantOptions". Use o mesmo label que já foi passado (e confirmado) em check_availability — sem isso a tool retorna erro "variant_required".',
         },
         confirmReplaceExisting: {
           type: 'boolean',
@@ -131,6 +141,8 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
           String(args.date ?? ''),
           args.staffName ? String(args.staffName) : undefined,
           args.time ? String(args.time) : undefined,
+          3,
+          args.variant ? String(args.variant) : undefined,
         ),
       );
     case 'create_booking':
@@ -141,6 +153,7 @@ export async function executeBusinessTool(toolCall: ToolCall, ctx: ToolExecution
           customerName: String(args.customerName ?? ''),
           customerPhone: String(args.customerPhone ?? ''),
           staffName: args.staffName ? String(args.staffName) : undefined,
+          variant: args.variant ? String(args.variant) : undefined,
           confirmReplaceExisting: args.confirmReplaceExisting === true,
         }),
       );

@@ -110,6 +110,37 @@ export async function sendWhatsAppMessage(
   await sendWhatsAppPayload(toWaPhoneNumber, { type: 'text', text: { body: text } }, text, credentials);
 }
 
+// A pre-approved Meta message template — the ONLY kind of message Meta
+// accepts outside the 24h customer-service window above (see
+// WHATSAPP_SESSION_WINDOW_MS's comment). Used for booking reminders (sent
+// well outside that window by design) and cancellation notices (sent this
+// way unconditionally, so it works whether the cancellation happened inside
+// or outside the window, without this caller needing to check
+// isWithinWhatsAppSessionWindow itself). Template name/params must exactly
+// match what was submitted for approval — see scripts/submit-whatsapp-
+// templates.ts for the actual body text of each one this app uses.
+export async function sendWhatsAppTemplate(
+  toWaPhoneNumber: string,
+  templateName: string,
+  languageCode: string,
+  bodyParams: string[],
+  credentials?: ResolvedWhatsAppCredentials,
+): Promise<void> {
+  await sendWhatsAppPayload(
+    toWaPhoneNumber,
+    {
+      type: 'template',
+      template: {
+        name: templateName,
+        language: { code: languageCode },
+        components: [{ type: 'body', parameters: bodyParams.map((text) => ({ type: 'text', text })) }],
+      },
+    },
+    `[template:${templateName}]`,
+    credentials,
+  );
+}
+
 // WhatsApp reply buttons: max 3, each title capped at 20 chars. List
 // messages: max 10 rows, each title capped at 24 chars. Both surface the
 // same orchestrator-computed quickReplies the web widget already renders as

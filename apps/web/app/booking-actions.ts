@@ -21,7 +21,13 @@ async function resolveActiveCompany(companySlug: string) {
   return company;
 }
 
-export async function getPublicAvailability(companySlug: string, serviceName: string, date: string, staffName?: string) {
+export async function getPublicAvailability(
+  companySlug: string,
+  serviceName: string,
+  date: string,
+  staffName?: string,
+  variant?: string,
+) {
   const company = await resolveActiveCompany(companySlug);
   if (!company) return { error: 'company_not_found' as const };
 
@@ -35,7 +41,7 @@ export async function getPublicAvailability(companySlug: string, serviceName: st
   // Uncapped-in-practice (vs. the bot's default of 3, sized for chat
   // quick-reply buttons) — this is a real date/time picker, so a visitor
   // should see every open slot in the day, not just the first few.
-  return checkAvailability(company.id, serviceName, date, staffName, undefined, 24);
+  return checkAvailability(company.id, serviceName, date, staffName, undefined, 24, variant);
 }
 
 export async function submitPublicBooking(
@@ -44,6 +50,7 @@ export async function submitPublicBooking(
     serviceName: string;
     scheduledAt: string;
     staffName?: string;
+    variant?: string;
     customerName: string;
     customerPhone: string;
     customerEmail?: string;
@@ -84,5 +91,6 @@ export async function submitPublicBooking(
     customerName: input.customerName,
     customerPhone: input.customerPhone,
     staffName: input.staffName,
+    variant: input.variant,
   });
 }

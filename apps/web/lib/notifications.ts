@@ -1,7 +1,7 @@
 import { prisma } from '@zappigo/db';
 import { sendEmail } from './email/resend';
-import { formatDateTime, getDeploymentTimezone } from './format-time';
-import { sendWhatsAppMessage, toWhatsAppPhone, type ResolvedWhatsAppCredentials } from './whatsapp/client';
+import { formatDate, formatDateTime, formatTime, getDeploymentTimezone } from './format-time';
+import { sendWhatsAppMessage, sendWhatsAppTemplate, toWhatsAppPhone, type ResolvedWhatsAppCredentials } from './whatsapp/client';
 import { SUPER_ADMIN_EMAIL } from './admin-auth';
 
 // "Cliente" here is Zappigo's own customer — the company that signed up, not
@@ -53,16 +53,39 @@ export async function notifyBookingCancelled(params: {
   companyId: string;
   serviceName: string;
   scheduledAt: Date;
+  // Optional — cancelBooking (lib/bot/services.ts) always has these; a
+  // future caller with no customer contact on hand (there isn't one today)
+  // would just skip the WhatsApp side and keep the admin email, same as
+  // before this existed.
+  customerName?: string;
+  customerPhone?: string; // local format, no country code — see whatsapp/client.ts#toLocalPhone
+  whatsappCredentials?: ResolvedWhatsAppCredentials;
 }): Promise<void> {
+  const tz = getDeploymentTimezone();
   const company = await getActiveAdminEmails(params.companyId);
-  if (!company?.emails.length) return;
 
-  const when = formatDateTime(params.scheduledAt, 'pt-BR', getDeploymentTimezone());
-  await sendEmail(
-    company.emails,
-    `Agendamento cancelado — ${params.serviceName}`,
-    `<p>O agendamento de <strong>${escapeHtml(params.serviceName)}</strong> para ${when} foi cancelado.</p>`,
-  );
+  if (company?.emails.length) {
+    const when = formatDateTime(params.scheduledAt, 'pt-BR', tz);
+    await sendEmail(
+      company.emails,
+      `Agendamento cancelado — ${params.serviceName}`,
+      `<p>O agendamento de <strong>${escapeHtml(params.serviceName)}</strong> para ${when} foi cancelado.</p>`,
+    );
+  }
+
+  // Always a template, never free text — a cancellation can be triggered by
+  // staff from the dashboard long after the customer's last message, well
+  // outside the 24h session window, and this must work either way without
+  // this call site having to check isWithinWhatsAppSessionWindow itself.
+  if (params.customerName && params.customerPhone) {
+    await sendWhatsAppTemplate(
+      toWhatsAppPhone(params.customerPhone),
+      'booking_cancelled',
+      'pt_BR',
+      [params.customerName, params.serviceName, formatDate(params.scheduledAt, 'pt-BR', tz), formatTime(params.scheduledAt, 'pt-BR', tz)],
+      params.whatsappCredentials,
+    );
+  }
 }
 
 // Fires once per new company signup (both the email/password flow in
@@ -128,6 +151,43 @@ export async function notifyEscalation(companyId: string, ticketId: string): Pro
         ? `<div style="background:#f8f9fb;border-radius:8px;padding:14px 18px;margin:14px 0;">${excerptHtml}</div>`
         : '') +
       `<p><a href="${appUrl}/dashboard/conversations/${ticketId}">Abrir conversa</a></p>`,
+  );
+}
+
+// Sports-court modality: a company event or birthday is never booked
+// automatically (see lib/sports/events.ts) — this tells the company's admins
+// a person needs to follow up, with everything the customer already gave.
+export async function notifyEventRequest(params: {
+  companyId: string;
+  ticketId: string;
+  eventLabel: string;
+  contactName: string;
+  contactPhone: string;
+  dateHint: string | null;
+  participants: number | null;
+  notes: string | null;
+}): Promise<void> {
+  const company = await getActiveAdminEmails(params.companyId);
+  if (!company?.emails.length) return;
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const rows = [
+    ['Tipo', params.eventLabel],
+    ['Contato', `${params.contactName} — ${params.contactPhone}`],
+    ['Data/horário desejado', params.dateHint],
+    ['Participantes', params.participants ? String(params.participants) : null],
+    ['Detalhes', params.notes],
+  ]
+    .filter((row): row is [string, string] => !!row[1])
+    .map(([label, value]) => `<p style="margin:0 0 8px;"><strong>${label}:</strong> ${escapeHtml(value)}</p>`)
+    .join('');
+
+  await sendEmail(
+    company.emails,
+    `Solicitação de evento — ${company.companyName}`,
+    `<p>Chegou um pedido de evento que precisa de contato humano:</p>` +
+      `<div style="background:#f8f9fb;border-radius:8px;padding:14px 18px;margin:14px 0;">${rows}</div>` +
+      `<p><a href="${appUrl}/dashboard/conversations/${params.ticketId}">Abrir solicitação</a></p>`,
   );
 }
 

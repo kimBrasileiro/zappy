@@ -25,6 +25,11 @@ export default async function EditServicePage({ params }: { params: { id: string
     select: { staffNames: true },
   });
   const existingStaffNames = [...new Set(otherServices.flatMap((s) => s.staffNames))].sort();
+  const otherCategories = await prisma.service.findMany({
+    where: { companyId, id: { not: service.id }, category: { not: null } },
+    select: { category: true },
+  });
+  const existingCategories = [...new Set(otherCategories.map((s) => s.category!))].sort();
 
   const absences =
     service.staffNames.length > 0
@@ -52,8 +57,12 @@ export default async function EditServicePage({ params }: { params: { id: string
             cancellationFeeCents: service.cancellationFeeCents,
             staffNames: service.staffNames,
             staffDurations: service.staffDurations as Record<string, number>,
+            category: service.category,
+            photoUrl: service.photoUrl,
+            variants: service.variants as { label: string; priceCents: number; durationMinutes: number }[],
           }}
           existingStaffNames={existingStaffNames}
+          existingCategories={existingCategories}
           submitLabel={t('saveChanges')}
         />
       </div>

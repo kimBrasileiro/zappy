@@ -28,6 +28,10 @@ locals {
       NEXT_PUBLIC_PRICING_CURRENCY_CODE   = var.pricing_currency_code
       NEXT_PUBLIC_PRICING_AMOUNT_FREE     = var.pricing_amount_free
       NEXT_PUBLIC_PRICING_AMOUNT_BASICO   = var.pricing_amount_basico
+      // Derived from the bucket resource itself (storage.tf), not a var —
+      // always non-empty, so this line never gets filtered by the `if v !=
+      // ""` guard below.
+      GCS_SERVICE_PHOTOS_BUCKET = google_storage_bucket.service_photos.name
     } : k => v if v != ""
   }
 }

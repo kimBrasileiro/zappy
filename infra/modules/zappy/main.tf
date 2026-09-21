@@ -31,7 +31,9 @@ locals {
     "iamcredentials.googleapis.com", # Workload Identity Federation token exchange (wif.tf)
     "sts.googleapis.com",            # ditto
     "cloudresourcemanager.googleapis.com",
-    "monitoring.googleapis.com", # Uptime checks + alert policies (monitoring.tf)
+    "monitoring.googleapis.com",     # Uptime checks + alert policies (monitoring.tf)
+    "cloudscheduler.googleapis.com", # booking-reminders cron (cloud_scheduler.tf)
+    "storage.googleapis.com",        # service photo uploads (storage.tf)
   ]
 }
 

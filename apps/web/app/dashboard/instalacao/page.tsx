@@ -54,6 +54,26 @@ export default async function InstalacaoPage() {
 
   const homepageLink = `${appUrl}/?company=${company.slug}`;
 
+  // The iframe id is scoped to the company slug so two embeds on the same
+  // host page (unlikely, but cheap to not collide) each get their own
+  // height updates instead of the second listener clobbering the first.
+  const bookingIframeId = `zappigo-booking-${company.slug}`;
+  const bookingEmbedSnippet = [
+    `<iframe id="${bookingIframeId}" src="${appUrl}/embed/booking?company=${company.slug}"`,
+    `        style="width:100%;max-width:460px;border:none;display:block;" height="640"`,
+    `        title="Agendamento"></iframe>`,
+    `<script>`,
+    `(function () {`,
+    `  window.addEventListener('message', function (e) {`,
+    `    if (e && e.data && e.data.type === 'zappigo-booking-embed-height') {`,
+    `      var f = document.getElementById('${bookingIframeId}');`,
+    `      if (f) f.style.height = e.data.height + 'px';`,
+    `    }`,
+    `  });`,
+    `})();`,
+    `</script>`,
+  ].join('\n');
+
   const richTags = {
     b: (chunks: ReactNode) => <b>{chunks}</b>,
     code: (chunks: ReactNode) => <code>{chunks}</code>,
@@ -116,6 +136,12 @@ export default async function InstalacaoPage() {
             {t('whatsappNotConfiguredButton')}
           </p>
         )}
+      </div>
+
+      <div className="dash-card">
+        <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('bookingEmbedCardTitle')}</h3>
+        <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>{t('bookingEmbedCardBody')}</p>
+        <CopySnippet snippet={bookingEmbedSnippet} />
       </div>
 
       <div className="dash-card">

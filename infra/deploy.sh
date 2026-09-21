@@ -36,7 +36,7 @@ cd "$REPO_ROOT"
 # these need to be NEXT_PUBLIC_ build-args too, not just Cloud Run runtime
 # env vars, or the client bundle ships with the hardcoded fallback forever.
 # Must match that environment's tfvars (pricing_amount_basico etc.).
-: "${NEXT_PUBLIC_PRICING_AMOUNT_BASICO:=19}"
+: "${NEXT_PUBLIC_PRICING_AMOUNT_BASICO:=49}"
 : "${NEXT_PUBLIC_PRICING_CURRENCY_SYMBOL:=R$}"
 : "${NEXT_PUBLIC_PRICING_CURRENCY_CODE:=BRL}"
 

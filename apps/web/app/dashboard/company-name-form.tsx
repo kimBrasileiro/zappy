@@ -19,9 +19,11 @@ function SubmitButton() {
 export function CompanyProfileForm({
   defaultName,
   defaultDescription,
+  defaultAddress,
 }: {
   defaultName: string;
   defaultDescription: string;
+  defaultAddress: string;
 }) {
   const t = useTranslations('dashboard.home');
   const [state, formAction] = useFormState(updateCompanyProfile, initialState);
@@ -39,6 +41,9 @@ export function CompanyProfileForm({
           rows={3}
           style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit' }}
         />
+      </div>
+      <div className="dash-form-row" style={{ marginBottom: 0, width: '100%', maxWidth: 480 }}>
+        <input name="address" defaultValue={defaultAddress} placeholder={t('companyAddressPlaceholder')} />
       </div>
       <SubmitButton />
       {state?.error && <div style={{ color: '#b91c1c', fontSize: 13 }}>{state.error}</div>}

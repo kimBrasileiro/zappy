@@ -117,6 +117,51 @@ function hasStaffConcept(service: Service): boolean {
   return service.staffNames.length > 0;
 }
 
+// A service's price/duration variations — pet size, hair length, or
+// anything else a company wants to label itself (see service.prisma's
+// `variants` comment). Empty means no variant concept at all, same
+// zero-migration-risk shape as staffNames: [].
+export type ServiceVariant = { label: string; priceCents: number; durationMinutes: number };
+
+function getVariants(service: Service): ServiceVariant[] {
+  return Array.isArray(service.variants) ? (service.variants as unknown as ServiceVariant[]) : [];
+}
+
+function hasVariantConcept(service: Service): boolean {
+  return getVariants(service).length > 0;
+}
+
+// Same fuzzy match as resolveStaffName, applied to variant labels — the
+// model only ever has the label as plain text from a prior list_services
+// reply, never an index into the array.
+function resolveVariantByLabel(service: Service, variantLabel: string): ServiceVariant | null {
+  const target = normalizeForMatch(variantLabel);
+  if (!target) return null;
+  const variants = getVariants(service);
+  return (
+    variants.find((v) => normalizeForMatch(v.label) === target) ??
+    variants.find((v) => normalizeForMatch(v.label).includes(target) || target.includes(normalizeForMatch(v.label))) ??
+    null
+  );
+}
+
+// The duration that actually governs slot-fitting/conflict checks for one
+// candidate. A variant's own duration (e.g. a big dog's bath genuinely
+// takes longer) wins over a per-staff override when both could apply —
+// composing "this variant, with this staff member's own pace" would need a
+// full staff×variant duration matrix, a much bigger cadastro for a case
+// (staff duration AND variant duration both set on the same service)
+// nothing in this codebase asks for yet. Falls back to resolveStaffDuration
+// exactly as before when there's no variant in play at all.
+function resolveEffectiveDuration(service: Service, staffName: string | null, variant: ServiceVariant | null): number {
+  if (variant) return variant.durationMinutes;
+  return resolveStaffDuration(service, staffName);
+}
+
+function effectivePriceCents(service: Service, variant: ServiceVariant | null): number {
+  return variant ? variant.priceCents : service.priceCents;
+}
+
 // A service can genuinely take different amounts of time depending on who
 // performs it (see service.prisma's staffDurations comment) — this is the
 // single source of truth every duration-sensitive call site below resolves
@@ -139,6 +184,12 @@ export async function listServices(companyId: string) {
     description: s.description,
     durationMinutes: s.durationMinutes,
     priceCents: s.priceCents,
+    // Both purely for the public booking form (grouping the service picker,
+    // showing a thumbnail) — the bot itself never reads either, but this is
+    // the one function both consumers already share (see app/page.tsx),
+    // same established pattern as everything else below.
+    ...(s.category ? { category: s.category } : {}),
+    ...(s.photoUrl ? { photoUrl: s.photoUrl } : {}),
     // Present only for services with a staff roster — tells the model it can
     // (and should) ask the customer's preference or pass a staffName, instead
     // of assuming a single generic provider.
@@ -152,6 +203,13 @@ export async function listServices(companyId: string) {
     ...(s.staffNames.some((n) => resolveStaffDuration(s, n) !== s.durationMinutes)
       ? { staffDurationsMinutes: Object.fromEntries(s.staffNames.map((n) => [n, resolveStaffDuration(s, n)])) }
       : {}),
+    // Present only when this service has price/duration variants (pet size,
+    // hair length, etc. — company-defined label, never a fixed enum here).
+    // When present, the model must quote THESE prices/durations instead of
+    // the flat priceCents/durationMinutes above, which stop being meaningful
+    // the moment a service has variants (see orchestrator.ts's own
+    // instruction on this).
+    ...(hasVariantConcept(s) ? { variantOptions: getVariants(s) } : {}),
     // Present only when the service actually has a notice window configured
     // — most services default to 0/0 (no restriction), not worth cluttering
     // every reply with "sem multa, cancele quando quiser".
@@ -179,6 +237,7 @@ export async function checkAvailability(
   // date/time picker with room to show a full day's options, so it passes a
   // much higher cap instead of silently hiding slots that are actually free.
   maxPerBucket = 3,
+  variantLabel?: string,
 ) {
   const service = await resolveService(companyId, serviceName);
   if (!service) {
@@ -197,6 +256,30 @@ export async function checkAvailability(
       return {
         error: 'unknown_staff',
         message: `Não encontrei "${staffName}" na equipe desse serviço. Profissionais disponíveis: ${service.staffNames.join(', ')}.`,
+      };
+    }
+  }
+
+  // Same shape as the staff check above: a service with variants can't be
+  // checked at all until one is chosen, since the variant's own duration is
+  // what determines which slots even fit (see resolveEffectiveDuration).
+  let resolvedVariant: ServiceVariant | null = null;
+  if (hasVariantConcept(service)) {
+    if (!variantLabel?.trim()) {
+      return {
+        error: 'variant_required',
+        message: `Esse serviço tem variações de preço/duração: ${getVariants(service)
+          .map((v) => v.label)
+          .join(', ')}. Pergunte ao cliente qual ele quer antes de checar disponibilidade.`,
+      };
+    }
+    resolvedVariant = resolveVariantByLabel(service, variantLabel);
+    if (!resolvedVariant) {
+      return {
+        error: 'unknown_variant',
+        message: `Não encontrei a variação "${variantLabel}". Opções: ${getVariants(service)
+          .map((v) => v.label)
+          .join(', ')}.`,
       };
     }
   }
@@ -356,8 +439,8 @@ export async function checkAvailability(
   // that's only valid for someone quicker — checked per-candidate inside
   // evaluateSlot, not by narrowing the loop itself).
   const candidateDurations = hasStaffConcept(service)
-    ? eligibleStaff.map((n) => resolveStaffDuration(service, n))
-    : [service.durationMinutes];
+    ? eligibleStaff.map((n) => resolveEffectiveDuration(service, n, resolvedVariant))
+    : [resolveEffectiveDuration(service, null, resolvedVariant)];
   const minDuration = Math.min(...candidateDurations);
 
   // Single source of truth for "is this exact start time actually free" —
@@ -373,7 +456,7 @@ export async function checkAvailability(
 
     if (hasStaffConcept(service)) {
       const free = eligibleStaff.filter((name) => {
-        const dur = resolveStaffDuration(service, name);
+        const dur = resolveEffectiveDuration(service, name, resolvedVariant);
         if (t < openTime.getTime() || t + dur * 60_000 > closeTime.getTime()) return false;
         if (conflictsWithCalendar(t, dur)) return false;
         return !existing.some((b) => b.staffName === name && overlaps(t, dur, b.scheduledAt.getTime(), b.durationMinutes));
@@ -382,9 +465,10 @@ export async function checkAvailability(
       return { ok: true, staffAvailable: !requestedStaff ? free : undefined };
     }
 
-    if (t < openTime.getTime() || t + service.durationMinutes * 60_000 > closeTime.getTime()) return { ok: false };
-    if (conflictsWithCalendar(t, service.durationMinutes)) return { ok: false };
-    const conflict = existing.some((b) => overlaps(t, service.durationMinutes, b.scheduledAt.getTime(), b.durationMinutes));
+    const soloDuration = resolveEffectiveDuration(service, null, resolvedVariant);
+    if (t < openTime.getTime() || t + soloDuration * 60_000 > closeTime.getTime()) return { ok: false };
+    if (conflictsWithCalendar(t, soloDuration)) return { ok: false };
+    const conflict = existing.some((b) => overlaps(t, soloDuration, b.scheduledAt.getTime(), b.durationMinutes));
     return { ok: !conflict };
   };
 
@@ -455,11 +539,19 @@ export async function checkAvailability(
       morningSlots: [],
       afternoonSlots: [],
       ...(requestedTimeResult ? { requestedTimeResult } : {}),
+      ...(resolvedVariant ? { variant: resolvedVariant.label } : {}),
       message: `Não há horários livres pra "${service.name}" no dia ${date} — todos os horários do dia já estão reservados. Sugira ao cliente escolher outra data.`,
     };
   }
 
-  return { serviceName: service.name, date, morningSlots, afternoonSlots, ...(requestedTimeResult ? { requestedTimeResult } : {}) };
+  return {
+    serviceName: service.name,
+    date,
+    morningSlots,
+    afternoonSlots,
+    ...(requestedTimeResult ? { requestedTimeResult } : {}),
+    ...(resolvedVariant ? { variant: resolvedVariant.label } : {}),
+  };
 }
 
 export async function createBooking(
@@ -476,6 +568,7 @@ export async function createBooking(
     customerName: string;
     customerPhone: string;
     staffName?: string;
+    variant?: string;
     confirmReplaceExisting?: boolean;
   },
 ) {
@@ -485,6 +578,30 @@ export async function createBooking(
       error: 'service_not_found',
       message: `Não encontrei nenhum serviço ativo chamado "${args.serviceName}". Chame list_services de novo para ver os nomes exatos.`,
     };
+  }
+
+  // Same gate as checkAvailability — a service with variants can't be
+  // booked without one, since it determines both the price charged and the
+  // duration blocked on the agenda.
+  let resolvedVariant: ServiceVariant | null = null;
+  if (hasVariantConcept(service)) {
+    if (!args.variant?.trim()) {
+      return {
+        error: 'variant_required',
+        message: `Esse serviço tem variações de preço/duração: ${getVariants(service)
+          .map((v) => v.label)
+          .join(', ')}. Pergunte ao cliente qual ele quer antes de agendar.`,
+      };
+    }
+    resolvedVariant = resolveVariantByLabel(service, args.variant);
+    if (!resolvedVariant) {
+      return {
+        error: 'unknown_variant',
+        message: `Não encontrei a variação "${args.variant}". Opções: ${getVariants(service)
+          .map((v) => v.label)
+          .join(', ')}.`,
+      };
+    }
   }
 
   // Calendar fields (needed regardless of whether this company actually has
@@ -596,7 +713,9 @@ export async function createBooking(
 
     const conflictsFor = (name: string) =>
       sameDay.some(
-        (b) => b.staffName === name && overlaps(scheduledAt.getTime(), resolveStaffDuration(service, name), b.scheduledAt.getTime(), b.durationMinutes),
+        (b) =>
+          b.staffName === name &&
+          overlaps(scheduledAt.getTime(), resolveEffectiveDuration(service, name, resolvedVariant), b.scheduledAt.getTime(), b.durationMinutes),
       );
 
     if (args.staffName?.trim()) {
@@ -644,8 +763,9 @@ export async function createBooking(
       assignedStaff = free.reduce((best, n) => (countForDay(n) < countForDay(best) ? n : best), free[0]!);
     }
   } else {
+    const soloDuration = resolveEffectiveDuration(service, null, resolvedVariant);
     const hasConflict = sameDay.some((b) =>
-      overlaps(scheduledAt.getTime(), service.durationMinutes, b.scheduledAt.getTime(), b.durationMinutes),
+      overlaps(scheduledAt.getTime(), soloDuration, b.scheduledAt.getTime(), b.durationMinutes),
     );
     if (hasConflict) {
       return {
@@ -749,10 +869,10 @@ export async function createBooking(
         customerId: effectiveCustomerId,
         ticketId,
         scheduledAt,
-        durationMinutes: resolveStaffDuration(service, assignedStaff),
-        priceCents: service.priceCents,
+        durationMinutes: resolveEffectiveDuration(service, assignedStaff, resolvedVariant),
+        priceCents: effectivePriceCents(service, resolvedVariant),
         staffName: assignedStaff,
-        notes: `Cliente: ${customerName}, Tel: ${normalizedPhone}`,
+        notes: `Cliente: ${customerName}, Tel: ${normalizedPhone}${resolvedVariant ? `, Variação: ${resolvedVariant.label}` : ''}`,
       },
     });
 
@@ -809,6 +929,10 @@ export async function createBooking(
       // who they're booked with, especially important when they said "tanto
       // faz" and the auto-allocation picked for them.
       ...(assignedStaff ? { staffName: assignedStaff } : {}),
+      // Present only for services with variants — tell the customer which
+      // one they're booked into (its price/duration are already reflected
+      // in priceCents/durationMinutes above).
+      ...(resolvedVariant ? { variant: resolvedVariant.label } : {}),
       // Present only when this call replaced an existing future booking for
       // the same customer+service — see lib/bot/orchestrator.ts's system
       // prompt for how this changes the confirmation wording.
@@ -916,6 +1040,12 @@ export async function cancelBooking(
   }
 
   await prisma.booking.update({ where: { id: booking.id }, data: { status: 'cancelled' } });
+  // Deliberately no customerName/customerPhone here — unlike the dashboard's
+  // own cancelBooking (dashboard/bookings/actions.ts), this cancellation
+  // happens INSIDE an active chat: the bot's own reply is already telling
+  // the customer directly (see orchestrator.ts's cancel_booking handling).
+  // Also sending the booking_cancelled template on top would just be a
+  // second, redundant WhatsApp message about the same event.
   await notifyBookingCancelled({ companyId, serviceName: service.name, scheduledAt: booking.scheduledAt });
 
   if (booking.googleCalendarEventId) {

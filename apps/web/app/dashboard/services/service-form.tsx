@@ -26,6 +26,12 @@ type StaffRow = { name: string; duration: string; isNew: boolean };
 // from real names, only as the one hardcoded "add new" option's value).
 const NEW_STAFF_VALUE = '__new__';
 
+// A variant row is entirely optional (unlike staff, which is mandatory) —
+// a service with zero rows behaves exactly as before this existed. Price/
+// duration are kept as strings while editing (same reasoning as the base
+// price/duration fields below), parsed server-side in actions.ts.
+type VariantRow = { label: string; price: string; duration: string };
+
 function SubmitButton({ label }: { label: string }) {
   const t = useTranslations('dashboard.services');
   const { pending } = useFormStatus();
@@ -45,6 +51,11 @@ export function ServiceForm({
   // re-typing (and risking a typo that silently creates a second, unrelated
   // "person" as far as conflict-checking is concerned).
   existingStaffNames = [],
+  // Same autocomplete spirit as existingStaffNames — every category already
+  // typed by this company's OTHER services, offered via <datalist> so
+  // "Cabelo" typed once for one service is easy to reuse for the next
+  // instead of drifting into "Cabelo"/"cabelo"/"Cabelos" as separate groups.
+  existingCategories = [],
   submitLabel,
 }: {
   action: (prevState: ServiceFormState, formData: FormData) => Promise<ServiceFormState>;
@@ -60,8 +71,12 @@ export function ServiceForm({
     cancellationFeeCents: number;
     staffNames: string[];
     staffDurations?: Record<string, number>;
+    category?: string | null;
+    photoUrl?: string | null;
+    variants?: { label: string; priceCents: number; durationMinutes: number }[];
   };
   existingStaffNames?: string[];
+  existingCategories?: string[];
   submitLabel: string;
 }) {
   const t = useTranslations('dashboard.services');
@@ -100,6 +115,24 @@ export function ServiceForm({
     setStaffRows((rows) => (rows.length > 1 ? rows.filter((_, i) => i !== idx) : rows));
   }
 
+  const [variantRows, setVariantRows] = useState<VariantRow[]>(
+    () =>
+      defaultValues?.variants?.map((v) => ({
+        label: v.label,
+        price: (v.priceCents / 100).toFixed(2),
+        duration: String(v.durationMinutes),
+      })) ?? [],
+  );
+  function updateVariantRow(idx: number, patch: Partial<VariantRow>) {
+    setVariantRows((rows) => rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+  }
+  function addVariantRow() {
+    setVariantRows((rows) => [...rows, { label: '', price: '', duration: '' }]);
+  }
+  function removeVariantRow(idx: number) {
+    setVariantRows((rows) => rows.filter((_, i) => i !== idx));
+  }
+
   const durationIsHours = !!defaultValues && defaultValues.durationMinutes % 60 === 0 && defaultValues.durationMinutes >= 60;
   const durationValue = defaultValues
     ? durationIsHours
@@ -130,6 +163,33 @@ export function ServiceForm({
       <div className="dash-form-row">
         <label>{t('formDescriptionLabel')}</label>
         <textarea name="description" rows={2} defaultValue={defaultValues?.description ?? ''} />
+      </div>
+      <div className="dash-form-row">
+        <label>{t('formCategoryLabel')}</label>
+        <input
+          name="category"
+          list="category-suggestions"
+          defaultValue={defaultValues?.category ?? ''}
+          placeholder={t('formCategoryPlaceholder')}
+        />
+        <datalist id="category-suggestions">
+          {existingCategories.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+      </div>
+      <div className="dash-form-row">
+        <label>{t('formPhotoLabel')}</label>
+        {defaultValues?.photoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- user-uploaded GCS URL, not a static/optimizable local asset
+          <img
+            src={defaultValues.photoUrl}
+            alt=""
+            style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 10, marginBottom: 8 }}
+          />
+        )}
+        <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" />
+        <p style={{ fontSize: 11.5, color: '#999', margin: '4px 0 0' }}>{t('formPhotoHint')}</p>
       </div>
       <div style={{ display: 'flex', gap: 12 }}>
         <div className="dash-form-row" style={{ flex: 1 }}>
@@ -231,6 +291,56 @@ export function ServiceForm({
       </div>
 
       <div className="dash-form-row">
+        <label>{t('formVariantsLabel')}</label>
+        <p style={{ fontSize: 11.5, color: '#999', margin: '0 0 8px' }}>{t('formVariantsHint')}</p>
+        {variantRows.map((row, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+            <input
+              name={`variantLabel_${idx}`}
+              required
+              value={row.label}
+              onChange={(e) => updateVariantRow(idx, { label: e.target.value })}
+              placeholder={t('formVariantLabelPlaceholder')}
+              style={{ flex: 1 }}
+            />
+            <input
+              name={`variantPrice_${idx}`}
+              type="number"
+              min={0}
+              step="0.01"
+              required
+              value={row.price}
+              onChange={(e) => updateVariantRow(idx, { price: e.target.value })}
+              placeholder={t('formVariantPricePlaceholder')}
+              style={{ width: 110, flexShrink: 0 }}
+            />
+            <input
+              name={`variantDuration_${idx}`}
+              type="number"
+              min={1}
+              step="1"
+              required
+              value={row.duration}
+              onChange={(e) => updateVariantRow(idx, { duration: e.target.value })}
+              placeholder={t('formVariantDurationPlaceholder')}
+              style={{ width: 96, flexShrink: 0 }}
+            />
+            <button
+              type="button"
+              onClick={() => removeVariantRow(idx)}
+              className="dash-btn dash-btn-secondary"
+              style={{ padding: '4px 10px', flexShrink: 0 }}
+            >
+              {t('formStaffRemove')}
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={addVariantRow} className="dash-btn dash-btn-secondary" style={{ marginTop: 2 }}>
+          {t('formVariantsAdd')}
+        </button>
+      </div>
+
+      <div className="dash-form-row">
         <label>{t('formBookingModeLabel')}</label>
         <select name="bookingMode" defaultValue={defaultValues?.bookingMode ?? 'auto'}>
           <option value="auto">{t('bookingModeAutoOption')}</option>
@@ -239,14 +349,11 @@ export function ServiceForm({
       </div>
 
       <div className="dash-form-row">
-        <label>
-          <input
-            type="checkbox"
-            name="is24h"
-            checked={is24h}
-            onChange={(e) => setIs24h(e.target.checked)}
-            style={{ marginRight: 6 }}
-          />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, flexDirection: 'row' }}>
+          <span className="dash-switch">
+            <input type="checkbox" name="is24h" checked={is24h} onChange={(e) => setIs24h(e.target.checked)} />
+            <span className="dash-switch-track" />
+          </span>
           {t('is24hLabel')}
         </label>
       </div>

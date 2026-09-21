@@ -55,7 +55,7 @@ variable "resend_from_email" {
 
 variable "pricing_amount_basico" {
   type    = string
-  default = "19"
+  default = "49"
 }
 
 variable "whatsapp_phone_number_id" {

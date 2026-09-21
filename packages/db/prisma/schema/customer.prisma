@@ -18,6 +18,10 @@ model Customer {
   tickets        Ticket[]
   bookings       Booking[]
   whatsappRoutes WhatsAppRoute[]
+  // Sports-court modality (sports.prisma) — empty for every other company.
+  classEnrollments  ClassEnrollment[]
+  sportLevels       CustomerSportLevel[]
+  courtReservations CourtReservation[]
 
   // Phase 2: crmContactId (HubSpot/Salesforce/Pipedrive OAuth2 sync) attaches
   // here without a destructive migration.

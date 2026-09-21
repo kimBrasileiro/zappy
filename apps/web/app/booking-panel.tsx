@@ -6,12 +6,17 @@ import { getPublicAvailability, submitPublicBooking } from './booking-actions';
 
 const BRAND_COLOR = '#2563eb';
 
+type PublicVariant = { label: string; priceCents: number; durationMinutes: number };
+
 type PublicService = {
   name: string;
   description: string | null;
   durationMinutes: number;
   priceCents: number;
   staffOptions?: string[];
+  category?: string;
+  photoUrl?: string;
+  variantOptions?: PublicVariant[];
 };
 
 type Slot = { time: string; iso: string };
@@ -86,6 +91,7 @@ export function BookingPanel({
 
   const [serviceName, setServiceName] = useState(services[0]?.name ?? '');
   const [staffName, setStaffName] = useState('');
+  const [variant, setVariant] = useState('');
   const [date, setDate] = useState(minDate);
 
   const [availability, setAvailability] = useState<AvailabilityResult | null>(null);
@@ -105,11 +111,12 @@ export function BookingPanel({
 
   async function handleCheckAvailability() {
     if (!serviceName || !date) return;
+    if (selectedService?.variantOptions?.length && !variant) return;
     setAvailabilityLoading(true);
     setAvailability(null);
     setSelectedSlot(null);
     try {
-      const result = await getPublicAvailability(companySlug, serviceName, date, staffName || undefined);
+      const result = await getPublicAvailability(companySlug, serviceName, date, staffName || undefined, variant || undefined);
       setAvailability(result);
     } finally {
       setAvailabilityLoading(false);
@@ -129,6 +136,7 @@ export function BookingPanel({
         serviceName: selectedService.name,
         scheduledAt: selectedSlot.iso,
         staffName: staffName || undefined,
+        variant: variant || undefined,
         customerName: name,
         customerPhone: phone,
         customerEmail: email || undefined,
@@ -155,6 +163,19 @@ export function BookingPanel({
   }
 
   if (services.length === 0) return null;
+
+  // Grouped by category for the <optgroup>s below — a service with no
+  // category falls into its own untitled group at the end (rendered as a
+  // plain, non-labeled run of <option>s, same as if categories didn't
+  // exist at all). Insertion order follows each category's first
+  // appearance in `services`, not alphabetical.
+  const serviceGroups: { category: string | null; services: PublicService[] }[] = [];
+  for (const s of services) {
+    const key = s.category ?? null;
+    const group = serviceGroups.find((g) => g.category === key);
+    if (group) group.services.push(s);
+    else serviceGroups.push({ category: key, services: [s] });
+  }
 
   const dateLabel = selectedSlot
     ? new Date(`${date}T00:00:00`).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -194,22 +215,71 @@ export function BookingPanel({
                 onChange={(e) => {
                   setServiceName(e.target.value);
                   setStaffName('');
+                  setVariant('');
                   setAvailability(null);
                   setSelectedSlot(null);
                 }}
               >
-                {services.map((s) => (
-                  <option key={s.name} value={s.name}>
-                    {s.name}
-                  </option>
-                ))}
+                {serviceGroups.map((group) =>
+                  group.category ? (
+                    <optgroup key={group.category} label={group.category}>
+                      {group.services.map((s) => (
+                        <option key={s.name} value={s.name}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    group.services.map((s) => (
+                      <option key={s.name} value={s.name}>
+                        {s.name}
+                      </option>
+                    ))
+                  ),
+                )}
               </select>
               {selectedService && (
-                <p style={{ color: '#999', fontSize: 12, margin: '6px 0 0' }}>
-                  {t('durationMinutes', { minutes: selectedService.durationMinutes })} · {formatPrice(selectedService.priceCents)}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0 0' }}>
+                  {selectedService.photoUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element -- user-uploaded GCS URL, not a static/optimizable local asset
+                    <img
+                      src={selectedService.photoUrl}
+                      alt=""
+                      style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+                    />
+                  )}
+                  {!selectedService.variantOptions?.length && (
+                    <p style={{ color: '#999', fontSize: 12, margin: 0 }}>
+                      {t('durationMinutes', { minutes: selectedService.durationMinutes })} · {formatPrice(selectedService.priceCents)}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
+
+            {selectedService?.variantOptions && selectedService.variantOptions.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={labelStyle}>{t('variantLabel')}</label>
+                <select
+                  style={inputStyle}
+                  value={variant}
+                  onChange={(e) => {
+                    setVariant(e.target.value);
+                    setAvailability(null);
+                    setSelectedSlot(null);
+                  }}
+                >
+                  <option value="" disabled>
+                    {t('variantPlaceholder')}
+                  </option>
+                  {selectedService.variantOptions.map((v) => (
+                    <option key={v.label} value={v.label}>
+                      {v.label} — {t('durationMinutes', { minutes: v.durationMinutes })} · {formatPrice(v.priceCents)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {selectedService?.staffOptions && selectedService.staffOptions.length > 0 && (
               <div style={{ marginBottom: 16 }}>
@@ -251,8 +321,12 @@ export function BookingPanel({
                   <button
                     type="button"
                     onClick={handleCheckAvailability}
-                    disabled={!date || availabilityLoading}
-                    style={{ ...buttonStyle, whiteSpace: 'nowrap', opacity: !date || availabilityLoading ? 0.6 : 1 }}
+                    disabled={!date || availabilityLoading || !!(selectedService?.variantOptions?.length && !variant)}
+                    style={{
+                      ...buttonStyle,
+                      whiteSpace: 'nowrap',
+                      opacity: !date || availabilityLoading || (selectedService?.variantOptions?.length && !variant) ? 0.6 : 1,
+                    }}
                   >
                     {availabilityLoading ? t('checkingAvailability') : t('checkAvailabilityButton')}
                   </button>

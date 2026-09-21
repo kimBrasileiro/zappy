@@ -7,9 +7,20 @@ import { CopySnippet } from '../copy-snippet';
 import { CompanyProfileForm } from './company-name-form';
 import { formatDateTime } from '../../lib/format-time';
 
+// Same set of line icons as nav-links.tsx (see that file's own comment on
+// why each file keeps its own small icon consts here instead of a shared
+// module) — reused for the "Atalhos rápidos" tiles so a shortcut and its
+// matching sidebar item always show the same glyph.
+const ICON_BOOKINGS = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+const ICON_CLIENTS = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="9" r="2.3" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 14.2c2.6.4 4.5 2.6 4.5 5.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+const ICON_REPORTS = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 20V11M10 20V4M16 20v-6M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_SERVICES = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-6.6 6.6a2 2 0 0 1-2.8 0l-8-8A2 2 0 0 1 3 11.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/></svg>`;
+const ICON_WAVE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 12V5a1.5 1.5 0 0 1 3 0v7M14 12.2V6.5a1.5 1.5 0 0 1 3 0V13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 12.5 6.6 11a1.6 1.6 0 0 0-2.4 2.1l3.4 4.2A6 6 0 0 0 12.3 20H14a5 5 0 0 0 5-5v-2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 export default async function DashboardHomePage() {
   const { companyId } = await requireSession();
   const t = await getTranslations('dashboard.home');
+  const tNav = await getTranslations('dashboard.nav');
   const locale = await getLocale();
 
   const now = new Date();
@@ -39,7 +50,9 @@ export default async function DashboardHomePage() {
   const inProgress = countByStatus['in_progress'] ?? 0;
   const totalConversations = ticketsByStatus.reduce((sum, t) => sum + t._count, 0);
 
-  const companyDescription = (company?.config as { description?: string } | null)?.description ?? '';
+  const companyConfig = company?.config as { description?: string; address?: string } | null;
+  const companyDescription = companyConfig?.description ?? '';
+  const companyAddress = companyConfig?.address ?? '';
 
   // "Primeiros passos" — a getting-started checklist, not a permanent
   // fixture: once every step is done the section stops rendering at all
@@ -83,12 +96,41 @@ export default async function DashboardHomePage() {
         <RefreshButton />
       </div>
 
+      <div className="dash-greeting-card">
+        <div>
+          <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: '#111827' }}>
+            {t('greeting', { name: company?.name ?? '' })}
+          </p>
+          <p style={{ margin: 0, fontSize: 12.5, color: '#666' }}>{t('greetingSubtitle')}</p>
+        </div>
+        <span className="dash-greeting-icon" dangerouslySetInnerHTML={{ __html: ICON_WAVE }} />
+      </div>
+
+      <div className="dash-shortcut-grid">
+        <Link href="/dashboard/bookings" className="dash-shortcut-tile">
+          <span className="dash-shortcut-icon" dangerouslySetInnerHTML={{ __html: ICON_BOOKINGS }} />
+          <span className="dash-shortcut-label">{tNav('bookings')}</span>
+        </Link>
+        <Link href="/dashboard/clients" className="dash-shortcut-tile">
+          <span className="dash-shortcut-icon" dangerouslySetInnerHTML={{ __html: ICON_CLIENTS }} />
+          <span className="dash-shortcut-label">{tNav('clients')}</span>
+        </Link>
+        <Link href="/dashboard/reports" className="dash-shortcut-tile">
+          <span className="dash-shortcut-icon" dangerouslySetInnerHTML={{ __html: ICON_REPORTS }} />
+          <span className="dash-shortcut-label">{tNav('reports')}</span>
+        </Link>
+        <Link href="/dashboard/services" className="dash-shortcut-tile">
+          <span className="dash-shortcut-icon" dangerouslySetInnerHTML={{ __html: ICON_SERVICES }} />
+          <span className="dash-shortcut-label">{tNav('services')}</span>
+        </Link>
+      </div>
+
       <div className="dash-card">
         <h3 style={{ fontSize: 15, marginTop: 0, marginBottom: 8 }}>{t('profileCardTitle')}</h3>
         <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 12 }}>
           {t('profileCardBody', { name: company?.name ?? '' })}
         </p>
-        <CompanyProfileForm defaultName={company?.name ?? ''} defaultDescription={companyDescription} />
+        <CompanyProfileForm defaultName={company?.name ?? ''} defaultDescription={companyDescription} defaultAddress={companyAddress} />
       </div>
 
       {!allStepsDone && (

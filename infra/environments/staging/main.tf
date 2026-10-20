@@ -22,9 +22,10 @@ module "zappy" {
   region      = var.region
   environment = "staging"
   github_repo = var.github_repo
+  alert_email = var.alert_email
 
-  container_image  = var.container_image
-  migration_image  = var.migration_image
+  container_image = var.container_image
+  migration_image = var.migration_image
 
   app_url                   = var.app_url
   stripe_publishable_key    = var.stripe_publishable_key
@@ -38,8 +39,8 @@ module "zappy" {
   min_instances = var.min_instances
   max_instances = var.max_instances
 
-  db_tier                 = var.db_tier
-  db_availability_type    = var.db_availability_type
-  db_disk_size_gb         = var.db_disk_size_gb
-  db_deletion_protection  = var.db_deletion_protection
+  db_tier                = var.db_tier
+  db_availability_type   = var.db_availability_type
+  db_disk_size_gb        = var.db_disk_size_gb
+  db_deletion_protection = var.db_deletion_protection
 }

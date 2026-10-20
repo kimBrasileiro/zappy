@@ -58,8 +58,8 @@ resource "google_monitoring_alert_policy" "web_down" {
   conditions {
     display_name = "Uptime check failing"
     condition_threshold {
-      filter          = "resource.type=\"uptime_url\" AND metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.label.\"check_id\"=\"${google_monitoring_uptime_check_config.web_health[0].uptime_check_id}\""
-      comparison      = "COMPARISON_GT"
+      filter     = "resource.type=\"uptime_url\" AND metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.label.\"check_id\"=\"${google_monitoring_uptime_check_config.web_health[0].uptime_check_id}\""
+      comparison = "COMPARISON_GT"
       # An uptime check runs from ~6 global locations independently — a
       # threshold of 1 (not 0) means at least 2 locations have to agree it's
       # down before this fires, so one region's transient network blip

@@ -3,13 +3,15 @@ import { redirect } from 'next/navigation';
 import { auth } from './auth';
 
 // Platform-wide access, deliberately not the company-scoped `role` field
-// (admin|agent|viewer) — that's a different authorization boundary. Fixed
-// to this one email as requested; isolated here so it's easy to find/change.
-// Exported (not just the isSuperAdminEmail check below) because
+// (admin|agent|viewer) — that's a different authorization boundary. Read
+// from the environment (every self-hosted deployment sets its own operator
+// email — see .env.example) rather than a literal, so forking this repo
+// never silently grants someone else's account admin rights over your
+// instance. Exported (not just the isSuperAdminEmail check below) because
 // lib/notifications.ts also uses it directly as the recipient for
 // platform-operator copies of billing events and the dashboard contact form
 // — same single source of truth, not a second hardcoded literal.
-export const SUPER_ADMIN_EMAIL = 'kim@wisell.ai';
+export const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || '';
 
 // Deliberately a plain string match against the hardcoded constant above —
 // never derived from a DB role/flag. A company-impersonation capability

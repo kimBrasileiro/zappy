@@ -30,22 +30,22 @@ resource "google_secret_manager_secret_version" "database_url" {
 locals {
   # name (matches .env.example) -> Secret Manager secret_id suffix
   runtime_secrets = {
-    BETTER_AUTH_SECRET            = "better-auth-secret"
-    STRIPE_SECRET_KEY             = "stripe-secret-key"
-    STRIPE_WEBHOOK_SECRET         = "stripe-webhook-secret"
-    STRIPE_PRICE_BASICO           = "stripe-price-basico"
-    STRIPE_PRICE_WHATSAPP_PROPRIO = "stripe-price-whatsapp-proprio"
-    STRIPE_PRICE_INTEGRACAO       = "stripe-price-integracao"
-    GEMINI_API_KEY                = "gemini-api-key"
-    RESEND_API_KEY                = "resend-api-key"
-    GOOGLE_CLIENT_SECRET          = "google-client-secret"
-    GOOGLE_CALENDAR_CLIENT_SECRET = "google-calendar-client-secret"
-    WHATSAPP_CLOUD_API_TOKEN      = "whatsapp-cloud-api-token"
-    META_APP_SECRET               = "meta-app-secret"
-    META_WEBHOOK_VERIFY_TOKEN     = "meta-webhook-verify-token"
-    WHATSAPP_TOKEN_ENCRYPTION_KEY = "whatsapp-token-encryption-key"
+    BETTER_AUTH_SECRET                   = "better-auth-secret"
+    STRIPE_SECRET_KEY                    = "stripe-secret-key"
+    STRIPE_WEBHOOK_SECRET                = "stripe-webhook-secret"
+    STRIPE_PRICE_BASICO                  = "stripe-price-basico"
+    STRIPE_PRICE_WHATSAPP_PROPRIO        = "stripe-price-whatsapp-proprio"
+    STRIPE_PRICE_INTEGRACAO              = "stripe-price-integracao"
+    GEMINI_API_KEY                       = "gemini-api-key"
+    RESEND_API_KEY                       = "resend-api-key"
+    GOOGLE_CLIENT_SECRET                 = "google-client-secret"
+    GOOGLE_CALENDAR_CLIENT_SECRET        = "google-calendar-client-secret"
+    WHATSAPP_CLOUD_API_TOKEN             = "whatsapp-cloud-api-token"
+    META_APP_SECRET                      = "meta-app-secret"
+    META_WEBHOOK_VERIFY_TOKEN            = "meta-webhook-verify-token"
+    WHATSAPP_TOKEN_ENCRYPTION_KEY        = "whatsapp-token-encryption-key"
     GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY = "google-calendar-token-encryption-key"
-    CRON_SECRET                   = "cron-secret"
+    CRON_SECRET                          = "cron-secret"
   }
 }
 

@@ -1,5 +1,6 @@
 {
   "name": "@zappigo/widget",
+  "license": "MIT",
   "private": true,
   "version": "0.1.0",
   "description": "Vanilla TS chat widget, bundled as a single <30KB gzipped script, Shadow DOM isolated.",

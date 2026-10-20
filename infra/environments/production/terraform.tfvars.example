@@ -7,6 +7,10 @@
 project_id  = "your-gcp-project-id"
 github_repo = "kimBrasileiro/zappy"
 
+# Recipient for system-health alerts — also becomes the app's own
+# SUPER_ADMIN_EMAIL automatically (see .env.example).
+alert_email = "you@example.com"
+
 # Leave the two *_image vars unset (placeholder default) for the very first
 # `terraform apply` — see ../../README.md step 3.
 

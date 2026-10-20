@@ -15,7 +15,7 @@ resource "google_sql_database_instance" "main" {
   deletion_protection = var.db_deletion_protection
 
   settings {
-    tier              = var.db_tier
+    tier = var.db_tier
     # New Cloud SQL instances default to the ENTERPRISE_PLUS edition, which
     # dropped support for the classic shared-core tiers (db-f1-micro,
     # db-g1-small) in favor of its own db-perf-optimized-N-* line —

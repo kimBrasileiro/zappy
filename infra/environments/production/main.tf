@@ -21,17 +21,18 @@ module "zappy" {
   region      = var.region
   environment = "production"
   github_repo = var.github_repo
+  alert_email = var.alert_email
 
   container_image = var.container_image
   migration_image = var.migration_image
 
-  app_url                  = var.app_url
-  stripe_publishable_key   = var.stripe_publishable_key
-  google_client_id         = var.google_client_id
+  app_url                   = var.app_url
+  stripe_publishable_key    = var.stripe_publishable_key
+  google_client_id          = var.google_client_id
   google_calendar_client_id = var.google_calendar_client_id
-  resend_from_email        = var.resend_from_email
-  whatsapp_phone_number_id = var.whatsapp_phone_number_id
-  whatsapp_number          = var.whatsapp_number
+  resend_from_email         = var.resend_from_email
+  whatsapp_phone_number_id  = var.whatsapp_phone_number_id
+  whatsapp_number           = var.whatsapp_number
 
   min_instances = var.min_instances
   max_instances = var.max_instances

@@ -15,3 +15,7 @@ project_id = "your-new-gcp-project-id"
 
 # whatsapp_phone_number_id = "1195368413663977"
 # whatsapp_number          = "+34666240157"
+
+# Recipient for system-health alerts — also becomes the app's own
+# SUPER_ADMIN_EMAIL automatically (see .env.example).
+alert_email = "you@example.com"

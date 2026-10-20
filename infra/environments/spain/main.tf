@@ -22,25 +22,26 @@ module "zappy" {
   region      = var.region
   environment = "production"
   github_repo = var.github_repo
+  alert_email = var.alert_email
 
   container_image = var.container_image
   migration_image = var.migration_image
 
-  app_url                   = var.app_url
-  stripe_publishable_key    = var.stripe_publishable_key
-  google_client_id          = var.google_client_id
-  google_calendar_client_id = var.google_calendar_client_id
-  resend_from_email         = var.resend_from_email
+  app_url                       = var.app_url
+  stripe_publishable_key        = var.stripe_publishable_key
+  google_client_id              = var.google_client_id
+  google_calendar_client_id     = var.google_calendar_client_id
+  resend_from_email             = var.resend_from_email
   whatsapp_phone_number_id      = var.whatsapp_phone_number_id
   whatsapp_number               = var.whatsapp_number
   whatsapp_default_country_code = var.whatsapp_default_country_code
 
-  default_locale                  = var.default_locale
-  default_timezone                = var.default_timezone
-  pricing_currency_symbol         = var.pricing_currency_symbol
-  pricing_currency_code           = var.pricing_currency_code
-  pricing_amount_free             = var.pricing_amount_free
-  pricing_amount_basico           = var.pricing_amount_basico
+  default_locale          = var.default_locale
+  default_timezone        = var.default_timezone
+  pricing_currency_symbol = var.pricing_currency_symbol
+  pricing_currency_code   = var.pricing_currency_code
+  pricing_amount_free     = var.pricing_amount_free
+  pricing_amount_basico   = var.pricing_amount_basico
 
   min_instances = var.min_instances
   max_instances = var.max_instances

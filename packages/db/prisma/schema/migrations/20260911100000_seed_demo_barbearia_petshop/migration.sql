@@ -17,7 +17,7 @@ VALUES (
   'barbearia-do-kim',
   'starter',
   'active',
-  '{"description": "Barbearia tradicional na Vila Mariana — corte, barba e combo, com hora marcada pelo WhatsApp.", "address": "Rua Harmonia, 123 — Vila Madalena, São Paulo - SP"}'::jsonb
+  '{"description": "Barbearia tradicional na Vila Madalena — corte, barba e combo, com hora marcada pelo WhatsApp.", "address": "Rua Harmonia, 123 — Vila Madalena, São Paulo - SP"}'::jsonb
 )
 ON CONFLICT (id) DO NOTHING;
 
@@ -55,7 +55,7 @@ VALUES (
   'pet-shop-do-kim',
   'starter',
   'active',
-  '{"description": "Banho e tosa pra cães e gatos de todos os portes, na Vila Mariana — agende pelo WhatsApp.", "address": "Rua Harmonia, 123 — Vila Madalena, São Paulo - SP"}'::jsonb
+  '{"description": "Banho e tosa pra cães e gatos de todos os portes, na Vila Madalena — agende pelo WhatsApp.", "address": "Rua Harmonia, 123 — Vila Madalena, São Paulo - SP"}'::jsonb
 )
 ON CONFLICT (id) DO NOTHING;
 

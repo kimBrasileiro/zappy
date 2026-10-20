@@ -5,6 +5,11 @@ variable "project_id" {
   type = string
 }
 
+variable "alert_email" {
+  description = "Recipient for system-health alert emails AND the app's own SUPER_ADMIN_EMAIL (passed straight through) — see modules/zappy/variables.tf."
+  type        = string
+}
+
 variable "region" {
   type    = string
   default = "southamerica-east1"

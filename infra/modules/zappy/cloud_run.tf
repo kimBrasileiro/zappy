@@ -17,6 +17,9 @@ locals {
       WHATSAPP_DEFAULT_COUNTRY_CODE      = var.whatsapp_default_country_code
       DEFAULT_LOCALE                     = var.default_locale
       DEFAULT_TIMEZONE                   = var.default_timezone
+      // Same address as var.alert_email (monitoring.tf) — one setting, not
+      // two, since they're meant to be the same operator either way.
+      SUPER_ADMIN_EMAIL = var.alert_email
       // NEXT_PUBLIC_-prefixed — apps/web/lib/pricing.ts is imported from
       // client components (signup/onboarding show the plan's price in the
       // browser), and only NEXT_PUBLIC_* env vars get statically inlined

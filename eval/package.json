@@ -1,5 +1,6 @@
 {
   "name": "@zappigo/eval",
+  "license": "MIT",
   "private": true,
   "version": "0.1.0",
   "description": "Behavioral eval suite for the chat orchestrator — scripted conversations against a real (ephemeral) company/service, graded by deterministic assertions plus a Gemini judge.",

@@ -53,8 +53,8 @@ resource "google_service_account" "deployer" {
 
 resource "google_service_account_iam_member" "wif_binding" {
   service_account_id = google_service_account.deployer.name
-  role                = "roles/iam.workloadIdentityUser"
-  member              = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
 
 # Push new images.
@@ -86,6 +86,6 @@ resource "google_cloud_run_v2_job_iam_member" "deployer_run" {
 # not just a permissions warning.
 resource "google_service_account_iam_member" "deployer_can_run_as_runtime" {
   service_account_id = google_service_account.runtime.name
-  role                = "roles/iam.serviceAccountUser"
-  member              = "serviceAccount:${google_service_account.deployer.email}"
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.deployer.email}"
 }

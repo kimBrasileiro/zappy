@@ -23,7 +23,7 @@ variable "environment" {
     provider's required OIDC claim (wif.tf) so staging's GitHub Actions
     credentials can never deploy to production or vice versa.
   EOT
-  type = string
+  type        = string
   validation {
     condition     = contains(["staging", "production"], var.environment)
     error_message = "environment must be \"staging\" or \"production\"."
@@ -49,8 +49,8 @@ variable "container_image" {
     image (or just let the deploy-staging/deploy-production GitHub Actions
     workflow do it).
   EOT
-  type    = string
-  default = "us-docker.pkg.dev/cloudrun/container/hello"
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
 variable "migration_image" {
@@ -60,8 +60,8 @@ variable "migration_image" {
     workspace + Prisma CLI, unlike the pruned `runner` stage above. Same
     bootstrap placeholder story as container_image.
   EOT
-  type    = string
-  default = "us-docker.pkg.dev/cloudrun/container/hello"
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
 # --- Plain (non-secret) runtime config -----------------------------------
@@ -77,8 +77,8 @@ variable "app_url" {
     two-pass bootstrap this implies if you don't have a custom domain picked
     yet.
   EOT
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
 }
 
 variable "stripe_publishable_key" {
@@ -211,8 +211,8 @@ variable "db_tier" {
     not for real production load. Upgrade to a db-custom-N-N tier (or
     db-perf-optimized-N-N) for production once traffic justifies it.
   EOT
-  type    = string
-  default = "db-f1-micro"
+  type        = string
+  default     = "db-f1-micro"
 }
 
 variable "db_availability_type" {
@@ -242,7 +242,6 @@ variable "db_deletion_protection" {
 # --- Monitoring/alerting (monitoring.tf) ----------------------------------
 
 variable "alert_email" {
-  description = "Recipient for system-health alert emails (site down, Cloud SQL down, 5xx burst) — see monitoring.tf. Same default as lib/admin-auth.ts#SUPER_ADMIN_EMAIL in the app itself, not read from there directly since Terraform and the app are separate config surfaces."
+  description = "Recipient for system-health alert emails (site down, Cloud SQL down, 5xx burst — see monitoring.tf) AND the app's own SUPER_ADMIN_EMAIL (cloud_run.tf passes it straight through — see apps/web/lib/admin-auth.ts), so this one address is both. No default on purpose — every deployment sets its own operator email."
   type        = string
-  default     = "kim@wisell.ai"
 }

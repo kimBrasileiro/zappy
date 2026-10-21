@@ -66,6 +66,8 @@ cp .env.example .env.local   # fill in at least DATABASE_URL, BETTER_AUTH_SECRET
 # Local Postgres 16, if you don't already have one:
 docker run -d --name zappigo-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=zappigo -p 5432:5432 postgres:16
 
+pnpm db:generate    # generates the Prisma client — do this before anything below
+                    # touches the database or typechecks against it
 pnpm db:migrate     # applies every migration
 pnpm db:seed        # one demo company + admin user (Acme Demo / admin@acme-demo.test)
 pnpm dev            # runs apps/web (and apps/widget in watch mode) via Turborepo
